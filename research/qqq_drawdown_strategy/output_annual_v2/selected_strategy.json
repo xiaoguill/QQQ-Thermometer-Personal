@@ -1,0 +1,46 @@
+{
+  "strategy": "Ensemble_VolTarget22_fast_ultra_50_50_Buffer1_goldcash",
+  "selection_tier": "strict_and_strictly_lower_annual_mdd",
+  "strict_eligible_candidates": 2,
+  "risk_first_10pp_candidates": 29,
+  "objective": {
+    "annual_return_shortfall_tolerance": -0.05,
+    "annual_mdd_gap_tolerance": 0.0,
+    "complete_years_only_for_eligibility": true
+  },
+  "data_start": "2007-05-30",
+  "data_end": "2026-08-10",
+  "cost_bps": 5.0,
+  "selected_description": "The fixed 50/50 ensemble with a fixed 1% gold/cash reserve for strictly lower annual drawdown.",
+  "benchmark": {
+    "total_return": 16.82219989763943,
+    "annual_return": 0.16216434341264052,
+    "max_drawdown": -0.5340399304007597,
+    "volatility": 0.22379197849910268,
+    "sharpe": 0.7836972127356518,
+    "observations": 4830
+  },
+  "sharpe_excellent_threshold": 0.9,
+  "sharpe_excellent": true,
+  "sources": [
+    {
+      "name": "Trend-Filtered Drawdown Control",
+      "url": "https://github.com/tallwh024-dev/Trend-Filtered-Drawdown-Control",
+      "rule": "\u79fb\u52a8\u5e73\u5747\u7ebf\u8d8b\u52bf\u8fc7\u6ee4\uff0c\u5e76\u6309 10%/15%/20% \u7ec4\u5408\u56de\u64a4\u5206\u7ea7\u964d\u4f4e\u98ce\u9669\u66b4\u9732"
+    },
+    {
+      "name": "Time Series Momentum Backtester",
+      "url": "https://github.com/mehul532/time-series-momentum-backtester",
+      "rule": "\u6b63\u5411\u8fc7\u53bb\u6536\u76ca\u52a8\u91cf\u4fe1\u53f7\u3001\u6ede\u540e\u6267\u884c\u548c\u4ea4\u6613\u6210\u672c\u538b\u529b\u6d4b\u8bd5"
+    },
+    {
+      "name": "Accelerating Dual Momentum",
+      "url": "https://github.com/AleksLi1/Accelerating_Dual_Momentum",
+      "rule": "\u591a\u65f6\u95f4\u5c3a\u5ea6\u52a8\u91cf\u6392\u540d\u4e0e\u9632\u5b88\u8d44\u4ea7\u56de\u9000"
+    }
+  ],
+  "robustness": {
+    "cost_20bps_both_within_5pp_years": 17,
+    "neighbor_all_both_within_5pp": false
+  }
+}

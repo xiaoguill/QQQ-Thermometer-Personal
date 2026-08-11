@@ -1,0 +1,51 @@
+{
+  "start_requested": "2006-01-01",
+  "end_requested": "2026-08-10",
+  "sources": {
+    "QQQ": {
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/QQQ",
+      "first_date": "2006-01-03",
+      "last_date": "2026-08-10",
+      "rows": 5182
+    },
+    "QLD": {
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/QLD",
+      "first_date": "2006-06-21",
+      "last_date": "2026-08-10",
+      "rows": 5065
+    },
+    "XLU": {
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/XLU",
+      "first_date": "2006-01-03",
+      "last_date": "2026-08-10",
+      "rows": 5182
+    },
+    "IAU": {
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/IAU",
+      "first_date": "2006-01-03",
+      "last_date": "2026-08-10",
+      "rows": 5182
+    },
+    "TLT": {
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/TLT",
+      "first_date": "2006-01-03",
+      "last_date": "2026-08-10",
+      "rows": 5182
+    },
+    "BIL": {
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/BIL",
+      "first_date": "2007-05-30",
+      "last_date": "2026-08-10",
+      "rows": 4830
+    },
+    "SVXY": {
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/SVXY",
+      "first_date": "2011-10-04",
+      "last_date": "2026-08-10",
+      "rows": 3733
+    },
+    "VIX": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
+    "VIX3M": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX3M_History.csv"
+  },
+  "actual_data_end": "2026-08-10"
+}
