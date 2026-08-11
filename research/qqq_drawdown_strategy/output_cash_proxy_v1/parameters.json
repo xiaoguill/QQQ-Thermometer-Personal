@@ -1,0 +1,13 @@
+{
+  "strategy": "LongBear_EMA_RSI_OBV_VIX_multi_indicator",
+  "cash_policy": "replace all BIL target weight with one proxy; no leverage",
+  "proxies": [
+    "BOXX",
+    "SGOV"
+  ],
+  "cost_bps": 5.0,
+  "official_sources": {
+    "BOXX": "https://funds.alphaarchitect.com/boxetf/",
+    "SGOV": "https://www.ishares.com/us/products/314116/"
+  }
+}
