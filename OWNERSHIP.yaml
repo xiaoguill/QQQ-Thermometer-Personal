@@ -1,0 +1,34 @@
+{
+  "schema": "qqq-path-ownership/v1",
+  "ownership_version": "1.0.0",
+  "format_note": "This file is valid JSON and therefore also a YAML 1.2 document; the verifier parses the canonical JSON subset without third-party dependencies.",
+  "protected_read_only": [
+    "OWNERSHIP.yaml",
+    "contracts/",
+    "verification/",
+    "configs/frozen/",
+    ".github/workflows/verification.yml"
+  ],
+  "roles": {
+    "frontend_builder": {
+      "write": ["frontend/", "tests/frontend/"],
+      "read_only": ["contracts/", "src/thermometer/", "src/api/", "docs/"],
+      "forbidden": ["OWNERSHIP.yaml", "contracts/", "verification/", "configs/frozen/", ".github/workflows/verification.yml", "src/api/", "src/storage/", "src/jobs/"]
+    },
+    "backend_builder": {
+      "write": ["src/api/", "src/storage/", "src/jobs/", "tests/api/", "tests/backend/"],
+      "read_only": ["contracts/", "src/thermometer/", "frontend/", "docs/"],
+      "forbidden": ["OWNERSHIP.yaml", "contracts/", "verification/", "configs/frozen/", ".github/workflows/verification.yml", "frontend/", "src/thermometer/"]
+    },
+    "domain_builder": {
+      "write": ["src/thermometer/", "tests/unit/", "tests/data_contracts/", "tests/integration/", "tests/e2e/"],
+      "read_only": ["contracts/", "frontend/", "src/api/", "docs/"],
+      "forbidden": ["OWNERSHIP.yaml", "contracts/", "verification/", "configs/frozen/", ".github/workflows/verification.yml", "frontend/", "src/api/", "src/storage/", "src/jobs/"]
+    },
+    "integrator": {
+      "write": ["frontend/", "src/api/", "src/storage/", "src/jobs/", "src/thermometer/", "src/web/", "tests/", "docs/", "README.md", "README_PERSONAL.md"],
+      "read_only": ["contracts/", "verification/", "configs/frozen/", "OWNERSHIP.yaml"],
+      "forbidden": ["OWNERSHIP.yaml", "contracts/", "verification/", "configs/frozen/", ".github/workflows/verification.yml"]
+    }
+  }
+}

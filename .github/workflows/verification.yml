@@ -11,6 +11,15 @@ on:
         description: Protected verification baseline ref
         required: true
         type: string
+      candidate_role:
+        description: Ownership role for this Candidate
+        required: true
+        type: choice
+        options:
+          - frontend_builder
+          - backend_builder
+          - domain_builder
+          - integrator
   pull_request:
 
 permissions:
@@ -53,6 +62,7 @@ jobs:
             --candidate-repo candidate \
             --trusted-ref "$(git -C trusted rev-parse HEAD)" \
             --candidate-sha "$(git -C candidate rev-parse HEAD)" \
+            --candidate-role "${{ inputs.candidate_role || 'integrator' }}" \
             --output "$GITHUB_WORKSPACE/evidence"
 
       - name: Require VERIFIED evidence and bind it to Candidate SHA

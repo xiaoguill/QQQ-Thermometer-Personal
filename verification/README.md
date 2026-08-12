@@ -9,6 +9,7 @@
 ```text
 trusted_repo   = 受保护的 verification baseline checkout
 candidate_repo = 待验证的精确 Candidate Commit checkout
+candidate_role = 由任务声明的 Builder 角色或 integrator
 ```
 
 由 trusted checkout 中的 `verification/cli.py` 启动：
@@ -21,6 +22,7 @@ $candidate = (git -C . rev-parse HEAD)
   --candidate-repo <candidate-checkout> `
   --trusted-ref <protected-baseline-sha> `
   --candidate-sha $candidate `
+  --candidate-role integrator `
   --output <external-evidence-directory>
 ```
 
@@ -32,6 +34,7 @@ Candidate 代码只在隔离 Python 子进程中运行。Golden、Negative、受
 
 - candidate SHA 是 candidate checkout 的完整 HEAD SHA；
 - trusted 与 candidate checkout 都干净；
+- Candidate 角色在 trusted `OWNERSHIP.yaml` 中定义，且实际变更路径没有越权；
 - 受保护路径与 trusted baseline 字节级一致；
 - Developer Tests 真实执行并有非零测试数量、零失败、零跳过；
 - Golden、Negative、Fault Injection 和三层验证门全部通过；
