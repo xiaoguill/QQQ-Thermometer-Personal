@@ -447,9 +447,9 @@ def _fault_injection(candidate_repo: Path, negative_payload: list[dict[str, Any]
         target.write_text(source.replace(original, mutation, 1), encoding="utf-8")
         probe_result, stdout, stderr = _candidate_probe(mutated_repo, [], negative_payload)
         result_map = {item["case_id"]: item for item in probe_result.get("negative", [])}
-        killed = [item["case_id"] for item in negative_payload if result_map.get(item["case_id"], {}).get("accepted") is not False]
-        details = {"mutation": "same_day_execution_acceptance", "applied": True, "killed": not killed, "surviving_fault_cases": killed}
-        return not killed, details, stdout, stderr
+        detected = [item["case_id"] for item in negative_payload if result_map.get(item["case_id"], {}).get("accepted") is True]
+        details = {"mutation": "same_day_execution_acceptance", "applied": True, "detected_by_negative_tests": bool(detected), "detected_fault_cases": detected}
+        return bool(detected), details, stdout, stderr
 
 
 def run_verification(
