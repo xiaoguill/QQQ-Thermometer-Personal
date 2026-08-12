@@ -1,7 +1,7 @@
 {
   "schema": "qqq-protected-manifest/v1",
   "manifest_version": "1.0.0",
-  "source": "trusted-baseline-content-29620bda3fbfe038cafeec62ed693d6e5711c99f-git-blob-sha256",
+  "source": "trusted-protected-ref-git-blob-sha256",
   "entries": {
     ".github/workflows/verification.yml": "cb824871d4b98d2ad9a923c0f6a0e0f0be985fcbe289901c36c673d9988cea18",
     "configs/frozen/strategy_contract.json": "c19329dbfa878766c9605f2045d48ef1f38ec9a5379ef25292bc432476c54d44",
