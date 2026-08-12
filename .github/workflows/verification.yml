@@ -23,6 +23,9 @@ jobs:
       - name: Checkout trusted verifier
         uses: actions/checkout@v4
         with:
+          # A protected immutable ref must be supplied for normal CI runs.
+          # The repository administrator should create this tag/branch after
+          # reviewing the baseline commit; a missing ref must fail closed.
           ref: ${{ inputs.trusted_ref || 'verification-baseline-v1' }}
           path: trusted
           fetch-depth: 0
@@ -41,6 +44,7 @@ jobs:
 
       - name: Run independent fail-closed verification
         env:
+          CI: 'true'
           PYTHONHASHSEED: '0'
           TZ: UTC
         run: |
@@ -50,6 +54,13 @@ jobs:
             --trusted-ref "$(git -C trusted rev-parse HEAD)" \
             --candidate-sha "$(git -C candidate rev-parse HEAD)" \
             --output "$GITHUB_WORKSPACE/evidence"
+
+      - name: Require VERIFIED evidence and bind it to Candidate SHA
+        run: |
+          python -I trusted/verification/cli.py promote \
+            --current-status IMPLEMENTED \
+            --evidence "$GITHUB_WORKSPACE/evidence/evidence.json" \
+            --checksum "$GITHUB_WORKSPACE/evidence/evidence.sha256"
 
       - name: Upload immutable verification evidence
         if: always()

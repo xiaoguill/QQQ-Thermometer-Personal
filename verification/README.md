@@ -50,6 +50,10 @@ python -I verification/cli.py promote `
 
 直接修改 `evidence.json`、缺少 sidecar checksum、修改 Candidate SHA、失败测试数或 Gate 结果，均返回 `UNVERIFIED` 和非零退出码。
 
+## 本地与 CI 状态
+
+本地 Trusted Harness 通过只代表 `LOCAL_VERIFIED`；只有在 CI 的干净 checkout 中按 Candidate SHA 运行并生成保留的 Evidence，外部流程才可以把它标记为 `CI_VERIFIED`。本运行时默认只签发机械状态 `VERIFIED`，不会把本地结果冒充为 `CI_VERIFIED`。
+
 ## Bootstrap 限制
 
 第一次建立 baseline 时可以使用 `--bootstrap`，但这不是独立验收的替代品。Bootstrap commit 必须由仓库外的用户/分支保护/CI 规则确认并固定为受保护 ref。正常运行拒绝 `trusted_ref == candidate_sha`，避免 Candidate 自己信任自己。

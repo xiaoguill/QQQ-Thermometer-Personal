@@ -38,5 +38,6 @@
     "e2e": "verification/tests/e2e"
   },
   "evidence_status_on_pass": "VERIFIED",
+  "ci_status_on_pass": "CI_VERIFIED",
   "fail_closed": true
 }
