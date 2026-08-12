@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b1020" />
+    <title>Northstar · QQQ Thermometer Demo</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell" id="appShell">
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true">N</div>
+          <div>
+            <p class="eyebrow">PRIVATE RESEARCH</p>
+            <p class="brand-name">Northstar</p>
+          </div>
+        </div>
+
+        <nav class="nav-stack" aria-label="页面导航">
+          <button class="nav-item is-active" type="button" data-view="overview" aria-current="page">
+            <span class="nav-icon" aria-hidden="true">◒</span>
+            <span>市场温度</span>
+          </button>
+          <button class="nav-item" type="button" data-view="signals">
+            <span class="nav-icon" aria-hidden="true">↗</span>
+            <span>信号证据</span>
+          </button>
+          <button class="nav-item" type="button" data-view="portfolio">
+            <span class="nav-icon" aria-hidden="true">◈</span>
+            <span>纸上组合</span>
+          </button>
+          <button class="nav-item" type="button" data-view="replay">
+            <span class="nav-icon" aria-hidden="true">◷</span>
+            <span>历史回放</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="privacy-note">
+            <span class="status-dot is-green" aria-hidden="true"></span>
+            <span>本地私有模式</span>
+          </div>
+          <p>只读监控 · 无券商连接</p>
+          <button class="sidebar-link" type="button" data-action="go-governance">查看治理边界 <span>→</span></button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="breadcrumb"><span>个人研究台</span><span class="breadcrumb-separator">/</span><strong>市场温度</strong></div>
+          <div class="topbar-actions">
+            <div class="data-health"><span class="status-dot is-green" aria-hidden="true"></span><span>数据已确认</span><span class="health-time">2026-08-12 16:05 ET</span></div>
+            <button class="icon-button" type="button" aria-label="切换深色显示" data-action="toggle-theme">◐</button>
+            <button class="avatar-button" type="button" aria-label="打开账户菜单">顾</button>
+          </div>
+        </header>
+
+        <section class="page-heading">
+          <div>
+            <p class="section-kicker">DAILY CLOSE · NEXT SESSION EXECUTION</p>
+            <h1>市场温度</h1>
+            <p class="page-subtitle">把风险状态、信号证据和目标仓位放在同一条可回溯链路上。</p>
+          </div>
+          <div class="heading-actions">
+            <button class="ghost-button" type="button" data-action="refresh-demo"><span aria-hidden="true">↻</span> 刷新快照</button>
+            <button class="primary-button" type="button" data-action="open-paper-ledger"><span aria-hidden="true">＋</span> 记录纸上观察</button>
+          </div>
+        </section>
+
+        <div class="view-panel is-active" data-panel="overview">
+          <section class="hero-grid">
+            <article class="temperature-card surface-card">
+              <div class="card-heading">
+                <div>
+                  <p class="card-label">当前状态</p>
+                  <h2>偏热 · 风险可控</h2>
+                </div>
+                <span class="state-badge state-yellow"><span class="state-symbol" aria-hidden="true">◐</span> 恢复观察</span>
+              </div>
+              <div class="temperature-readout">
+                <div class="temperature-gauge" aria-label="市场温度 63，偏热但未进入冲击状态">
+                  <div class="gauge-ring"><span>63</span><small>/ 100</small></div>
+                  <div class="gauge-needle" aria-hidden="true"></div>
+                </div>
+                <div class="temperature-copy">
+                  <p class="readout-title">风险温度</p>
+                  <p class="readout-value">63 <span>偏热</span></p>
+                  <p class="readout-description">QQQ 仍在中期趋势之上，短期波动下降；恢复闸门尚未全部打开。</p>
+                  <div class="readout-meta"><span class="status-dot is-yellow" aria-hidden="true"></span> 较昨日 +4 · 状态已连续 3 日</div>
+                </div>
+              </div>
+              <div class="temperature-scale" aria-label="温度区间">
+                <span class="scale-cold">冷</span><span class="scale-neutral">中性</span><span class="scale-hot">热</span>
+                <div class="scale-track"><span class="scale-marker" style="left: 63%"></span></div>
+              </div>
+            </article>
+
+            <article class="decision-card surface-card">
+              <div class="card-heading">
+                <div>
+                  <p class="card-label">今日决策摘要</p>
+                  <h2>维持恢复阶段仓位</h2>
+                </div>
+                <span class="version-chip">v10 candidate</span>
+              </div>
+              <div class="decision-line">
+                <div class="decision-icon is-yellow" aria-hidden="true">↗</div>
+                <div>
+                  <p class="decision-title">不追涨，不切换冲击防守</p>
+                  <p class="decision-detail">保持 QQQ 核心暴露，等待中期闸门连续确认。</p>
+                </div>
+              </div>
+              <div class="decision-divider"></div>
+              <div class="decision-facts">
+                <div><span>信号日</span><strong>2026-08-12</strong></div>
+                <div><span>执行日</span><strong>2026-08-13</strong></div>
+                <div><span>执行延迟</span><strong>T+1</strong></div>
+              </div>
+              <button class="text-button" type="button" data-action="explain-signal">查看为什么 <span>→</span></button>
+            </article>
+          </section>
+
+          <section class="metric-grid" aria-label="关键指标">
+            <article class="metric-card surface-card">
+              <div class="metric-top"><span>QQQ 收盘</span><span class="metric-change is-positive">+0.84%</span></div>
+              <strong class="metric-value">$582.14</strong>
+              <div class="mini-chart mini-chart-blue" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="metric-foot"><span>20 日趋势</span><span class="is-positive">向上</span></div>
+            </article>
+            <article class="metric-card surface-card">
+              <div class="metric-top"><span>VIX</span><span class="metric-change is-negative">+0.7</span></div>
+              <strong class="metric-value">18.6</strong>
+              <div class="mini-chart mini-chart-orange" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="metric-foot"><span>期限结构</span><span class="is-positive">正常</span></div>
+            </article>
+            <article class="metric-card surface-card">
+              <div class="metric-top"><span>QQQ 20D 实现波动率</span><span class="metric-change is-positive">-1.3%</span></div>
+              <strong class="metric-value">17.9%</strong>
+              <div class="mini-chart mini-chart-green" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="metric-foot"><span>目标波动</span><span>18.0%</span></div>
+            </article>
+            <article class="metric-card surface-card">
+              <div class="metric-top"><span>126D 动量</span><span class="metric-change is-positive">确认中</span></div>
+              <strong class="metric-value">+14.2%</strong>
+              <div class="mini-chart mini-chart-purple" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="metric-foot"><span>连续确认</span><span>3 / 5 日</span></div>
+            </article>
+          </section>
+
+          <section class="content-grid">
+            <article class="chart-card surface-card">
+              <div class="card-heading chart-heading">
+                <div><p class="card-label">状态历史</p><h2>温度与基准走势</h2></div>
+                <div class="chart-controls">
+                  <button class="range-button" type="button" data-range="1M">1M</button>
+                  <button class="range-button is-active" type="button" data-range="3M">3M</button>
+                  <button class="range-button" type="button" data-range="1Y">1Y</button>
+                  <button class="range-button" type="button" data-range="ALL">全部</button>
+                </div>
+              </div>
+              <div class="legend-row">
+                <button class="legend-toggle is-active" type="button" data-series="temperature" aria-pressed="true"><span class="legend-swatch legend-swatch-temperature"></span>温度</button>
+                <button class="legend-toggle is-active" type="button" data-series="qqq" aria-pressed="true"><span class="legend-swatch legend-swatch-qqq"></span>QQQ 归一化</button>
+                <button class="legend-toggle is-active" type="button" data-series="vix" aria-pressed="true"><span class="legend-swatch legend-swatch-vix"></span>VIX</button>
+              </div>
+              <div class="main-chart-wrap">
+                <svg class="main-chart" viewBox="0 0 900 300" role="img" aria-labelledby="chartTitle chartDesc">
+                  <title id="chartTitle">过去三个月温度、QQQ 和 VIX 归一化走势</title>
+                  <desc id="chartDesc">图表仅用于界面演示，数据为静态模拟快照。</desc>
+                  <defs>
+                    <linearGradient id="temperatureFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#e8b85e" stop-opacity=".2"/><stop offset="100%" stop-color="#e8b85e" stop-opacity="0"/></linearGradient>
+                    <linearGradient id="qqqFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#69a9ff" stop-opacity=".17"/><stop offset="100%" stop-color="#69a9ff" stop-opacity="0"/></linearGradient>
+                  </defs>
+                  <g class="chart-grid-lines">
+                    <line x1="66" y1="40" x2="870" y2="40"></line><line x1="66" y1="90" x2="870" y2="90"></line><line x1="66" y1="140" x2="870" y2="140"></line><line x1="66" y1="190" x2="870" y2="190"></line><line x1="66" y1="240" x2="870" y2="240"></line>
+                  </g>
+                  <g class="chart-axis-labels"><text x="18" y="44">100</text><text x="30" y="94">75</text><text x="30" y="144">50</text><text x="30" y="194">25</text><text x="40" y="244">0</text><text x="66" y="278">05/12</text><text x="250" y="278">06/02</text><text x="455" y="278">06/23</text><text x="650" y="278">07/14</text><text x="810" y="278">08/12</text></g>
+                  <path class="chart-area chart-area-qqq" data-series-path="qqq" d="M66 214 C115 205 137 218 176 186 S236 174 271 183 S333 170 366 156 S424 168 456 141 S514 132 548 147 S603 111 637 118 S695 96 726 108 S782 81 816 92 S846 72 870 76 L870 240 L66 240 Z"></path>
+                  <path class="chart-area chart-area-temperature" data-series-path="temperature" d="M66 154 C114 145 137 160 176 145 S236 155 271 138 S330 150 365 132 S420 150 456 128 S515 137 548 118 S600 133 637 111 S691 119 726 101 S781 121 816 94 S846 88 870 96 L870 240 L66 240 Z"></path>
+                  <path class="chart-line chart-line-qqq" data-series-path="qqq" d="M66 214 C115 205 137 218 176 186 S236 174 271 183 S333 170 366 156 S424 168 456 141 S514 132 548 147 S603 111 637 118 S695 96 726 108 S782 81 816 92 S846 72 870 76"></path>
+                  <path class="chart-line chart-line-temperature" data-series-path="temperature" d="M66 154 C114 145 137 160 176 145 S236 155 271 138 S330 150 365 132 S420 150 456 128 S515 137 548 118 S600 133 637 111 S691 119 726 101 S781 121 816 94 S846 88 870 96"></path>
+                  <path class="chart-line chart-line-vix" data-series-path="vix" d="M66 191 C110 180 145 183 176 199 S227 196 271 207 S330 201 365 184 S420 190 456 198 S516 180 548 169 S600 176 637 163 S689 175 726 155 S780 165 816 142 S850 151 870 137"></path>
+                  <line class="chart-cursor" x1="816" y1="35" x2="816" y2="240"></line>
+                  <circle class="chart-point chart-point-temperature" cx="816" cy="94" r="5"></circle><circle class="chart-point chart-point-qqq" cx="816" cy="92" r="5"></circle><circle class="chart-point chart-point-vix" cx="816" cy="142" r="5"></circle>
+                  <g class="chart-tooltip"><rect x="718" y="42" width="124" height="82" rx="8"></rect><text x="732" y="62" class="tooltip-date">08/12/2026</text><text x="732" y="83">温度 <tspan class="tooltip-temperature">63</tspan></text><text x="732" y="102">QQQ <tspan class="tooltip-qqq">98.4</tspan></text><text x="732" y="121">VIX <tspan class="tooltip-vix">18.6</tspan></text></g>
+                </svg>
+              </div>
+              <div class="chart-caption"><span><span class="status-dot is-yellow" aria-hidden="true"></span> 黄色带 = 恢复观察</span><span>数据：模拟快照 · 价格口径：复权收盘</span></div>
+            </article>
+
+            <article class="evidence-card surface-card">
+              <div class="card-heading"><div><p class="card-label">信号一致性</p><h2>3 / 5 条件满足</h2></div><span class="evidence-score">60%</span></div>
+              <p class="evidence-summary">当前趋势偏向风险资产，但还没有满足进一步加仓的全部中期条件。</p>
+              <div class="signal-list">
+                <div class="signal-row"><span class="signal-icon is-pass">✓</span><div><strong>QQQ > EMA10</strong><small>价格趋势 · 已满足</small></div><span class="signal-value">+2.1%</span></div>
+                <div class="signal-row"><span class="signal-icon is-pass">✓</span><div><strong>20D 实现波动率下降</strong><small>波动趋势 · 已满足</small></div><span class="signal-value">17.9%</span></div>
+                <div class="signal-row"><span class="signal-icon is-pending">–</span><div><strong>QQQ > SMA150</strong><small>中期趋势 · 等待确认</small></div><span class="signal-value">+0.6%</span></div>
+                <div class="signal-row"><span class="signal-icon is-pass">✓</span><div><strong>VIX 期限结构正常</strong><small>波动结构 · 已满足</small></div><span class="signal-value">0.86</span></div>
+                <div class="signal-row"><span class="signal-icon is-pending">–</span><div><strong>126D 动量连续 5 日</strong><small>中期闸门 · 3 / 5 日</small></div><span class="signal-value">+14.2%</span></div>
+              </div>
+              <button class="text-button" type="button" data-action="open-evidence">展开指标证据 <span>→</span></button>
+            </article>
+          </section>
+
+          <section class="lower-grid">
+            <article class="allocation-card surface-card">
+              <div class="card-heading"><div><p class="card-label">目标仓位</p><h2>下一交易日建议</h2></div><span class="as-of-label">T+1</span></div>
+              <div class="allocation-body">
+                <div class="donut-chart" aria-label="目标仓位：QQQ 58%，QLD 24%，BIL 18%"><div><strong>100%</strong><span>目标仓位</span></div></div>
+                <div class="allocation-legend">
+                  <div><span class="legend-block block-qqq"></span><span>QQQ</span><strong>58%</strong></div>
+                  <div><span class="legend-block block-qld"></span><span>QLD</span><strong>24%</strong></div>
+                  <div><span class="legend-block block-bil"></span><span>BIL</span><strong>18%</strong></div>
+                  <div class="allocation-note"><span class="status-dot is-yellow" aria-hidden="true"></span> 较当前 QLD -6%</div>
+                </div>
+              </div>
+            </article>
+            <article class="watch-card surface-card">
+              <div class="card-heading"><div><p class="card-label">下一步关注</p><h2>触发条件</h2></div><button class="small-icon-button" type="button" aria-label="更多条件">···</button></div>
+              <div class="watch-list">
+                <div class="watch-row"><div class="watch-index">01</div><div><strong>恢复确认</strong><span>中期闸门连续满足 5 日</span></div><span class="watch-status is-yellow">进行中</span></div>
+                <div class="watch-row"><div class="watch-index">02</div><div><strong>重新冲击</strong><span>QQQ 5D ≤ -5% 且 VIX 条件成立</span></div><span class="watch-status is-green">未触发</span></div>
+                <div class="watch-row"><div class="watch-index">03</div><div><strong>数据刷新</strong><span>下一次收盘后 · 约 18:05 ET</span></div><span class="watch-status is-blue">计划中</span></div>
+              </div>
+            </article>
+          </section>
+
+          <section class="audit-strip surface-card">
+            <div class="audit-item"><span class="audit-icon">◷</span><div><span>策略版本</span><strong>v10_preserve_shock_recovery</strong></div></div>
+            <div class="audit-item"><span class="audit-icon">◫</span><div><span>数据源</span><strong>本地核心 · Alpaca 抽样复核</strong></div></div>
+            <div class="audit-item"><span class="audit-icon">⌁</span><div><span>信号时点</span><strong>收盘后计算 · 次日执行</strong></div></div>
+            <button class="audit-link" type="button" data-action="open-audit">打开审计记录 <span>→</span></button>
+          </section>
+        </div>
+
+        <div class="view-panel" data-panel="signals">
+          <section class="empty-view surface-card"><span class="empty-icon">↗</span><h2>信号证据</h2><p>这个 demo 将信号拆成“条件、数值、阈值、确认日数、数据质量”五个字段。点击首页的“查看为什么”可体验摘要入口。</p><button class="primary-button" type="button" data-action="back-overview">返回市场温度</button></section>
+        </div>
+        <div class="view-panel" data-panel="portfolio">
+          <section class="empty-view surface-card"><span class="empty-icon">◈</span><h2>纸上组合</h2><p>这里只允许展示目标仓位、纸上账本和人工确认记录，不连接券商下单。</p><button class="primary-button" type="button" data-action="back-overview">返回市场温度</button></section>
+        </div>
+        <div class="view-panel" data-panel="replay">
+          <section class="empty-view surface-card"><span class="empty-icon">◷</span><h2>历史回放</h2><p>未来这里会按信号日、执行日和策略版本重放 2008 至今的关键阶段；当前只展示界面骨架。</p><button class="primary-button" type="button" data-action="back-overview">返回市场温度</button></section>
+        </div>
+
+        <footer class="page-footer"><span>Northstar Personal Research · Demo v0.1</span><span>模拟数据 · 不构成投资建议 · 无自动交易</span></footer>
+      </main>
+    </div>
+
+    <div class="toast" role="status" aria-live="polite" hidden></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
