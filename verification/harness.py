@@ -97,6 +97,17 @@ def _git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProc
     return result
 
 
+def _git_bytes(repo: Path, *args: str) -> bytes:
+    result = subprocess.run(
+        ["git", "-C", str(repo), *args],
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise VerificationFailure(f"git byte command failed: git -C {repo} {' '.join(args)}")
+    return result.stdout
+
+
 def _head(repo: Path) -> str:
     return _git(repo, "rev-parse", "HEAD").stdout.strip()
 
@@ -164,6 +175,7 @@ def _parse_marker(stdout: str, marker: str) -> dict[str, Any]:
 def _candidate_probe(candidate_repo: Path, snapshots: list[dict[str, Any]], negatives: list[dict[str, Any]]) -> tuple[dict[str, Any], str, str]:
     code = r'''
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -208,6 +220,7 @@ from pathlib import Path
 root = Path(sys.argv[1]).resolve()
 sys.path.insert(0, str(root))
 payload = json.loads(sys.stdin.read())
+os.environ["QQQ_CANDIDATE_ROOT"] = payload["candidate_root"]
 test_root = Path(payload.get("test_root", str(root))).resolve()
 suite = unittest.defaultTestLoader.discover(str(test_root / payload["relative_dir"]), pattern="test_*.py")
 stream = unittest.TextTestRunner(verbosity=0).run(suite)
@@ -226,7 +239,7 @@ sys.exit(0 if stream.wasSuccessful() else 1)
     exit_code, stdout, stderr = _run_isolated(
         candidate_repo,
         code,
-        {"suite": suite_name, "relative_dir": relative_dir, "test_root": str(test_root)},
+        {"suite": suite_name, "relative_dir": relative_dir, "test_root": str(test_root), "candidate_root": str(candidate_repo)},
         extra_env={"QQQ_CANDIDATE_ROOT": str(candidate_repo)},
     )
     result = _parse_marker(stdout, "__QQQ_UNIT__")
@@ -368,13 +381,16 @@ def _write_readonly(path: Path, content: bytes) -> None:
         subprocess.run(["attrib", "+R", str(path)], capture_output=True, check=False)
 
 
-def _artifact_hashes(trusted_repo: Path, paths: Iterable[str]) -> dict[str, str]:
+def _artifact_hashes(repo: Path, ref: str, paths: Iterable[str]) -> dict[str, str]:
     hashes: dict[str, str] = {}
     for relative in paths:
-        path = trusted_repo / Path(relative)
-        if not path.is_file():
+        try:
+            content = _git_bytes(repo, "show", f"{ref}:{relative}")
+        except VerificationFailure:
+            content = b""
+        if not content and not (repo / Path(relative)).is_file():
             raise VerificationFailure(f"required artifact is missing: {relative}")
-        hashes[relative] = sha256_file(path)
+        hashes[relative] = sha256_bytes(content)
     return hashes
 
 
@@ -385,24 +401,27 @@ def _scope_gate(trusted_repo: Path, candidate_repo: Path, trusted_ref: str, cand
     relevant = sorted({path for path in trusted_files | candidate_files if any(path == prefix.rstrip("/") or path.startswith(prefix) for prefix in prefixes)})
     changed: list[str] = []
     for relative in relevant:
-        trusted_path = trusted_repo / Path(relative)
-        candidate_path = candidate_repo / Path(relative)
-        if not trusted_path.is_file() or not candidate_path.is_file() or trusted_path.read_bytes() != candidate_path.read_bytes():
+        trusted_content = _git_bytes(trusted_repo, "show", f"{trusted_ref}:{relative}")
+        candidate_content = _git_bytes(candidate_repo, "show", f"{candidate_sha}:{relative}")
+        if trusted_content != candidate_content:
             changed.append(relative)
     if changed:
         return GateResult("protected_scope", "BLOCKED", "protected files differ from trusted verification baseline", {"changed_paths": changed})
     return GateResult("protected_scope", "PASS", "protected paths are unchanged", {"checked_paths": relevant})
 
 
-def _manifest_gate(trusted_repo: Path, candidate_repo: Path) -> GateResult:
+def _manifest_gate(trusted_repo: Path, candidate_repo: Path, trusted_ref: str, candidate_sha: str) -> GateResult:
     manifest = _json_file(trusted_repo / MANIFEST_REL)
     entries = manifest.get("entries")
     if not isinstance(entries, dict) or not entries:
         return GateResult("protected_manifest", "BLOCKED", "trusted protected manifest has no entries", {})
     mismatches: list[str] = []
     for relative, expected_hash in entries.items():
-        path = candidate_repo / Path(relative)
-        if not path.is_file() or sha256_file(path) != expected_hash:
+        try:
+            actual_hash = sha256_bytes(_git_bytes(candidate_repo, "show", f"{candidate_sha}:{relative}"))
+        except VerificationFailure:
+            actual_hash = ""
+        if actual_hash != expected_hash:
             mismatches.append(relative)
     if mismatches:
         return GateResult("protected_manifest", "BLOCKED", "candidate artifact hash differs from trusted manifest", {"mismatches": mismatches})
@@ -509,7 +528,7 @@ def run_verification(
             gates.append(GateResult("policy_integrity", "PASS", "trusted policy is fail-closed", {"policy_id": policy.get("policy_id")}))
 
         gates.append(_scope_gate(trusted_repo, candidate_repo, resolved_trusted_ref, resolved_candidate_sha, protected))
-        gates.append(_manifest_gate(trusted_repo, candidate_repo))
+        gates.append(_manifest_gate(trusted_repo, candidate_repo, resolved_trusted_ref, resolved_candidate_sha))
         gates.append(_test_integrity_gate(trusted_repo, candidate_repo, policy))
 
         golden = _json_file(trusted_repo / GOLDEN_REL)
@@ -595,7 +614,7 @@ def run_verification(
         gates.append(GateResult("controlled_environment", "PASS", "candidate code ran in isolated Python subprocesses with deterministic environment", {"python": sys.version, "platform": platform.platform(), "python_executable": sys.executable, "test_layers": ["unit", "integration", "e2e"], "layers_pass": layers_pass}))
 
         artifact_paths = [path for path in protected.get("exact_paths", []) if path != str(MANIFEST_REL).replace("\\", "/")]
-        artifact_hashes = _artifact_hashes(trusted_repo, artifact_paths)
+        artifact_hashes = _artifact_hashes(trusted_repo, resolved_trusted_ref, artifact_paths)
         gates.append(_evidence_integrity_gate(artifact_hashes, resolved_candidate_sha, candidate_head))
         quality, all_required = _quality_result(gates, policy.get("required_gates", []))
         test_failures = int(developer_result.get("tests_failed", 0)) + int(developer_result.get("tests_errors", 0)) + int(independent_result.get("tests_failed", 0)) + int(independent_result.get("tests_errors", 0)) + len(golden_failures) + len(negative_failures) + len(fault_failures) + (0 if mutation_killed else 1)

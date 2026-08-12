@@ -11,7 +11,7 @@
     "verification/control/protected_paths.json": "fed91ebbf2548107c9cc9fca42f0cfb82b57fab2c03bae77fd748d1d82b5d1d5",
     "verification/golden/contract_cases.json": "8e6e62322d33d958b4ce8aef41d853361d44bdd1b870c466ee78694b0945cce5",
     "verification/golden/negative_cases.json": "7c343733da983fc839f10f0105ac0c7cec03d97f4fe86833aaefbbb021e057ec",
-    "verification/harness.py": "dfa8b8374965b18f2bf60c5268f4dc5f0b4437790efcd0f52f8bb5b8890ca202",
+    "verification/harness.py": "4d1949ad4e3056e8f969d417f8bd5fb5fc3e16ee64b2b1f5676bc5835eef87a",
     "verification/status.py": "29f5bb8f06b69104e4ae58bb9a852f52abf3c6d08205540f25532984acff5108",
     "verification/tests/e2e/test_contract_acceptance.py": "ce43d5d9facd84dbe5fe7338f27f6e936bae9a589e6cb892d1c901fae428a9ff",
     "verification/tests/integration/test_contract_acceptance.py": "61065fb694862f9fbff08352ed713cb252cc9540a037111d9d9f34ff9eecfc24",
