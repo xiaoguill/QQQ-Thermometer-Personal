@@ -1,7 +1,7 @@
 {
   "schema": "qqq-protected-manifest/v1",
   "manifest_version": "1.0.0",
-  "source": "baseline-before-commit",
+  "source": "trusted-protected-git-blob-sha256",
   "entries": {
     ".github/workflows/verification.yml": "b399982426c3b5227b5a9415d39bd8d55cd371f70bbe5bee229018636892e163",
     "configs/frozen/strategy_contract.json": "c19329dbfa878766c9605f2045d48ef1f38ec9a5379ef25292bc432476c54d44",
@@ -11,7 +11,7 @@
     "verification/control/protected_paths.json": "fed91ebbf2548107c9cc9fca42f0cfb82b57fab2c03bae77fd748d1d82b5d1d5",
     "verification/golden/contract_cases.json": "8e6e62322d33d958b4ce8aef41d853361d44bdd1b870c466ee78694b0945cce5",
     "verification/golden/negative_cases.json": "7c343733da983fc839f10f0105ac0c7cec03d97f4fe86833aaefbbb021e057ec",
-    "verification/harness.py": "4d1949ad4e3056e8f969d417f8bd5fb5fc3e16ee64b2b1f5676bc5835eef87a",
+    "verification/harness.py": "f5388d7f77116b5cf986632f1225aa5437f96d38c3c4e97f7dc0803874aa6f9d",
     "verification/status.py": "29f5bb8f06b69104e4ae58bb9a852f52abf3c6d08205540f25532984acff5108",
     "verification/tests/e2e/test_contract_acceptance.py": "ce43d5d9facd84dbe5fe7338f27f6e936bae9a589e6cb892d1c901fae428a9ff",
     "verification/tests/integration/test_contract_acceptance.py": "61065fb694862f9fbff08352ed713cb252cc9540a037111d9d9f34ff9eecfc24",

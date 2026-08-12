@@ -83,6 +83,17 @@ def _json_file(path: Path) -> dict[str, Any]:
     return value
 
 
+def _json_git_file(repo: Path, ref: str, relative: str) -> dict[str, Any]:
+    try:
+        raw = _git_bytes(repo, "show", f"{ref}:{relative}")
+        value = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError, VerificationFailure) as exc:
+        raise VerificationFailure(f"cannot read trusted JSON fixture at {ref}:{relative}") from exc
+    if not isinstance(value, dict):
+        raise VerificationFailure(f"trusted JSON fixture must be an object: {ref}:{relative}")
+    return value
+
+
 def _git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(
         ["git", "-C", str(repo), *args],
@@ -144,7 +155,11 @@ def _controlled_env(extra: Mapping[str, str] | None = None) -> dict[str, str]:
 
 def _run_isolated(candidate_repo: Path, code: str, payload: Mapping[str, Any], *, extra_env: Mapping[str, str] | None = None) -> tuple[int, str, str]:
     envelope = json.dumps(payload, ensure_ascii=False, sort_keys=True)
-    command = [sys.executable, "-I", "-c", code, str(candidate_repo)]
+    # The child runs from the candidate checkout.  Passing the absolute
+    # Windows path as argv is unsafe for non-ASCII workspace names under some
+    # PowerShell/Python combinations, so the child resolves its root from
+    # cwd instead.
+    command = [sys.executable, "-I", "-c", code, "."]
     result = subprocess.run(
         command,
         cwd=str(candidate_repo),
@@ -179,7 +194,7 @@ import os
 import sys
 from pathlib import Path
 
-root = Path(sys.argv[1]).resolve()
+root = Path.cwd().resolve()
 sys.path.insert(0, str(root))
 from src.thermometer.contracts import ContractError, load_contract
 from src.thermometer.policy import generate_target_snapshot
@@ -213,16 +228,34 @@ print("__QQQ_PROBE__" + json.dumps({"valid": valid_results, "negative": negative
 def _test_suite(candidate_repo: Path, suite_name: str, relative_dir: str, *, test_root: Path | None = None) -> tuple[dict[str, Any], str, str]:
     code = r'''
 import json
+import importlib.util
+import os
 import sys
 import unittest
 from pathlib import Path
 
-root = Path(sys.argv[1]).resolve()
+root = Path.cwd().resolve()
 sys.path.insert(0, str(root))
 payload = json.loads(sys.stdin.read())
 os.environ["QQQ_CANDIDATE_ROOT"] = payload["candidate_root"]
-test_root = Path(payload.get("test_root", str(root))).resolve()
-suite = unittest.defaultTestLoader.discover(str(test_root / payload["relative_dir"]), pattern="test_*.py")
+test_root = Path(payload.get("test_root", "."))
+if not test_root.is_absolute():
+    test_root = (root / test_root).resolve()
+else:
+    test_root = test_root.resolve()
+test_dir = test_root / payload["relative_dir"]
+test_files = sorted(test_dir.rglob("test_*.py"))
+suite = unittest.TestSuite()
+loader = unittest.defaultTestLoader
+for index, test_file in enumerate(test_files):
+    module_name = f"_qqq_independent_test_{index}"
+    spec = importlib.util.spec_from_file_location(module_name, test_file)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load test module: {test_file}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    suite.addTests(loader.loadTestsFromModule(module))
 stream = unittest.TextTestRunner(verbosity=0).run(suite)
 result = {
     "suite": payload["relative_dir"],
@@ -236,13 +269,38 @@ print("__QQQ_UNIT__" + json.dumps(result, sort_keys=True))
 sys.exit(0 if stream.wasSuccessful() else 1)
 '''
     test_root = test_root or candidate_repo
+    test_root_arg = "." if test_root == candidate_repo else os.path.relpath(test_root, candidate_repo)
     exit_code, stdout, stderr = _run_isolated(
         candidate_repo,
         code,
-        {"suite": suite_name, "relative_dir": relative_dir, "test_root": str(test_root), "candidate_root": str(candidate_repo)},
-        extra_env={"QQQ_CANDIDATE_ROOT": str(candidate_repo)},
+        {
+            "suite": suite_name,
+            "relative_dir": relative_dir,
+            "test_root": test_root_arg,
+            "candidate_root": ".",
+        },
+        extra_env={"QQQ_CANDIDATE_ROOT": "."},
     )
-    result = _parse_marker(stdout, "__QQQ_UNIT__")
+    try:
+        result = _parse_marker(stdout, "__QQQ_UNIT__")
+    except VerificationFailure as exc:
+        diagnostic = {
+            "suite": suite_name,
+            "relative_dir": relative_dir,
+            "tests_collected": 0,
+            "tests_failed": 0,
+            "tests_errors": 1,
+            "tests_skipped": 0,
+            "tests_expected_failures": 0,
+            "exit_code": exit_code,
+            "marker_found": False,
+            "diagnostic": {
+                "error": str(exc),
+                "stdout_tail": stdout[-4000:],
+                "stderr_tail": stderr[-4000:],
+            },
+        }
+        return diagnostic, stdout, stderr
     result["exit_code"] = exit_code
     return result, stdout, stderr
 
@@ -263,6 +321,7 @@ def _run_test_suites(repo: Path, suites: list[str]) -> tuple[dict[str, Any], str
         "tests_failed": sum(int(item.get("tests_failed", 0)) for item in flattened),
         "tests_errors": sum(int(item.get("tests_errors", 0)) for item in flattened),
         "tests_skipped": sum(int(item.get("tests_skipped", 0)) for item in flattened),
+        "tests_expected_failures": sum(int(item.get("tests_expected_failures", 0)) for item in flattened),
         "exit_code": 0 if all(int(item.get("exit_code", 1)) == 0 for item in flattened) else 1,
         "required_layers": ["unit", "integration", "e2e"],
         "executed_layers": [
@@ -299,6 +358,7 @@ def _independent_tests(trusted_repo: Path, candidate_repo: Path, policy: Mapping
         "tests_failed": sum(int(item.get("tests_failed", 0)) for item in flattened),
         "tests_errors": sum(int(item.get("tests_errors", 0)) for item in flattened),
         "tests_skipped": sum(int(item.get("tests_skipped", 0)) for item in flattened),
+        "tests_expected_failures": sum(int(item.get("tests_expected_failures", 0)) for item in flattened),
         "exit_code": 0 if all(int(item.get("exit_code", 1)) == 0 for item in flattened) else 1,
         "required_layers": ["unit", "integration", "e2e"],
         "executed_layers": [
@@ -384,14 +444,13 @@ def _write_readonly(path: Path, content: bytes) -> None:
 def _artifact_hashes(repo: Path, ref: str, paths: Iterable[str]) -> dict[str, str]:
     hashes: dict[str, str] = {}
     for relative in paths:
-        try:
-            content = _git_bytes(repo, "show", f"{ref}:{relative}")
-        except VerificationFailure:
-            content = b""
-        if not content and not (repo / Path(relative)).is_file():
-            raise VerificationFailure(f"required artifact is missing: {relative}")
+        content = _git_bytes(repo, "show", f"{ref}:{relative}")
         hashes[relative] = sha256_bytes(content)
     return hashes
+
+
+def _expected_artifact_hashes(trusted_repo: Path, trusted_ref: str, paths: Iterable[str]) -> dict[str, str]:
+    return {relative: sha256_bytes(_git_bytes(trusted_repo, "show", f"{trusted_ref}:{relative}")) for relative in paths}
 
 
 def _scope_gate(trusted_repo: Path, candidate_repo: Path, trusted_ref: str, candidate_sha: str, protected: Mapping[str, Any]) -> GateResult:
@@ -401,8 +460,14 @@ def _scope_gate(trusted_repo: Path, candidate_repo: Path, trusted_ref: str, cand
     relevant = sorted({path for path in trusted_files | candidate_files if any(path == prefix.rstrip("/") or path.startswith(prefix) for prefix in prefixes)})
     changed: list[str] = []
     for relative in relevant:
-        trusted_content = _git_bytes(trusted_repo, "show", f"{trusted_ref}:{relative}")
-        candidate_content = _git_bytes(candidate_repo, "show", f"{candidate_sha}:{relative}")
+        try:
+            trusted_content = _git_bytes(trusted_repo, "show", f"{trusted_ref}:{relative}")
+        except VerificationFailure:
+            trusted_content = None
+        try:
+            candidate_content = _git_bytes(candidate_repo, "show", f"{candidate_sha}:{relative}")
+        except VerificationFailure:
+            candidate_content = None
         if trusted_content != candidate_content:
             changed.append(relative)
     if changed:
@@ -411,7 +476,7 @@ def _scope_gate(trusted_repo: Path, candidate_repo: Path, trusted_ref: str, cand
 
 
 def _manifest_gate(trusted_repo: Path, candidate_repo: Path, trusted_ref: str, candidate_sha: str) -> GateResult:
-    manifest = _json_file(trusted_repo / MANIFEST_REL)
+    manifest = _json_git_file(trusted_repo, trusted_ref, MANIFEST_REL.as_posix())
     entries = manifest.get("entries")
     if not isinstance(entries, dict) or not entries:
         return GateResult("protected_manifest", "BLOCKED", "trusted protected manifest has no entries", {})
@@ -515,13 +580,15 @@ def run_verification(
         else:
             gates.append(GateResult("workspace_clean", "PASS", "trusted and candidate workspaces are clean", {}))
 
-        if resolved_trusted_ref == resolved_candidate_sha and not bootstrap:
+        if trusted_head != resolved_trusted_ref:
+            gates.append(GateResult("trusted_ref_separation", "BLOCKED", "trusted checkout HEAD is not the requested trusted ref", {"trusted_head": trusted_head, "trusted_ref": resolved_trusted_ref}))
+        elif resolved_trusted_ref == resolved_candidate_sha and not bootstrap:
             gates.append(GateResult("trusted_ref_separation", "BLOCKED", "trusted ref equals candidate; normal verification requires a separate trusted baseline", {"trusted_ref": resolved_trusted_ref, "candidate_sha": resolved_candidate_sha}))
         else:
             gates.append(GateResult("trusted_ref_separation", "PASS", "trusted verification ref is accepted", {"trusted_ref": resolved_trusted_ref, "bootstrap": bootstrap}))
 
-        policy = _json_file(trusted_repo / POLICY_REL)
-        protected = _json_file(trusted_repo / PROTECTED_PATHS_REL)
+        policy = _json_git_file(trusted_repo, resolved_trusted_ref, POLICY_REL.as_posix())
+        protected = _json_git_file(trusted_repo, resolved_trusted_ref, PROTECTED_PATHS_REL.as_posix())
         if policy.get("fail_closed") is not True:
             gates.append(GateResult("policy_integrity", "BLOCKED", "trusted policy is not fail-closed", {}))
         else:
@@ -531,8 +598,8 @@ def run_verification(
         gates.append(_manifest_gate(trusted_repo, candidate_repo, resolved_trusted_ref, resolved_candidate_sha))
         gates.append(_test_integrity_gate(trusted_repo, candidate_repo, policy))
 
-        golden = _json_file(trusted_repo / GOLDEN_REL)
-        negative = _json_file(trusted_repo / NEGATIVE_REL)
+        golden = _json_git_file(trusted_repo, resolved_trusted_ref, GOLDEN_REL.as_posix())
+        negative = _json_git_file(trusted_repo, resolved_trusted_ref, NEGATIVE_REL.as_posix())
         valid_cases = golden.get("cases", [])
         negative_cases = negative.get("cases", [])
         if not isinstance(valid_cases, list) or not valid_cases or not isinstance(negative_cases, list) or not negative_cases:
@@ -541,18 +608,24 @@ def run_verification(
         developer_result, developer_stdout, developer_stderr = _developer_tests(candidate_repo, policy)
         stdout_parts.extend([developer_stdout])
         stderr_parts.extend([developer_stderr])
-        developer_pass = developer_result.get("exit_code") == 0 and developer_result.get("tests_collected", 0) > 0 and developer_result.get("tests_failed", 0) == 0 and developer_result.get("tests_errors", 0) == 0 and developer_result.get("tests_skipped", 0) == 0
+        developer_suites = developer_result.get("suites", {})
+        developer_layers_nonempty = all(int(developer_suites.get(path, {}).get("tests_collected", 0)) > 0 for path in ("tests/unit", "tests/integration", "tests/e2e"))
+        developer_pass = developer_result.get("exit_code") == 0 and developer_result.get("tests_collected", 0) > 0 and developer_layers_nonempty and developer_result.get("tests_failed", 0) == 0 and developer_result.get("tests_errors", 0) == 0 and developer_result.get("tests_skipped", 0) == 0 and developer_result.get("tests_expected_failures", 0) == 0
         gates.append(GateResult("developer_tests", "PASS" if developer_pass else "FAIL", "developer test suite executed" if developer_pass else "developer test suite failed or was empty", developer_result))
 
         independent_result, independent_stdout, independent_stderr = _independent_tests(trusted_repo, candidate_repo, policy)
         stdout_parts.append(independent_stdout)
         stderr_parts.append(independent_stderr)
+        independent_suites = independent_result.get("suites", {})
+        independent_layers_nonempty = all(int(independent_suites.get(path, {}).get("tests_collected", 0)) > 0 for path in ("verification/tests/unit", "verification/tests/integration", "verification/tests/e2e"))
         independent_pass = (
             independent_result.get("exit_code") == 0
             and independent_result.get("tests_collected", 0) > 0
+            and independent_layers_nonempty
             and independent_result.get("tests_failed", 0) == 0
             and independent_result.get("tests_errors", 0) == 0
             and independent_result.get("tests_skipped", 0) == 0
+            and independent_result.get("tests_expected_failures", 0) == 0
             and set(independent_result.get("executed_layers", [])) == {"unit", "integration", "e2e"}
         )
         gates.append(GateResult("independent_tests", "PASS" if independent_pass else "FAIL", "trusted independent test suites executed" if independent_pass else "trusted independent test suites failed or incomplete", independent_result))
@@ -610,14 +683,27 @@ def run_verification(
         stderr_parts.append(mutation_stderr)
         gates.append(GateResult("fault_injection", "PASS" if mutation_killed else "FAIL", "mutated candidate code was caught by protected negative tests" if mutation_killed else "mutated candidate code survived protected negative tests", mutation_details))
 
+        final_trusted_clean, final_trusted_status = _clean(trusted_repo)
+        final_candidate_clean, final_candidate_status = _clean(candidate_repo)
+        if not final_trusted_clean or not final_candidate_clean:
+            workspace_gate = next(gate for gate in gates if gate.name == "workspace_clean")
+            workspace_gate.status = "BLOCKED"
+            workspace_gate.message = "trusted or candidate workspace became dirty during verification"
+            workspace_gate.details.update({"trusted_status_after_tests": final_trusted_status, "candidate_status_after_tests": final_candidate_status})
+
         layers_pass = developer_pass and independent_pass and set(developer_result.get("executed_layers", [])) == {"unit", "integration", "e2e"}
         gates.append(GateResult("controlled_environment", "PASS", "candidate code ran in isolated Python subprocesses with deterministic environment", {"python": sys.version, "platform": platform.platform(), "python_executable": sys.executable, "test_layers": ["unit", "integration", "e2e"], "layers_pass": layers_pass}))
 
-        artifact_paths = [path for path in protected.get("exact_paths", []) if path != str(MANIFEST_REL).replace("\\", "/")]
-        artifact_hashes = _artifact_hashes(trusted_repo, resolved_trusted_ref, artifact_paths)
-        gates.append(_evidence_integrity_gate(artifact_hashes, resolved_candidate_sha, candidate_head))
+        artifact_paths = list(protected.get("exact_paths", []))
+        artifact_hashes = _artifact_hashes(candidate_repo, resolved_candidate_sha, artifact_paths)
+        expected_artifact_hashes = _expected_artifact_hashes(trusted_repo, resolved_trusted_ref, artifact_paths)
+    artifact_mismatches = sorted(path for path in artifact_paths if artifact_hashes.get(path) != expected_artifact_hashes.get(path))
+        if artifact_mismatches:
+            gates.append(GateResult("evidence_integrity", "BLOCKED", "candidate artifact hashes differ from trusted protected artifacts", {"mismatches": artifact_mismatches}))
+        else:
+            gates.append(_evidence_integrity_gate(artifact_hashes, resolved_candidate_sha, candidate_head))
         quality, all_required = _quality_result(gates, policy.get("required_gates", []))
-        test_failures = int(developer_result.get("tests_failed", 0)) + int(developer_result.get("tests_errors", 0)) + int(independent_result.get("tests_failed", 0)) + int(independent_result.get("tests_errors", 0)) + len(golden_failures) + len(negative_failures) + len(fault_failures) + (0 if mutation_killed else 1)
+        test_failures = int(developer_result.get("tests_failed", 0)) + int(developer_result.get("tests_errors", 0)) + int(developer_result.get("tests_expected_failures", 0)) + int(independent_result.get("tests_failed", 0)) + int(independent_result.get("tests_errors", 0)) + int(independent_result.get("tests_expected_failures", 0)) + len(golden_failures) + len(negative_failures) + len(fault_failures) + (0 if mutation_killed else 1)
         test_skips = int(developer_result.get("tests_skipped", 0)) + int(independent_result.get("tests_skipped", 0))
         test_collected = int(developer_result.get("tests_collected", 0)) + int(independent_result.get("tests_collected", 0)) + len(valid_cases) + len(negative_cases) + len(fault_inputs) + 1
         test_counts = {
@@ -625,7 +711,10 @@ def run_verification(
             "tests_passed": test_collected - test_failures - test_skips,
             "tests_failed": test_failures,
             "tests_skipped": test_skips,
+            "tests_errors": int(developer_result.get("tests_errors", 0)) + int(independent_result.get("tests_errors", 0)),
+            "tests_expected_failures": int(developer_result.get("tests_expected_failures", 0)) + int(independent_result.get("tests_expected_failures", 0)),
             "developer_tests": developer_result,
+            "independent_tests": independent_result,
             "golden_cases": len(valid_cases),
             "negative_cases": len(negative_cases),
             "fault_cases": len(fault_inputs),
@@ -641,7 +730,7 @@ def run_verification(
             "command": "verification/cli.py run",
             "started_at": datetime.now(timezone.utc).isoformat(),
             "environment": {"python": sys.version, "platform": platform.platform(), "python_executable": sys.executable, "controlled": True, "network_access": "not_requested"},
-            "workspace": {"trusted_clean": trusted_clean, "candidate_clean": candidate_clean, "candidate_repo": str(candidate_repo)},
+            "workspace": {"trusted_clean": final_trusted_clean, "candidate_clean": final_candidate_clean, "candidate_repo": str(candidate_repo)},
             "tests": test_counts,
             "gates": [gate.as_dict() for gate in gates],
             "quality_gate": {"result": quality, "all_required_gates_passed": all_required and quality == "PASS", "fail_closed": True},
@@ -685,7 +774,7 @@ def run_verification(
             "quality_gate": {"result": "BLOCKED", "all_required_gates_passed": False, "fail_closed": True},
             "error": f"{type(exc).__name__}: {exc}",
             "gates": [gate.as_dict() for gate in gates],
-            "environment": {"python": sys.version, "platform": platform.platform(), "controlled": True},
+            "environment": {"python": sys.version, "platform": platform.platform(), "controlled": True, "network_access": "not_requested"},
         }
         fallback_payload = dict(fallback)
         fallback_payload.pop("evidence_payload_sha256", None)
@@ -693,4 +782,7 @@ def run_verification(
         fallback["evidence_payload_sha256"] = sha256_bytes(_canonical_bytes(fallback_payload))
         final_bytes = json.dumps(fallback, ensure_ascii=False, sort_keys=True, indent=2).encode("utf-8") + b"\n"
         _write_readonly(evidence_path, final_bytes)
+        _write_readonly(output_dir / "evidence.sha256", (sha256_bytes(final_bytes) + "  evidence.json\n").encode("ascii"))
+        _write_readonly(output_dir / "stdout.txt", "\n".join(stdout_parts).encode("utf-8"))
+        _write_readonly(output_dir / "stderr.txt", "\n".join(stderr_parts).encode("utf-8"))
         return 1, evidence_path
