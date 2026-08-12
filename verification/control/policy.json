@@ -1,0 +1,50 @@
+{
+  "policy_id": "qqq-independent-verification-policy",
+  "policy_version": "1.0.0",
+  "verifier_version": "1.0.0",
+  "required_gates": [
+    "candidate_commit",
+    "workspace_clean",
+    "trusted_ref_separation",
+    "policy_integrity",
+    "protected_scope",
+    "protected_manifest",
+    "test_integrity",
+    "developer_tests",
+    "independent_tests",
+    "golden_dataset",
+    "negative_tests",
+    "negative_fault_inputs",
+    "fault_injection",
+    "controlled_environment",
+    "evidence_integrity"
+  ],
+  "required_test_layers": [
+    "unit",
+    "integration",
+    "e2e"
+  ],
+  "required_reverse_proof": [
+    "negative_tests",
+    "fault_injection"
+  ],
+  "protected_prefixes": [
+    "verification/",
+    "configs/frozen/",
+    ".github/workflows/verification.yml"
+  ],
+  "developer_test_suites": [
+    "tests/data_contracts",
+    "tests/unit",
+    "tests/integration",
+    "tests/e2e"
+  ],
+  "independent_test_suites": {
+    "unit": "verification/tests/unit",
+    "integration": "verification/tests/integration",
+    "e2e": "verification/tests/e2e"
+  },
+  "evidence_status_on_pass": "VERIFIED",
+  "ci_status_on_pass": "CI_VERIFIED",
+  "fail_closed": true
+}
