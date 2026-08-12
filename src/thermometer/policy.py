@@ -14,6 +14,7 @@ from .contracts import load_contract
 
 
 STRATEGY_VERSION = "v10_preserve_shock_recovery"
+POLICY_IMPLEMENTATION_VERSION = "candidate-policy-contract-v1"
 
 
 def _weights(**values: float) -> dict[str, float]:
