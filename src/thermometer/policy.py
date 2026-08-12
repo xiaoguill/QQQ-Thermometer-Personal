@@ -82,5 +82,6 @@ def generate_target_snapshot(inputs: Mapping[str, Any]) -> dict[str, Any]:
     }
     # Validate the generated object at the candidate boundary, but do not use
     # validation to manufacture its state or target weights.
-    load_contract().validate_target_snapshot(snapshot)
-    return snapshot
+    # Return the contract-normalized snapshot so the public boundary is
+    # explicit about zero weights for every registered strategy asset.
+    return load_contract().validate_target_snapshot(snapshot)
