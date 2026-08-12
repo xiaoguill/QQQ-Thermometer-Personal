@@ -582,8 +582,8 @@ def run_verification(
 
         if trusted_head != resolved_trusted_ref:
             gates.append(GateResult("trusted_ref_separation", "BLOCKED", "trusted checkout HEAD is not the requested trusted ref", {"trusted_head": trusted_head, "trusted_ref": resolved_trusted_ref}))
-        elif resolved_trusted_ref == resolved_candidate_sha and not bootstrap:
-            gates.append(GateResult("trusted_ref_separation", "BLOCKED", "trusted ref equals candidate; normal verification requires a separate trusted baseline", {"trusted_ref": resolved_trusted_ref, "candidate_sha": resolved_candidate_sha}))
+        elif resolved_trusted_ref == resolved_candidate_sha:
+            gates.append(GateResult("trusted_ref_separation", "BLOCKED", "trusted ref equals candidate; bootstrap mode cannot grant verification", {"trusted_ref": resolved_trusted_ref, "candidate_sha": resolved_candidate_sha, "bootstrap_requested": bootstrap}))
         else:
             gates.append(GateResult("trusted_ref_separation", "PASS", "trusted verification ref is accepted", {"trusted_ref": resolved_trusted_ref, "bootstrap": bootstrap}))
 
@@ -697,7 +697,7 @@ def run_verification(
         artifact_paths = list(protected.get("exact_paths", []))
         artifact_hashes = _artifact_hashes(candidate_repo, resolved_candidate_sha, artifact_paths)
         expected_artifact_hashes = _expected_artifact_hashes(trusted_repo, resolved_trusted_ref, artifact_paths)
-    artifact_mismatches = sorted(path for path in artifact_paths if artifact_hashes.get(path) != expected_artifact_hashes.get(path))
+        artifact_mismatches = sorted(path for path in artifact_paths if artifact_hashes.get(path) != expected_artifact_hashes.get(path))
         if artifact_mismatches:
             gates.append(GateResult("evidence_integrity", "BLOCKED", "candidate artifact hashes differ from trusted protected artifacts", {"mismatches": artifact_mismatches}))
         else:
@@ -726,7 +726,11 @@ def run_verification(
             "candidate_sha": resolved_candidate_sha,
             "verified_head_sha": candidate_head,
             "trusted_ref": resolved_trusted_ref,
+            "trusted_head_sha": trusted_head,
             "verifier_version": VERIFIER_VERSION,
+            "policy_id": policy.get("policy_id"),
+            "policy_version": policy.get("policy_version"),
+            "required_gates": list(policy.get("required_gates", [])),
             "command": "verification/cli.py run",
             "started_at": datetime.now(timezone.utc).isoformat(),
             "environment": {"python": sys.version, "platform": platform.platform(), "python_executable": sys.executable, "controlled": True, "network_access": "not_requested"},
