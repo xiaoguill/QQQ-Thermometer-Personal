@@ -1,0 +1,25 @@
+{
+  "schema": "qqq-contract-negative/v1",
+  "dataset_id": "qqq_contract_negative_v1",
+  "dataset_status": "frozen_manual_fixture",
+  "source": "independent_hand_authored_negative_cases",
+  "strategy_version": "v10_preserve_shock_recovery",
+  "cases": [
+    {
+      "case_id": "NEG-UNKNOWN-ASSET",
+      "snapshot": {"strategy_version": "v10_preserve_shock_recovery", "signal_date": "2020-03-16", "execution_date": "2020-03-17", "state": "shock", "target_weights": {"NOT_AN_ASSET": 1.0}, "indicators": {}, "reason_codes": ["invalid"], "input_data_version": "negative-v1"}
+    },
+    {
+      "case_id": "NEG-WEIGHT-NOT-CLOSED",
+      "snapshot": {"strategy_version": "v10_preserve_shock_recovery", "signal_date": "2020-03-16", "execution_date": "2020-03-17", "state": "shock", "target_weights": {"BIL": 0.9}, "indicators": {}, "reason_codes": ["invalid"], "input_data_version": "negative-v1"}
+    },
+    {
+      "case_id": "NEG-EXECUTION-NOT-AFTER-SIGNAL",
+      "snapshot": {"strategy_version": "v10_preserve_shock_recovery", "signal_date": "2020-03-16", "execution_date": "2020-03-16", "state": "shock", "target_weights": {"BIL": 1.0}, "indicators": {}, "reason_codes": ["invalid"], "input_data_version": "negative-v1"}
+    },
+    {
+      "case_id": "NEG-UNKNOWN-STATE",
+      "snapshot": {"strategy_version": "v10_preserve_shock_recovery", "signal_date": "2020-03-16", "execution_date": "2020-03-17", "state": "green", "target_weights": {"BIL": 1.0}, "indicators": {}, "reason_codes": ["invalid"], "input_data_version": "negative-v1"}
+    }
+  ]
+}

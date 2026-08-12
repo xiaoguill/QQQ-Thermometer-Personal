@@ -1,0 +1,60 @@
+name: Independent Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Full candidate commit SHA
+        required: true
+        type: string
+      trusted_ref:
+        description: Protected verification baseline ref
+        required: true
+        type: string
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trusted verifier
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.trusted_ref || 'verification-baseline-v1' }}
+          path: trusted
+          fetch-depth: 0
+
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate_sha || github.event.pull_request.head.sha || github.sha }}
+          path: candidate
+          fetch-depth: 0
+
+      - name: Set up controlled Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run independent fail-closed verification
+        env:
+          PYTHONHASHSEED: '0'
+          TZ: UTC
+        run: |
+          python -I trusted/verification/cli.py run \
+            --trusted-repo trusted \
+            --candidate-repo candidate \
+            --trusted-ref "$(git -C trusted rev-parse HEAD)" \
+            --candidate-sha "$(git -C candidate rev-parse HEAD)" \
+            --output "$GITHUB_WORKSPACE/evidence"
+
+      - name: Upload immutable verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qqq-verification-evidence-${{ github.sha }}
+          path: evidence/
+          retention-days: 90

@@ -1,0 +1,59 @@
+{
+  "schema": "qqq-contract-golden/v1",
+  "dataset_id": "qqq_contract_acceptance_v1",
+  "dataset_status": "frozen_manual_fixture",
+  "source": "independent_hand_authored_contract_cases",
+  "strategy_version": "v10_preserve_shock_recovery",
+  "cases": [
+    {
+      "case_id": "WARMUP-2008-01-02",
+      "signal_date": "2008-01-02",
+      "execution_date": "2008-01-03",
+      "indicators": {"ready": false, "reason": "insufficient_history", "quality": "ok"},
+      "input_data_version": "fixture-warmup-v1",
+      "expected_state": "warming",
+      "expected_reason_codes": ["warmup_insufficient_history"],
+      "expected_target_weights": {"QQQ": 0.0, "QLD": 0.0, "XLU": 0.0, "IAU": 0.0, "TLT": 0.0, "BIL": 1.0, "VXX": 0.0}
+    },
+    {
+      "case_id": "SHOCK-2020-03-16",
+      "signal_date": "2020-03-16",
+      "execution_date": "2020-03-17",
+      "indicators": {"qqq_return_5d": -0.12, "vix": 82.69, "vix_term_ratio": 1.12, "ready": true},
+      "input_data_version": "fixture-shock-2020-03-16-v1",
+      "expected_state": "shock",
+      "expected_reason_codes": ["shock_entry_price_and_volatility"],
+      "expected_target_weights": {"QQQ": 0.0, "QLD": 0.0, "XLU": 0.0, "IAU": 0.0, "TLT": 0.0, "BIL": 0.75, "VXX": 0.25}
+    },
+    {
+      "case_id": "RECOVERY-2020-03-24",
+      "signal_date": "2020-03-24",
+      "execution_date": "2020-03-25",
+      "indicators": {"qqq_above_ema10": true, "qqq_rebound": true, "rv20_declining": false, "ready": true},
+      "input_data_version": "fixture-recovery-2020-03-24-v1",
+      "expected_state": "recovery",
+      "expected_reason_codes": ["two_recovery_confirmations"],
+      "expected_target_weights": {"QQQ": 0.5, "QLD": 0.0, "XLU": 0.0, "IAU": 0.0, "TLT": 0.0, "BIL": 0.5, "VXX": 0.0}
+    },
+    {
+      "case_id": "NORMAL-2024-08-05",
+      "signal_date": "2024-08-05",
+      "execution_date": "2024-08-06",
+      "indicators": {"qqq_above_sma150": true, "momentum126_positive": true, "ready": true},
+      "input_data_version": "fixture-normal-2024-08-05-v1",
+      "expected_state": "normal",
+      "expected_reason_codes": ["medium_gate_confirmed"],
+      "expected_target_weights": {"QQQ": 0.6, "QLD": 0.0, "XLU": 0.0, "IAU": 0.0, "TLT": 0.0, "BIL": 0.4, "VXX": 0.0}
+    },
+    {
+      "case_id": "REVIEW-2022-06-16",
+      "signal_date": "2022-06-16",
+      "execution_date": "2022-06-17",
+      "indicators": {"ready": false, "quality": "needs_review"},
+      "input_data_version": "fixture-review-2022-06-16-v1",
+      "expected_state": "needs_review",
+      "expected_reason_codes": ["data_quality_needs_review"],
+      "expected_target_weights": {"QQQ": 0.0, "QLD": 0.0, "XLU": 0.0, "IAU": 0.0, "TLT": 0.0, "BIL": 1.0, "VXX": 0.0}
+    }
+  ]
+}

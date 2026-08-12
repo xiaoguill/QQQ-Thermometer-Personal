@@ -1,0 +1,21 @@
+{
+  "schema": "qqq-protected-manifest/v1",
+  "manifest_version": "1.0.0",
+  "source": "baseline-before-commit",
+  "entries": {
+    ".github/workflows/verification.yml": "b399982426c3b5227b5a9415d39bd8d55cd371f70bbe5bee229018636892e163",
+    "configs/frozen/strategy_contract.json": "c19329dbfa878766c9605f2045d48ef1f38ec9a5379ef25292bc432476c54d44",
+    "verification/__init__.py": "29ed2219919a8f4162d35aa6dc7f1b4dc8618f6656af372962080fb524e0b72a",
+    "verification/cli.py": "c168cb08069d25607d6c34347e394c2d467a54cadf2a4f37892b5fc317bb05fc",
+    "verification/control/policy.json": "62aee52571fb2540b5e3baee2e4b706b8b34f3699c56505a714eef7d7e133fc6",
+    "verification/control/protected_paths.json": "fed91ebbf2548107c9cc9fca42f0cfb82b57fab2c03bae77fd748d1d82b5d1d5",
+    "verification/golden/contract_cases.json": "8e6e62322d33d958b4ce8aef41d853361d44bdd1b870c466ee78694b0945cce5",
+    "verification/golden/negative_cases.json": "7c343733da983fc839f10f0105ac0c7cec03d97f4fe86833aaefbbb021e057ec",
+    "verification/harness.py": "f8531db2c0e4033babc65b2fb9784d851f86fba0e98c4fb7abff36384b048735",
+    "verification/status.py": "29f5bb8f06b69104e4ae58bb9a852f52abf3c6d08205540f25532984acff5108",
+    "verification/tests/e2e/test_contract_acceptance.py": "ce43d5d9facd84dbe5fe7338f27f6e936bae9a589e6cb892d1c901fae428a9ff",
+    "verification/tests/integration/test_contract_acceptance.py": "61065fb694862f9fbff08352ed713cb252cc9540a037111d9d9f34ff9eecfc24",
+    "verification/tests/unit/test_contract_acceptance.py": "e6b7391f617fc1f27dff3f6a5f472898cabcaf3cecd3d68091d314826a280ec6",
+    "verification/README.md": "38c6e3141db21b63e6341f300bdceaf89b0a7a41b7bec2aec8ab13cd042508cd"
+  }
+}

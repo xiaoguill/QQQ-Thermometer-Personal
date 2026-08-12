@@ -2,6 +2,11 @@
 
 状态：研究候选，未设为默认策略。版本名：`v10_preserve_shock_recovery`。
 
+机器可读的版本、状态、资产、时点、权重和验证容差合同位于
+`configs/frozen/strategy_contract.json`，由 `src/thermometer/contracts.py` 只读加载。
+本文件解释候选规则和证据边界；它不会把 v10 自动提升为产品默认版本，也不替代后续的
+Golden Dataset、Independent Harness 或 CI Evidence。
+
 ## 目的
 
 v10 只针对既有实验中发现的恢复阶段问题做有限修改：保留原有冲击走廊，避免 V 型反弹后因为 VIX 或期限结构仍处于高位而长期停在防守资产；同时不允许仅凭 VIX 回落就立即买入 SVXY 或大幅增加 QLD。
