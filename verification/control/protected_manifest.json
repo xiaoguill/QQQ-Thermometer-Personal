@@ -1,21 +1,21 @@
 {
   "schema": "qqq-protected-manifest/v1",
   "manifest_version": "1.0.0",
-  "source": "trusted-protected-git-blob-sha256",
+  "source": "trusted-baseline-content-29620bda3fbfe038cafeec62ed693d6e5711c99f-git-blob-sha256",
   "entries": {
-    ".github/workflows/verification.yml": "b399982426c3b5227b5a9415d39bd8d55cd371f70bbe5bee229018636892e163",
+    ".github/workflows/verification.yml": "cb824871d4b98d2ad9a923c0f6a0e0f0be985fcbe289901c36c673d9988cea18",
     "configs/frozen/strategy_contract.json": "c19329dbfa878766c9605f2045d48ef1f38ec9a5379ef25292bc432476c54d44",
     "verification/__init__.py": "29ed2219919a8f4162d35aa6dc7f1b4dc8618f6656af372962080fb524e0b72a",
     "verification/cli.py": "c168cb08069d25607d6c34347e394c2d467a54cadf2a4f37892b5fc317bb05fc",
-    "verification/control/policy.json": "62aee52571fb2540b5e3baee2e4b706b8b34f3699c56505a714eef7d7e133fc6",
+    "verification/control/policy.json": "ac497e6c764dda6e4c5bb836316129946595b3b188b2ef6c74b5afdd1b789a57",
     "verification/control/protected_paths.json": "fed91ebbf2548107c9cc9fca42f0cfb82b57fab2c03bae77fd748d1d82b5d1d5",
     "verification/golden/contract_cases.json": "8e6e62322d33d958b4ce8aef41d853361d44bdd1b870c466ee78694b0945cce5",
     "verification/golden/negative_cases.json": "7c343733da983fc839f10f0105ac0c7cec03d97f4fe86833aaefbbb021e057ec",
-    "verification/harness.py": "0b3f4d118a532d3bf9d6941a5319ac01e014ac9c229870fba1403dc17adecd3f",
+    "verification/harness.py": "12e61484f9aac93d5acfaca6f79142fe58ebbaa953f52e1a53ad4b761edb18e2",
     "verification/status.py": "904c94664abfb196b81bdefc8ead6c401988496d24a47bf70fe3cf373e5f1da7",
     "verification/tests/e2e/test_contract_acceptance.py": "ce43d5d9facd84dbe5fe7338f27f6e936bae9a589e6cb892d1c901fae428a9ff",
     "verification/tests/integration/test_contract_acceptance.py": "61065fb694862f9fbff08352ed713cb252cc9540a037111d9d9f34ff9eecfc24",
     "verification/tests/unit/test_contract_acceptance.py": "e6b7391f617fc1f27dff3f6a5f472898cabcaf3cecd3d68091d314826a280ec6",
-    "verification/README.md": "38c6e3141db21b63e6341f300bdceaf89b0a7a41b7bec2aec8ab13cd042508cd"
+    "verification/README.md": "033e0f3e6fdd6afd97c0351a559b9cc4e4ea5c63c5cc26b633d852b171f7ec75"
   }
 }
