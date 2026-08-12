@@ -160,3 +160,12 @@ ehthumbs.db
 Thumbs.db
 
 TODO
+
+# Personal thermometer runtime and generated research outputs
+work/
+artifacts/runs/
+artifacts/runtime/
+research/qqq_drawdown_strategy/output_*/
+research/qqq_drawdown_strategy/one_year_test/
+*.pyc
+__pycache__/

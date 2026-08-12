@@ -1,0 +1,12 @@
+{
+  "name": "v10_preserve_shock_recovery",
+  "label": "保留原冲击走廊，仅加速恢复阶段（最终候选）",
+  "acute_vxx_days": 2,
+  "gate_streak_days": 5,
+  "stage_days": 5,
+  "min_shock_days": 5,
+  "min_recovery_days": 15,
+  "recovery_mode": "qqq_gate",
+  "preserve_shock_corridor": true,
+  "execution_delay_days": 1
+}
