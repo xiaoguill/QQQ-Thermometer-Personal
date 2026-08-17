@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a1020" />
+    <title>Northstar · Replay / Performance / Audit</title>
+    <link rel="stylesheet" href="../shell/tokens.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#m14-main">跳到主要内容</a>
+    <div class="m14-app" data-m14-root data-api-base="/api" data-mode="SIMULATED">
+      <header class="m14-header">
+        <div class="brand-lockup">
+          <a class="brand-mark" href="../shell/index.html" aria-label="返回状态壳层">N</a>
+          <div><p class="eyebrow">PRIVATE RESEARCH</p><p class="brand-name">Northstar</p></div>
+        </div>
+        <nav class="top-nav" aria-label="研究台导航">
+          <a href="../shell/index.html">状态壳层</a>
+          <a href="../dashboard/index.html">Dashboard</a>
+          <a href="./index.html" aria-current="page">Replay / Audit</a>
+        </nav>
+        <div class="header-meta" aria-label="当前显示模式">
+          <span class="mode-pill"><span aria-hidden="true">◆</span><span data-mode-label>SIMULATED</span></span>
+          <span class="quality-pill">数据质量：<strong data-quality-value>正常</strong></span>
+        </div>
+      </header>
+
+      <main id="m14-main" class="m14-main">
+        <section class="intro" aria-labelledby="page-title">
+          <div>
+            <p class="kicker">M14 · REPLAY / PERFORMANCE / AUDIT</p>
+            <h1 id="page-title">历史回放与表现审计</h1>
+            <p class="intro-copy">只读取版本化 API 返回的历史状态、净值、表现、账本和审计元数据。页面不计算收益、回撤、基准或成本，也不把历史数字写成未来承诺。</p>
+          </div>
+          <button class="primary-button" type="button" data-action="load-live">读取同源 API</button>
+        </section>
+
+        <section class="control-card" aria-label="回放查询参数">
+          <div class="panel-head">
+            <div><p class="card-label">Replay controls</p><h2>查询窗口</h2></div>
+            <span class="provenance-chip">只读 GET</span>
+          </div>
+          <div class="control-grid">
+            <label>历史开始日期<input type="date" data-control-from /></label>
+            <label>历史结束日期<input type="date" data-control-to /></label>
+            <label>表现截止日期<input type="date" data-control-as-of /></label>
+            <label>最大行数<input type="number" min="1" max="500" value="100" data-control-limit /></label>
+          </div>
+          <p class="control-note">日期和 limit 只作为 API 查询参数；不会在浏览器筛选、补齐或重排未来数据。默认展示明确标注的 SIMULATED fixture；没有审计证据的数字保持未验证。</p>
+          <div class="fixture-bar" aria-label="模拟数据夹具">
+            <span class="fixture-label">SIMULATED FIXTURE</span>
+            <button type="button" data-fixture="complete" aria-pressed="true">完整证据</button>
+            <button type="button" data-fixture="missing_evidence" aria-pressed="false">缺失证据</button>
+            <button type="button" data-fixture="empty_failed" aria-pressed="false">空/失败</button>
+            <button type="button" data-fixture="failed" aria-pressed="false">接口失败</button>
+          </div>
+          <p class="dashboard-status" aria-live="polite" data-dashboard-status>SIMULATED · 所有数字均为后端字段透传。</p>
+        </section>
+
+        <section class="section-block" aria-labelledby="replay-title">
+          <div class="section-title"><div><p class="kicker">Historical states</p><h2 id="replay-title">历史状态回放</h2></div><span class="panel-status" data-history-status>ok · 2 行</span></div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>#</th><th>signal date</th><th>execution date</th><th>状态</th><th>温度</th><th>趋势</th><th>agreement</th><th>质量</th><th>run id</th><th>reason codes</th><th>target weights</th></tr></thead>
+              <tbody data-history-body></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section-block" aria-labelledby="curve-title">
+          <div class="section-title"><div><p class="kicker">Backend-produced series</p><h2 id="curve-title">净值与基准字段</h2></div><span class="panel-status" data-curve-status>ok · 3 行</span></div>
+          <p class="card-note">若后端未返回 QQQ 基准、收益、回撤或成本调整列，表格保持“未提供”；页面不会从 NAV 反推。</p>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>#</th><th>execution date</th><th>NAV</th><th>cash</th><th>strategy return</th><th>QQQ NAV</th><th>QQQ return</th><th>drawdown</th><th>cost bps</th><th>cost-adjusted NAV</th><th>质量</th></tr></thead>
+              <tbody data-curve-body></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="performance-grid" aria-label="表现指标与压力场景">
+          <article class="surface-card">
+            <div class="section-title"><div><p class="kicker">Backend metrics</p><h2>核心表现指标</h2></div><span class="panel-status" data-metrics-status>ok · 后端指标原值</span></div>
+            <ul class="metric-list" data-metric-list></ul>
+            <p class="card-note">这些字段只展示后端返回的原值；CAGR、最大回撤、持续时间和换手都不会在前端生成。</p>
+          </article>
+          <article class="surface-card">
+            <div class="section-title"><div><p class="kicker">Annual records</p><h2>逐年收益与回撤</h2></div><span class="provenance-chip">逐年字段</span></div>
+            <div class="two-list-grid">
+              <div><h3>年度收益</h3><ul class="metric-list compact" data-annual-returns></ul></div>
+              <div><h3>年度回撤</h3><ul class="metric-list compact" data-annual-drawdowns></ul></div>
+            </div>
+          </article>
+          <article class="surface-card">
+            <div class="section-title"><div><p class="kicker">Benchmark evidence</p><h2>QQQ 基准对齐</h2></div><span class="provenance-chip">API 原值</span></div>
+            <ul class="metric-list" data-benchmark-list></ul>
+            <p class="card-note">QQQ 出现在目标仓位中不等于存在同窗口基准。没有后端基准序列和对齐证据时，页面明确显示未提供。</p>
+          </article>
+          <article class="surface-card">
+            <div class="section-title"><div><p class="kicker">Cost sensitivity</p><h2>成本压力场景</h2></div><span class="provenance-chip">后端命名场景</span></div>
+            <ul class="metric-list" data-cost-list></ul>
+            <p class="card-note">场景名称、bps、假设和结果必须由后端返回；页面不覆盖冻结策略合同的成本口径。</p>
+          </article>
+        </section>
+
+        <section class="audit-grid" aria-label="版本、账本与审计信息">
+          <article class="surface-card">
+            <div class="section-title"><div><p class="kicker">Audit manifest</p><h2>可复现性字段</h2></div><span class="panel-status" data-audit-field-status>未提供审计字段</span></div>
+            <pre class="audit-pre" data-audit-fields>未提供；不能把本页数字称为已验证回测结论。</pre>
+          </article>
+          <article class="surface-card quality-card" data-quality-panel>
+            <div class="section-title"><div><p class="kicker">Data quality</p><h2>数据质量</h2></div><code data-quality-key>ok</code></div>
+            <p class="quality-summary">当前状态：<strong data-quality-value>正常</strong></p>
+            <div class="table-scroll compact-scroll"><table><thead><tr><th>质量问题</th></tr></thead><tbody data-quality-issues></tbody></table></div>
+          </article>
+          <article class="surface-card wide-card">
+            <div class="section-title"><div><p class="kicker">Version provenance</p><h2>策略与代码版本</h2></div><span class="panel-status" data-versions-status>ok · 1 行</span></div>
+            <div class="table-scroll"><table><thead><tr><th>#</th><th>version</th><th>strategy</th><th>implementation</th><th>status</th><th>config hash</th><th>code</th><th>data</th><th>approved at</th><th>evidence</th></tr></thead><tbody data-versions-body></tbody></table></div>
+          </article>
+          <article class="surface-card wide-card">
+            <div class="section-title"><div><p class="kicker">Paper ledger</p><h2>追加账本（只读）</h2></div><span class="panel-status" data-ledger-status>ok · 2 行</span></div>
+            <div class="table-scroll"><table><thead><tr><th>#</th><th>event date</th><th>type</th><th>symbol</th><th>quantity</th><th>price</th><th>cost</th><th>status</th><th>quality</th><th>run id</th><th>idempotency key</th><th>evidence</th></tr></thead><tbody data-ledger-body></tbody></table></div>
+          </article>
+          <article class="surface-card wide-card">
+            <div class="section-title"><div><p class="kicker">Endpoint provenance</p><h2>接口级追踪</h2></div><span class="provenance-chip">meta 原值</span></div>
+            <div class="table-scroll"><table><thead><tr><th>接口</th><th>质量</th><th>as of</th><th>signal date</th><th>execution date</th><th>strategy</th><th>run id</th><th>code</th><th>data</th><th>evidence</th></tr></thead><tbody data-provenance-body></tbody></table></div>
+          </article>
+        </section>
+
+        <aside class="boundary-notice" aria-label="M14 数据边界">
+          <span class="notice-icon" aria-hidden="true">i</span>
+          <div>
+            <strong>M14 边界：展示证据，不制造回测结论</strong>
+            <p data-missing-notice>缺失字段保持未提供；不从日期、质量或其他接口推断。当前冻结 API 没有 confirmation_status、逐行 manifest、QQQ 基准对齐和成本场景的强类型保证；这些字段缺失时不能宣称已验证。</p>
+          </div>
+        </aside>
+
+        <footer class="m14-footer"><span>Northstar Personal Research · M14 · <strong>SIMULATED</strong> fixture 可切换</span><span>只读审计 · 无订单 · 无未来收益承诺</span></footer>
+      </main>
+    </div>
+    <script type="module" src="./m14.mjs"></script>
+  </body>
+</html>
