@@ -33,6 +33,21 @@ from .indicators import (
     IndicatorSnapshot,
     calculate_indicator_snapshots,
 )
+from .sqlite_store import (
+    MIGRATIONS,
+    STORAGE_IMPLEMENTATION_VERSION,
+    STORAGE_SCHEMA,
+    STORAGE_SCHEMA_VERSION,
+    Migration,
+    SQLiteRepository,
+    SQLiteStore,
+    StorageConflictError,
+    StorageError,
+    StorageImmutableError,
+    StorageSchemaError,
+    StorageValidationError,
+    StoredRecord,
+)
 
 __all__ = [
     "DEFAULT_PRICE_FIELD_MAPPING",
@@ -62,4 +77,17 @@ __all__ = [
     "IndicatorRun",
     "IndicatorSnapshot",
     "calculate_indicator_snapshots",
+    "MIGRATIONS",
+    "STORAGE_IMPLEMENTATION_VERSION",
+    "STORAGE_SCHEMA",
+    "STORAGE_SCHEMA_VERSION",
+    "Migration",
+    "SQLiteRepository",
+    "SQLiteStore",
+    "StorageConflictError",
+    "StorageError",
+    "StorageImmutableError",
+    "StorageSchemaError",
+    "StorageValidationError",
+    "StoredRecord",
 ]
