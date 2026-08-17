@@ -2,6 +2,9 @@
   "schema": "qqq-protected-paths/v1",
   "manifest_path": "verification/control/protected_manifest.json",
   "exact_paths": [
+    "OWNERSHIP.yaml",
+    "contracts/openapi.json",
+    "contracts/README.md",
     "configs/frozen/strategy_contract.json",
     "verification/__init__.py",
     "verification/harness.py",
@@ -14,6 +17,7 @@
     "verification/golden/contract_cases.json",
     "verification/golden/negative_cases.json",
     "verification/tests/unit/test_contract_acceptance.py",
+    "verification/tests/unit/test_parallel_governance_acceptance.py",
     "verification/tests/integration/test_contract_acceptance.py",
     "verification/tests/e2e/test_contract_acceptance.py",
     ".github/workflows/verification.yml"
@@ -21,6 +25,7 @@
   "prefixes": [
     "verification/",
     "configs/frozen/",
+    "contracts/",
     ".github/workflows/verification.yml"
   ]
 }

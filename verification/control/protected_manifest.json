@@ -3,19 +3,23 @@
   "manifest_version": "1.0.0",
   "source": "trusted-protected-ref-git-blob-sha256",
   "entries": {
-    ".github/workflows/verification.yml": "cb824871d4b98d2ad9a923c0f6a0e0f0be985fcbe289901c36c673d9988cea18",
+    ".github/workflows/verification.yml": "a9d75fe3c90b8e75fca68994d4a680cdc48de4070039f16c1d65e5e69a474e90",
+    "OWNERSHIP.yaml": "eeea6d84d991ac6eed070b2805e4c4682bb09114d1f8ca806951fb08ea867378",
+    "contracts/openapi.json": "45b36620f2a9854c7e0ddb31b71a4a1a0c1264d5a5b7b4e5115c8a471c00928d",
+    "contracts/README.md": "6ce9d85bca2fd8b2f728858fc7ba42b2daeee912e4ee520f1e089426918c5fcc",
     "configs/frozen/strategy_contract.json": "c19329dbfa878766c9605f2045d48ef1f38ec9a5379ef25292bc432476c54d44",
     "verification/__init__.py": "29ed2219919a8f4162d35aa6dc7f1b4dc8618f6656af372962080fb524e0b72a",
-    "verification/cli.py": "c168cb08069d25607d6c34347e394c2d467a54cadf2a4f37892b5fc317bb05fc",
-    "verification/control/policy.json": "ac497e6c764dda6e4c5bb836316129946595b3b188b2ef6c74b5afdd1b789a57",
-    "verification/control/protected_paths.json": "fed91ebbf2548107c9cc9fca42f0cfb82b57fab2c03bae77fd748d1d82b5d1d5",
+    "verification/cli.py": "a1a11e3222604e4c7e08da7c3c830fe6f7de198c56c0e6c7089d89c0eada6dc0",
+    "verification/control/policy.json": "6d887feb5a82f7e5b2e68fb5cced67a8bea2ca4b0ec820957b0987bf03fd1754",
+    "verification/control/protected_paths.json": "4473474f3b8e4cd0acc473ec50d3d8a7d516f0d9e210409ed6ba5159904898b3",
     "verification/golden/contract_cases.json": "8e6e62322d33d958b4ce8aef41d853361d44bdd1b870c466ee78694b0945cce5",
     "verification/golden/negative_cases.json": "7c343733da983fc839f10f0105ac0c7cec03d97f4fe86833aaefbbb021e057ec",
-    "verification/harness.py": "12e61484f9aac93d5acfaca6f79142fe58ebbaa953f52e1a53ad4b761edb18e2",
-    "verification/status.py": "904c94664abfb196b81bdefc8ead6c401988496d24a47bf70fe3cf373e5f1da7",
+    "verification/harness.py": "490cdc1637fce345e8770195d86462031fe630d432a662902706af21a74bb31d",
+    "verification/status.py": "76a8dba37b12c44baed38296c084739ca28e06142b581fd7115788e7af55885b",
     "verification/tests/e2e/test_contract_acceptance.py": "ce43d5d9facd84dbe5fe7338f27f6e936bae9a589e6cb892d1c901fae428a9ff",
     "verification/tests/integration/test_contract_acceptance.py": "61065fb694862f9fbff08352ed713cb252cc9540a037111d9d9f34ff9eecfc24",
     "verification/tests/unit/test_contract_acceptance.py": "e6b7391f617fc1f27dff3f6a5f472898cabcaf3cecd3d68091d314826a280ec6",
-    "verification/README.md": "033e0f3e6fdd6afd97c0351a559b9cc4e4ea5c63c5cc26b633d852b171f7ec75"
+    "verification/tests/unit/test_parallel_governance_acceptance.py": "234910fd589c6f8b247a993eee67db6eb1e6e9ad43efba7b9bab43712d4161a3",
+    "verification/README.md": "bf4e20daa6f1b987525ede1de1408899dc20bd511fce3472bc3e2cb088fa0a72"
   }
 }

@@ -21,6 +21,7 @@ _REQUIRED_GATES = {
     "workspace_clean",
     "trusted_ref_separation",
     "policy_integrity",
+    "ownership_scope",
     "protected_scope",
     "protected_manifest",
     "test_integrity",

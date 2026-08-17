@@ -40,6 +40,7 @@ MANIFEST_REL = Path("verification/control/protected_manifest.json")
 GOLDEN_REL = Path("verification/golden/contract_cases.json")
 NEGATIVE_REL = Path("verification/golden/negative_cases.json")
 CONTRACT_REL = Path("configs/frozen/strategy_contract.json")
+OWNERSHIP_REL = Path("OWNERSHIP.yaml")
 
 
 @dataclass
@@ -475,6 +476,105 @@ def _scope_gate(trusted_repo: Path, candidate_repo: Path, trusted_ref: str, cand
     return GateResult("protected_scope", "PASS", "protected paths are unchanged", {"checked_paths": relevant})
 
 
+def _path_matches(path: str, patterns: Iterable[str]) -> bool:
+    """Match exact paths and directory prefixes from the ownership contract."""
+
+    for pattern in patterns:
+        normalized = str(pattern).replace("\\", "/")
+        if normalized.endswith("/"):
+            if path.startswith(normalized):
+                return True
+        elif path == normalized:
+            return True
+    return False
+
+
+def _changed_paths(
+    base_repo: Path,
+    base_ref: str,
+    candidate_repo: Path,
+    candidate_ref: str,
+) -> list[str]:
+    """Return content-level changes without trusting a candidate diff declaration."""
+
+    base_files = _tracked_files(base_repo, base_ref)
+    candidate_files = _tracked_files(candidate_repo, candidate_ref)
+    changed: list[str] = []
+    for relative in sorted(base_files | candidate_files):
+        try:
+            base_content = _git_bytes(base_repo, "show", f"{base_ref}:{relative}")
+        except VerificationFailure:
+            base_content = None
+        try:
+            candidate_content = _git_bytes(candidate_repo, "show", f"{candidate_ref}:{relative}")
+        except VerificationFailure:
+            candidate_content = None
+        if base_content != candidate_content:
+            changed.append(relative)
+    return changed
+
+
+def _ownership_gate(
+    trusted_repo: Path,
+    candidate_repo: Path,
+    trusted_ref: str,
+    candidate_sha: str,
+    candidate_role: str,
+) -> GateResult:
+    """Reject Candidate changes outside the trusted role ownership contract."""
+
+    ownership = _json_git_file(trusted_repo, trusted_ref, OWNERSHIP_REL.as_posix())
+    roles = ownership.get("roles")
+    if not isinstance(roles, Mapping) or candidate_role not in roles:
+        return GateResult(
+            "ownership_scope",
+            "BLOCKED",
+            "candidate role is not defined by the trusted ownership contract",
+            {"candidate_role": candidate_role, "known_roles": sorted(roles) if isinstance(roles, Mapping) else []},
+        )
+    role = roles[candidate_role]
+    read_only = ownership.get("protected_read_only")
+    write = role.get("write") if isinstance(role, Mapping) else None
+    forbidden = role.get("forbidden") if isinstance(role, Mapping) else None
+    if not isinstance(read_only, list) or not isinstance(write, list) or not isinstance(forbidden, list):
+        return GateResult(
+            "ownership_scope",
+            "BLOCKED",
+            "ownership contract path lists are malformed",
+            {"candidate_role": candidate_role},
+        )
+    if not all(isinstance(value, str) for values in (read_only, write, forbidden) for value in values):
+        return GateResult(
+            "ownership_scope",
+            "BLOCKED",
+            "ownership contract contains non-string path patterns",
+            {"candidate_role": candidate_role},
+        )
+
+    changed = _changed_paths(trusted_repo, trusted_ref, candidate_repo, candidate_sha)
+    violations: list[dict[str, str]] = []
+    for path in changed:
+        if _path_matches(path, read_only):
+            violations.append({"path": path, "reason": "protected_read_only"})
+        elif _path_matches(path, forbidden):
+            violations.append({"path": path, "reason": "role_forbidden"})
+        elif not _path_matches(path, write):
+            violations.append({"path": path, "reason": "outside_role_write_scope"})
+    if violations:
+        return GateResult(
+            "ownership_scope",
+            "BLOCKED",
+            "candidate changes exceed the trusted path ownership contract",
+            {"candidate_role": candidate_role, "changed_paths": changed, "violations": violations},
+        )
+    return GateResult(
+        "ownership_scope",
+        "PASS",
+        "candidate changes are within the trusted path ownership contract",
+        {"candidate_role": candidate_role, "changed_paths": changed, "write_scope": write},
+    )
+
+
 def _manifest_gate(trusted_repo: Path, candidate_repo: Path, trusted_ref: str, candidate_sha: str) -> GateResult:
     manifest = _json_git_file(trusted_repo, trusted_ref, MANIFEST_REL.as_posix())
     entries = manifest.get("entries")
@@ -542,6 +642,7 @@ def run_verification(
     candidate_repo: str | Path,
     trusted_ref: str,
     candidate_sha: str,
+    candidate_role: str,
     output_dir: str | Path,
     bootstrap: bool = False,
 ) -> tuple[int, Path]:
@@ -594,6 +695,7 @@ def run_verification(
         else:
             gates.append(GateResult("policy_integrity", "PASS", "trusted policy is fail-closed", {"policy_id": policy.get("policy_id")}))
 
+        gates.append(_ownership_gate(trusted_repo, candidate_repo, resolved_trusted_ref, resolved_candidate_sha, candidate_role))
         gates.append(_scope_gate(trusted_repo, candidate_repo, resolved_trusted_ref, resolved_candidate_sha, protected))
         gates.append(_manifest_gate(trusted_repo, candidate_repo, resolved_trusted_ref, resolved_candidate_sha))
         gates.append(_test_integrity_gate(trusted_repo, candidate_repo, policy))
@@ -726,6 +828,7 @@ def run_verification(
             "candidate_sha": resolved_candidate_sha,
             "verified_head_sha": candidate_head,
             "trusted_ref": resolved_trusted_ref,
+            "candidate_role": candidate_role,
             "trusted_head_sha": trusted_head,
             "verifier_version": VERIFIER_VERSION,
             "policy_id": policy.get("policy_id"),
@@ -781,6 +884,7 @@ def run_verification(
             "run_id": run_id,
             "candidate_sha": candidate_sha,
             "trusted_ref": trusted_ref,
+            "candidate_role": candidate_role,
             "verifier_version": VERIFIER_VERSION,
             "result": "BLOCKED",
             "status_transition": "UNVERIFIED",

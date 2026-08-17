@@ -1,0 +1,186 @@
+{
+  "$schema": "qqq-thermometer-strategy-contract/v1",
+  "contract_id": "qqq_thermometer_strategy_contract",
+  "contract_schema_version": "1.0.0",
+  "product": {
+    "name": "QQQ Thermometer Personal",
+    "mode": "local_paper_only",
+    "product_default_strategy_version": null,
+    "active_research_strategy_version": "v10_preserve_shock_recovery",
+    "default_version_status": "pending_user_approval"
+  },
+  "verification_contract": {
+    "portfolio_weight_tolerance": 1e-8,
+    "return_tolerance": 1e-10,
+    "price_tolerance": 1e-6,
+    "default_cost_bps": 5.0,
+    "stress_cost_bps": [10.0, 25.0, 50.0],
+    "signal_cutoff": "close",
+    "signal_delay_trading_days": 1,
+    "execution_must_be_next_trading_day": true,
+    "allow_short": false,
+    "execution_price_basis": null,
+    "price_basis": null,
+    "benchmark_cost_policy": null,
+    "unresolved_decisions": [
+      "product_default_strategy_version",
+      "execution_price_basis",
+      "price_basis",
+      "benchmark_cost_policy",
+      "paper_initial_capital",
+      "continuous_or_integer_weights"
+    ]
+  },
+  "assets": {
+    "QQQ": {
+      "asset_type": "ETF",
+      "roles": ["strategy", "benchmark"],
+      "tradable": true,
+      "notes": "Core growth ETF and primary comparison benchmark."
+    },
+    "QLD": {
+      "asset_type": "ETF",
+      "roles": ["strategy"],
+      "tradable": true,
+      "notes": "Daily 2x target product; path dependence must be disclosed."
+    },
+    "XLU": {
+      "asset_type": "ETF",
+      "roles": ["strategy"],
+      "tradable": true,
+      "notes": "Defensive equity candidate."
+    },
+    "IAU": {
+      "asset_type": "ETF",
+      "roles": ["strategy"],
+      "tradable": true,
+      "notes": "Gold defensive sleeve candidate."
+    },
+    "TLT": {
+      "asset_type": "ETF",
+      "roles": ["strategy"],
+      "tradable": true,
+      "notes": "Long-duration Treasury ETF; correlation is not assumed."
+    },
+    "BIL": {
+      "asset_type": "ETF",
+      "roles": ["strategy", "cash_proxy"],
+      "tradable": true,
+      "notes": "Cash proxy, not risk-free cash and not BOXX."
+    },
+    "VXX": {
+      "asset_type": "ETF",
+      "roles": ["strategy"],
+      "tradable": true,
+      "notes": "Short-term shock sleeve only in the current v10 research contract."
+    },
+    "SVXY": {
+      "asset_type": "ETF",
+      "roles": ["strategy_reference"],
+      "tradable": true,
+      "notes": "Not enabled by the current v10 candidate contract."
+    },
+    "VOO": {
+      "asset_type": "ETF",
+      "roles": ["benchmark"],
+      "tradable": true,
+      "notes": "Broad-market comparison benchmark."
+    },
+    "SPY": {
+      "asset_type": "ETF",
+      "roles": ["benchmark"],
+      "tradable": true,
+      "notes": "Optional broad-market comparison benchmark."
+    },
+    "VIX": {
+      "asset_type": "index",
+      "roles": ["signal"],
+      "tradable": false,
+      "notes": "Signal input only; never a target portfolio asset."
+    },
+    "VIX3M": {
+      "asset_type": "index",
+      "roles": ["signal"],
+      "tradable": false,
+      "notes": "Signal input only; never a target portfolio asset."
+    }
+  },
+  "strategy_versions": [
+    {
+      "version": "v10_preserve_shock_recovery",
+      "display_name": "v10 Preserve Shock Recovery",
+      "status": "research_candidate",
+      "implementation_state": "contract_only",
+      "strategy_family": "shock_recovery",
+      "states": ["warming", "normal", "shock", "recovery", "needs_review"],
+      "strategy_assets": ["QQQ", "QLD", "XLU", "IAU", "TLT", "BIL", "VXX"],
+      "benchmark_assets": ["QQQ", "VOO", "SPY"],
+      "weight_schema": {
+        "sum_target": 1.0,
+        "missing_asset_policy": "missing_means_zero",
+        "unknown_asset_policy": "reject",
+        "max_weights": {},
+        "max_weights_status": "pending_strategy_approval",
+        "warmup_default_weights": {"BIL": 1.0}
+      },
+      "timing": {
+        "signal_cutoff": "close",
+        "signal_uses_data_through_signal_date": true,
+        "execution_delay_trading_days": 1,
+        "execution_price_basis": null
+      },
+      "parameters": {
+        "shock_qqq_return_window_days": 5,
+        "shock_qqq_return_max": -0.05,
+        "shock_vix_min": 30.0,
+        "shock_vix_term_ratio_min": 1.0,
+        "recovery_confirmation_required": 2,
+        "recovery_confirmation_options": [
+          "qqq_short_term_rebound",
+          "qqq_above_ema10",
+          "qqq_realized_volatility_20d_declining"
+        ],
+        "medium_gate_trend_window_days": 150,
+        "medium_gate_momentum_window_days": 126,
+        "medium_gate_confirmation_days": 5,
+        "shock_min_hold_days": 5,
+        "recovery_min_hold_days": 15,
+        "svxy_direct_switch": false
+      },
+      "notes": [
+        "Research candidate only; not the product default.",
+        "VXX is restricted to the short-term shock sleeve by the current candidate contract.",
+        "Exact asset caps and target weights remain pending explicit strategy approval."
+      ]
+    },
+    {
+      "version": "final_regime_ensemble",
+      "display_name": "Final Regime Ensemble (Legacy Reference)",
+      "status": "legacy_reference",
+      "implementation_state": "reference_only",
+      "strategy_family": "regime_ensemble",
+      "states": ["warming", "green", "yellow", "red", "fast_guard", "needs_review"],
+      "strategy_assets": ["QQQ", "QLD", "XLU", "IAU", "TLT", "BIL", "SVXY"],
+      "benchmark_assets": ["QQQ", "VOO", "SPY"],
+      "weight_schema": {
+        "sum_target": 1.0,
+        "missing_asset_policy": "missing_means_zero",
+        "unknown_asset_policy": "reject",
+        "max_weights": {},
+        "max_weights_status": "reference_not_product_approved",
+        "warmup_default_weights": {"BIL": 1.0}
+      },
+      "timing": {
+        "signal_cutoff": "close",
+        "signal_uses_data_through_signal_date": true,
+        "execution_delay_trading_days": 1,
+        "execution_price_basis": null
+      },
+      "parameters": {},
+      "notes": [
+        "Historical baseline only; must not be silently renamed to v10.",
+        "This registry entry does not authorize product use or live trading."
+      ]
+    }
+  ]
+}

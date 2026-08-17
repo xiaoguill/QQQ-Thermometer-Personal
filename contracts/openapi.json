@@ -1,0 +1,350 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "QQQ Thermometer Personal Read API",
+    "version": "0.1.0",
+    "description": "冻结的个人本地 paper-only 查询契约。它定义前端可消费的结果，不授权真实交易。"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8765",
+      "description": "个人本地服务或演示入口"
+    }
+  ],
+  "x-qqq-contract": {
+    "schema": "qqq-api-contract/v1",
+    "contract_version": "1.0.0",
+    "mode": "local_paper_only",
+    "frozen_by": "Trusted Verification Baseline",
+    "builder_rule": "Frontend and backend builders may read this contract but may not change it in a normal Candidate."
+  },
+  "paths": {
+    "/api/thermometer/latest": {
+      "get": {
+        "operationId": "getThermometerLatest",
+        "responses": {
+          "200": { "$ref": "#/components/responses/ThermometerLatest" },
+          "default": { "$ref": "#/components/responses/ApiError" }
+        }
+      }
+    },
+    "/api/thermometer/history": {
+      "get": {
+        "operationId": "getThermometerHistory",
+        "parameters": [
+          { "$ref": "#/components/parameters/FromDate" },
+          { "$ref": "#/components/parameters/ToDate" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/ThermometerHistory" },
+          "default": { "$ref": "#/components/responses/ApiError" }
+        }
+      }
+    },
+    "/api/signals/explain": {
+      "get": {
+        "operationId": "explainSignals",
+        "parameters": [{ "$ref": "#/components/parameters/AsOfDate" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/SignalExplanation" },
+          "default": { "$ref": "#/components/responses/ApiError" }
+        }
+      }
+    },
+    "/api/triggers/next": {
+      "get": {
+        "operationId": "getNextTriggers",
+        "responses": {
+          "200": { "$ref": "#/components/responses/TriggerList" },
+          "default": { "$ref": "#/components/responses/ApiError" }
+        }
+      }
+    },
+    "/api/portfolio/targets": {
+      "get": {
+        "operationId": "getPortfolioTargets",
+        "parameters": [{ "$ref": "#/components/parameters/AsOfDate" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/TargetSnapshot" },
+          "default": { "$ref": "#/components/responses/ApiError" }
+        }
+      }
+    },
+    "/api/portfolio/latest": {
+      "get": {
+        "operationId": "getPortfolioLatest",
+        "responses": {
+          "200": { "$ref": "#/components/responses/PortfolioSnapshot" },
+          "default": { "$ref": "#/components/responses/ApiError" }
+        }
+      }
+    },
+    "/api/portfolio/ledger": {
+      "get": {
+        "operationId": "getPaperLedger",
+        "parameters": [
+          { "$ref": "#/components/parameters/FromDate" },
+          { "$ref": "#/components/parameters/ToDate" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Ledger" },
+          "default": { "$ref": "#/components/responses/ApiError" }
+        }
+      }
+    },
+    "/api/performance/curve": {
+      "get": {
+        "operationId": "getPerformanceCurve",
+        "parameters": [{ "$ref": "#/components/parameters/AsOfDate" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/PerformanceCurve" },
+          "default": { "$ref": "#/components/responses/ApiError" }
+        }
+      }
+    },
+    "/api/performance/metrics": {
+      "get": {
+        "operationId": "getPerformanceMetrics",
+        "parameters": [{ "$ref": "#/components/parameters/AsOfDate" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/PerformanceMetrics" },
+          "default": { "$ref": "#/components/responses/ApiError" }
+        }
+      }
+    },
+    "/api/data-quality/latest": {
+      "get": {
+        "operationId": "getLatestDataQuality",
+        "responses": {
+          "200": { "$ref": "#/components/responses/DataQuality" },
+          "default": { "$ref": "#/components/responses/ApiError" }
+        }
+      }
+    },
+    "/api/versions": {
+      "get": {
+        "operationId": "getVersions",
+        "responses": {
+          "200": { "$ref": "#/components/responses/VersionList" },
+          "default": { "$ref": "#/components/responses/ApiError" }
+        }
+      }
+    },
+    "/api/paper/confirm": {
+      "post": {
+        "operationId": "confirmPaperObservation",
+        "description": "只记录纸上观察或人工确认；不得创建券商订单。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/PaperConfirmationRequest" } }
+          }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/PaperConfirmation" },
+          "400": { "$ref": "#/components/responses/ApiError" },
+          "409": { "$ref": "#/components/responses/ApiError" },
+          "default": { "$ref": "#/components/responses/ApiError" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "FromDate": {
+        "name": "from",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "string", "format": "date" }
+      },
+      "ToDate": {
+        "name": "to",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "string", "format": "date" }
+      },
+      "AsOfDate": {
+        "name": "as_of",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "string", "format": "date" }
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "integer", "minimum": 1, "maximum": 500, "default": 100 }
+      }
+    },
+    "responses": {
+      "ThermometerLatest": {
+        "description": "Latest thermometer state",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ThermometerLatestResponse" } } }
+      },
+      "ThermometerHistory": {
+        "description": "Historical thermometer states",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ThermometerHistoryResponse" } } }
+      },
+      "SignalExplanation": {
+        "description": "Signal evidence and reason codes",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SignalExplanationResponse" } } }
+      },
+      "TriggerList": {
+        "description": "Next rule-defined triggers",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TriggerListResponse" } } }
+      },
+      "TargetSnapshot": {
+        "description": "Paper target weights",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TargetSnapshotResponse" } } }
+      },
+      "PortfolioSnapshot": {
+        "description": "Latest paper portfolio snapshot",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PortfolioSnapshotResponse" } } }
+      },
+      "Ledger": {
+        "description": "Append-only paper ledger events",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LedgerResponse" } } }
+      },
+      "PerformanceCurve": {
+        "description": "Paper performance curve",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PerformanceCurveResponse" } } }
+      },
+      "PerformanceMetrics": {
+        "description": "Paper performance metrics",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PerformanceMetricsResponse" } } }
+      },
+      "DataQuality": {
+        "description": "Latest data quality state",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataQualityResponse" } } }
+      },
+      "VersionList": {
+        "description": "Strategy and runtime versions",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VersionListResponse" } } }
+      },
+      "PaperConfirmation": {
+        "description": "Recorded paper-only observation",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PaperConfirmationResponse" } } }
+      },
+      "ApiError": {
+        "description": "Fail-closed API error",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorResponse" } } }
+      }
+    },
+    "schemas": {
+      "ApiMetadata": {
+        "type": "object",
+        "required": ["contract_version", "strategy_version", "as_of", "signal_date", "execution_date", "data_quality", "run_id"],
+        "properties": {
+          "contract_version": { "type": "string", "const": "1.0.0" },
+          "strategy_version": { "type": "string", "minLength": 1 },
+          "as_of": { "type": "string", "format": "date-time" },
+          "signal_date": { "type": "string", "format": "date" },
+          "execution_date": { "type": ["string", "null"], "format": "date" },
+          "data_quality": { "$ref": "#/components/schemas/DataQualityState" },
+          "run_id": { "type": "string", "minLength": 1 },
+          "code_version": { "type": "string", "minLength": 1 },
+          "data_version": { "type": "string", "minLength": 1 },
+          "evidence_ref": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      },
+      "DataQualityState": {
+        "type": "string",
+        "enum": ["ok", "stale", "partial", "failed", "needs_review"]
+      },
+      "TargetWeights": {
+        "type": "object",
+        "description": "Backend-produced target weights; frontend cannot override them.",
+        "additionalProperties": { "type": "number", "minimum": 0 }
+      },
+      "ThermometerState": {
+        "type": "string",
+        "enum": ["warming", "normal", "shock", "recovery", "needs_review", "green", "yellow", "red", "fast_guard"]
+      },
+      "ThermometerSnapshot": {
+        "type": "object",
+        "required": ["state", "temperature", "trend", "signal_agreement", "reason_codes", "target_weights"],
+        "properties": {
+          "state": { "$ref": "#/components/schemas/ThermometerState" },
+          "temperature": { "type": ["number", "null"] },
+          "trend": { "type": ["string", "null"] },
+          "signal_agreement": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+          "reason_codes": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "target_weights": { "$ref": "#/components/schemas/TargetWeights" }
+        },
+        "additionalProperties": false
+      },
+      "ThermometerLatestResponse": {
+        "type": "object",
+        "required": ["meta", "data"],
+        "properties": { "meta": { "$ref": "#/components/schemas/ApiMetadata" }, "data": { "$ref": "#/components/schemas/ThermometerSnapshot" } },
+        "additionalProperties": false
+      },
+      "ThermometerHistoryResponse": {
+        "type": "object",
+        "required": ["meta", "data"],
+        "properties": { "meta": { "$ref": "#/components/schemas/ApiMetadata" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/ThermometerSnapshot" } } },
+        "additionalProperties": false
+      },
+      "SignalExplanationResponse": {
+        "type": "object",
+        "required": ["meta", "data"],
+        "properties": { "meta": { "$ref": "#/components/schemas/ApiMetadata" }, "data": { "type": "object", "required": ["reason_codes", "indicators"], "properties": { "reason_codes": { "type": "array", "items": { "type": "string" } }, "indicators": { "type": "object" } }, "additionalProperties": false } },
+        "additionalProperties": false
+      },
+      "TriggerListResponse": { "$ref": "#/components/schemas/GenericArrayResponse" },
+      "TargetSnapshotResponse": {
+        "type": "object",
+        "required": ["meta", "data"],
+        "properties": { "meta": { "$ref": "#/components/schemas/ApiMetadata" }, "data": { "type": "object", "required": ["target_weights"], "properties": { "target_weights": { "$ref": "#/components/schemas/TargetWeights" } }, "additionalProperties": false } },
+        "additionalProperties": false
+      },
+      "PortfolioSnapshotResponse": { "$ref": "#/components/schemas/GenericObjectResponse" },
+      "LedgerResponse": { "$ref": "#/components/schemas/GenericArrayResponse" },
+      "PerformanceCurveResponse": { "$ref": "#/components/schemas/GenericArrayResponse" },
+      "PerformanceMetricsResponse": { "$ref": "#/components/schemas/GenericObjectResponse" },
+      "DataQualityResponse": {
+        "type": "object",
+        "required": ["meta", "data"],
+        "properties": { "meta": { "$ref": "#/components/schemas/ApiMetadata" }, "data": { "type": "object", "required": ["status", "issues"], "properties": { "status": { "$ref": "#/components/schemas/DataQualityState" }, "issues": { "type": "array", "items": { "type": "string" } } }, "additionalProperties": false } },
+        "additionalProperties": false
+      },
+      "VersionListResponse": { "$ref": "#/components/schemas/GenericArrayResponse" },
+      "GenericArrayResponse": {
+        "type": "object",
+        "required": ["meta", "data"],
+        "properties": { "meta": { "$ref": "#/components/schemas/ApiMetadata" }, "data": { "type": "array", "items": { "type": "object" } } },
+        "additionalProperties": false
+      },
+      "GenericObjectResponse": {
+        "type": "object",
+        "required": ["meta", "data"],
+        "properties": { "meta": { "$ref": "#/components/schemas/ApiMetadata" }, "data": { "type": "object" } },
+        "additionalProperties": false
+      },
+      "PaperConfirmationRequest": {
+        "type": "object",
+        "required": ["idempotency_key", "observation_date", "decision"],
+        "properties": {
+          "idempotency_key": { "type": "string", "minLength": 1 },
+          "observation_date": { "type": "string", "format": "date" },
+          "decision": { "type": "string", "enum": ["confirm", "pause", "review"] },
+          "note": { "type": ["string", "null"], "maxLength": 2000 }
+        },
+        "additionalProperties": false
+      },
+      "PaperConfirmationResponse": { "$ref": "#/components/schemas/GenericObjectResponse" },
+      "ApiErrorResponse": {
+        "type": "object",
+        "required": ["error", "meta"],
+        "properties": {
+          "error": { "type": "object", "required": ["code", "message"], "properties": { "code": { "type": "string", "minLength": 1 }, "message": { "type": "string", "minLength": 1 }, "details": { "type": "object" } }, "additionalProperties": false },
+          "meta": { "$ref": "#/components/schemas/ApiMetadata" }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
