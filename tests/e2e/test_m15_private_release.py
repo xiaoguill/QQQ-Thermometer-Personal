@@ -9,7 +9,6 @@ import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
-from unittest.mock import patch
 
 from src.api import ApiAccessPolicy, create_app, create_http_server
 import src.api.http_server as http_server_module
@@ -293,12 +292,16 @@ class M15PrivateReleaseE2ETests(unittest.TestCase):
                     def server_close(self):
                         return None
 
-                with patch.object(http_server_module, "ThreadingHTTPServer", FakeServer):
+                original_server = http_server_module.ThreadingHTTPServer
+                http_server_module.ThreadingHTTPServer = FakeServer
+                try:
                     server = create_http_server(app, host="127.0.0.1", port=0)
                     try:
                         self.assertEqual(server.server_address[0], "127.0.0.1")
                     finally:
                         server.server_close()
+                finally:
+                    http_server_module.ThreadingHTTPServer = original_server
             finally:
                 store.close()
 
