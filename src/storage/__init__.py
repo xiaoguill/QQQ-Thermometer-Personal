@@ -48,23 +48,36 @@ from .sqlite_store import (
     StorageValidationError,
     StoredRecord,
 )
-from .paper_portfolio import (
-    PAPER_EXECUTION_IMPLEMENTATION_VERSION,
-    PAPER_LEDGER_EVENT_SCHEMA,
-    PAPER_PORTFOLIO_SCHEMA,
-    PAPER_RECONCILIATION_SCHEMA,
-    PAPER_STATUS,
-    PaperDayInput,
-    PaperDayResult,
-    PaperExecutionConfig,
-    PaperInputError,
-    PaperPortfolioError,
-    PaperPortfolioService,
-    PaperPortfolioState,
-    PaperPrice,
-    PaperReconciliation,
-    PaperReconciliationError,
-)
+_PAPER_EXPORTS = {
+    "PAPER_EXECUTION_IMPLEMENTATION_VERSION",
+    "PAPER_LEDGER_EVENT_SCHEMA",
+    "PAPER_PORTFOLIO_SCHEMA",
+    "PAPER_RECONCILIATION_SCHEMA",
+    "PAPER_STATUS",
+    "PaperDayInput",
+    "PaperDayResult",
+    "PaperExecutionConfig",
+    "PaperInputError",
+    "PaperPortfolioError",
+    "PaperPortfolioService",
+    "PaperPortfolioState",
+    "PaperPrice",
+    "PaperReconciliation",
+    "PaperReconciliationError",
+}
+
+
+def __getattr__(name):
+    """Load M09 only when requested, avoiding a domain/storage import cycle."""
+
+    if name in _PAPER_EXPORTS:
+        from importlib import import_module
+
+        module = import_module(".paper_portfolio", __name__)
+        value = getattr(module, name)
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
     "DEFAULT_PRICE_FIELD_MAPPING",
