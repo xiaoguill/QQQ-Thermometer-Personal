@@ -149,6 +149,15 @@
       "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml", "docs/PERSONAL_USE_GOVERNANCE.md", "verification/control/policy.json"]
     },
     {
+      "path": "tasks/M09.json",
+      "doc_id": "QQQ-TASK-M09",
+      "type": "task_contract",
+      "status": "approved",
+      "authority": "L3",
+      "read_when": ["M09", "data_pipeline", "paper_portfolio", "paper_ledger", "shadow"],
+      "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml", "tasks/M08.json", "docs/PERSONAL_USE_GOVERNANCE.md", "verification/control/policy.json"]
+    },
+    {
       "path": "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
       "doc_id": "QQQ-GOV-VERIFICATION-001",
       "type": "normative_governance",
