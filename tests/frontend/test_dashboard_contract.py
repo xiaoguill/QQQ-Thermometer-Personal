@@ -82,6 +82,12 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("clearRenderedCollections", runtime)
         self.assertIn("UNAVAILABLE_METADATA", runtime)
 
+    def test_repeated_quality_labels_update_together(self) -> None:
+        html = (DASHBOARD / "index.html").read_text(encoding="utf-8")
+        runtime = (DASHBOARD / "dashboard.mjs").read_text(encoding="utf-8")
+        self.assertGreaterEqual(html.count("data-quality-value"), 2)
+        self.assertIn("document.querySelectorAll(selector)", runtime)
+
     def test_responsive_and_state_semantics_exist(self) -> None:
         css = (DASHBOARD / "styles.css").read_text(encoding="utf-8")
         self.assertIn(":focus-visible", css)

@@ -11,8 +11,9 @@ function query(selector) {
 }
 
 function setText(selector, value) {
-  const element = query(selector);
-  if (element) element.textContent = value;
+  document.querySelectorAll(selector).forEach((element) => {
+    element.textContent = value;
+  });
 }
 
 function clear(element) {
