@@ -20,6 +20,7 @@
     "tasks/M11.json",
     "tasks/M12.json",
     "tasks/M13.json",
+    "tasks/M14.json",
     "contracts/openapi.json",
     "contracts/README.md",
     "configs/frozen/strategy_contract.json",

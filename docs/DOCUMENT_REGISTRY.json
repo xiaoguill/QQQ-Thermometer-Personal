@@ -194,6 +194,15 @@
       "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml", "contracts/openapi.json", "tasks/M12.json", "verification/control/policy.json"]
     },
     {
+      "path": "tasks/M14.json",
+      "doc_id": "QQQ-TASK-M14",
+      "type": "task_contract",
+      "status": "approved",
+      "authority": "L3",
+      "read_when": ["M14", "frontend", "replay", "performance", "drawdown", "audit"],
+      "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml", "contracts/openapi.json", "tasks/M13.json", "verification/control/policy.json"]
+    },
+    {
       "path": "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
       "doc_id": "QQQ-GOV-VERIFICATION-001",
       "type": "normative_governance",
