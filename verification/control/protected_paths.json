@@ -7,6 +7,7 @@
     "docs/DOCUMENT_REGISTRY.json",
     "tasks/README.md",
     "tasks/M00.5.json",
+    "tasks/M01.json",
     "contracts/openapi.json",
     "contracts/README.md",
     "configs/frozen/strategy_contract.json",
