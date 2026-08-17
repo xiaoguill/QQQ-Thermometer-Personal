@@ -226,6 +226,51 @@ class JobOrchestratorIntegrationTests(unittest.TestCase):
         self.assertTrue(second_result[0].idempotent)
         self.assertEqual(calls, ["refresh", "calculate", "simulate", "publish"])
 
+    def test_separate_sqlite_instances_serialize_same_key_across_threads(self):
+        database_path = self.root / "separate-instances.sqlite"
+        request = self._request(key="job-separate-instances")
+        calls = []
+        results = []
+        errors = []
+        start = threading.Barrier(2)
+        bootstrap_store = SQLiteStore(database_path, allowed_root=self.root).initialize()
+        bootstrap_store.close()
+
+        def worker(label):
+            store = SQLiteStore(database_path, allowed_root=self.root).initialize()
+            repository = SQLiteRepository(store)
+            try:
+                runner = JobOrchestrator(
+                    repository,
+                    self._stages(calls),
+                    run_id_factory=lambda: f"run-m11-instance-{label}",
+                )
+                start.wait(2.0)
+                results.append(runner.run(request))
+            except Exception as exc:  # surfaced below as a test failure
+                errors.append(exc)
+            finally:
+                store.close()
+
+        threads = [threading.Thread(target=worker, args=(label,)) for label in ("a", "b")]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(5.0)
+
+        self.assertFalse(any(thread.is_alive() for thread in threads))
+        self.assertEqual(errors, [])
+        self.assertEqual(len(results), 2)
+        self.assertEqual({item.run_id for item in results}, {results[0].run_id})
+        self.assertEqual(sorted(item.idempotent for item in results), [False, True])
+        self.assertEqual([item[0] for item in calls], ["refresh", "calculate", "simulate", "publish"])
+        verification_store = SQLiteStore(database_path, allowed_root=self.root).initialize()
+        try:
+            verification_repository = SQLiteRepository(verification_store)
+            self.assertEqual(verification_repository.count("run"), 9)
+        finally:
+            verification_store.close()
+
     def test_request_validation_is_bounded_and_requires_manifest_hashes(self):
         with self.assertRaises(JobValidationError):
             self._request(input_manifest={})

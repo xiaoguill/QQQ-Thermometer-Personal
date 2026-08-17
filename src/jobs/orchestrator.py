@@ -12,12 +12,14 @@ import copy
 import hashlib
 import json
 import math
+import os
 import re
 import threading
 import time
 import uuid
 from dataclasses import dataclass, replace
 from datetime import date, datetime, timezone
+from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from src.storage.sqlite_store import SQLiteRepository, StoredRecord
@@ -39,6 +41,7 @@ _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _MAX_MANIFEST_ENTRIES = 128
 _MAX_SCAN_RECORDS = 10_000
 _MAX_TIMEOUT_SECONDS = 3_600.0
+_RUN_LOCK_TIMEOUT_SECONDS = 30.0
 
 
 class JobError(RuntimeError):
@@ -362,6 +365,77 @@ def _new_run_id() -> str:
     return f"run-{uuid.uuid4().hex}"
 
 
+class _RepositoryRunLock:
+    """Bounded local file lock for cross-instance SQLite idempotency."""
+
+    def __init__(self, database_path: str, *, timeout_seconds: float = _RUN_LOCK_TIMEOUT_SECONDS) -> None:
+        self._database_path = database_path
+        self._timeout_seconds = timeout_seconds
+        self._lock_path = None if database_path == ":memory:" else Path(f"{database_path}.m11.lock")
+        self._file_descriptor: int | None = None
+        self._windows_locked = False
+
+    def __enter__(self) -> "_RepositoryRunLock":
+        if self._lock_path is None:
+            return self
+        self._lock_path.parent.mkdir(parents=True, exist_ok=True)
+        self._file_descriptor = os.open(str(self._lock_path), os.O_CREAT | os.O_RDWR)
+        descriptor = self._file_descriptor
+        if os.fstat(descriptor).st_size == 0:
+            os.write(descriptor, b"0")
+        os.lseek(descriptor, 0, os.SEEK_SET)
+        deadline = time.monotonic() + self._timeout_seconds
+        if os.name == "nt":
+            import msvcrt
+
+            while True:
+                try:
+                    os.lseek(descriptor, 0, os.SEEK_SET)
+                    msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
+                    self._windows_locked = True
+                    break
+                except OSError as exc:
+                    if time.monotonic() >= deadline:
+                        self._close()
+                        raise JobConcurrencyError("local run lock was not acquired within the bounded wait") from exc
+                    time.sleep(0.01)
+        else:
+            import fcntl
+
+            while True:
+                try:
+                    fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except OSError as exc:
+                    if time.monotonic() >= deadline:
+                        self._close()
+                        raise JobConcurrencyError("local run lock was not acquired within the bounded wait") from exc
+                    time.sleep(0.01)
+        return self
+
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+        if self._file_descriptor is None:
+            return
+        descriptor = self._file_descriptor
+        try:
+            if os.name == "nt" and self._windows_locked:
+                import msvcrt
+
+                os.lseek(descriptor, 0, os.SEEK_SET)
+                msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
+            elif os.name != "nt":
+                import fcntl
+
+                fcntl.flock(descriptor, fcntl.LOCK_UN)
+        finally:
+            self._close()
+
+    def _close(self) -> None:
+        if self._file_descriptor is not None:
+            os.close(self._file_descriptor)
+            self._file_descriptor = None
+
+
 class JobOrchestrator:
     """Run the fixed M11 pipeline with durable, append-only state."""
 
@@ -421,7 +495,8 @@ class JobOrchestrator:
 
         result: JobRunResult | None = None
         try:
-            result = self._execute(request)
+            with _RepositoryRunLock(self.repository.store.path):
+                result = self._execute(request)
             return result
         finally:
             with self._condition:
