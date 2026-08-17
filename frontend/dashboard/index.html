@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a1020" />
+    <title>Northstar · Dashboard</title>
+    <link rel="stylesheet" href="../shell/tokens.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#dashboard-main">跳到主要内容</a>
+    <div class="dashboard-app" data-dashboard-root data-api-base="/api" data-mode="SIMULATED">
+      <header class="dashboard-header">
+        <div class="brand-lockup">
+          <a class="brand-mark" href="../shell/index.html" aria-label="返回状态壳层">N</a>
+          <div><p class="eyebrow">PRIVATE RESEARCH</p><p class="brand-name">Northstar</p></div>
+        </div>
+        <nav class="top-nav" aria-label="研究台导航">
+          <a href="../shell/index.html">状态壳层</a>
+          <a href="./index.html" aria-current="page">Dashboard</a>
+        </nav>
+        <div class="header-meta" aria-label="当前显示模式">
+          <span class="mode-pill"><span aria-hidden="true">◆</span><span data-mode-label>SIMULATED</span></span>
+          <span class="quality-pill">数据质量：<strong data-quality-value>正常</strong></span>
+        </div>
+      </header>
+
+      <main id="dashboard-main" class="dashboard-main">
+        <section class="intro" aria-labelledby="dashboard-title">
+          <div>
+            <p class="kicker">M13 · DASHBOARD / SIGNAL EXPLANATION</p>
+            <h1 id="dashboard-title">市场状态总览</h1>
+            <p class="intro-copy">展示后端返回的状态、证据和目标仓位。页面不重新计算策略，也不把信号一致度解释成概率或收益承诺。</p>
+          </div>
+          <button class="primary-button" type="button" data-action="load-live">读取同源 API</button>
+        </section>
+
+        <section class="fixture-bar" aria-label="模拟数据夹具">
+          <span class="fixture-label">SIMULATED fixture</span>
+          <button type="button" data-fixture="normal" aria-pressed="true">正常</button>
+          <button type="button" data-fixture="shock" aria-pressed="false">冲击</button>
+          <button type="button" data-fixture="recovery" aria-pressed="false">恢复</button>
+          <button type="button" data-fixture="needs_review" aria-pressed="false">待复核</button>
+          <button type="button" data-fixture="partial" aria-pressed="false">部分数据</button>
+          <button type="button" data-fixture="failed" aria-pressed="false">失败</button>
+        </section>
+
+        <p class="dashboard-status" data-dashboard-status role="status">SIMULATED · 状态字段来自后端响应；确认状态不由前端推断。</p>
+
+        <section class="hero-grid" aria-label="当前状态与信号摘要">
+          <article class="state-panel state-tone-confirmed" data-state-panel>
+            <div class="panel-head"><div><p class="card-label">当前状态</p><h2 data-state-label>正常</h2></div><code data-state-key>normal</code></div>
+            <div class="state-body">
+              <div class="temperature-ring" role="img" aria-label="后端返回的风险温度" data-temperature-fill><div><strong data-temperature-value>72.0</strong><span>/ 后端值</span></div></div>
+              <div class="state-copy"><p>趋势</p><strong data-trend-value>bullish</strong><p class="state-note">状态标签与温度数值分别来自 API；前端不根据状态补算温度。</p></div>
+            </div>
+            <div class="state-footer"><span>确认状态：<strong data-confirmation-value>未提供</strong></span><span data-confirmation-note>当前 API 契约未声明 confirmation_status。</span></div>
+          </article>
+
+          <article class="surface-card signal-card">
+            <div class="panel-head"><div><p class="card-label">Signal Explanation</p><h2>信号证据摘要</h2></div><span class="evidence-badge" data-explanation-status>后端证据已返回</span></div>
+            <div class="agreement-row"><div><span>信号一致度</span><strong data-agreement-value>80.0%</strong></div><div class="agreement-track" aria-hidden="true"><span data-agreement-fill></span></div></div>
+            <p class="disclaimer">一致度只描述返回信号的方向一致程度，不是概率、胜率或未来收益预测。</p>
+            <h3>Reason codes</h3>
+            <ul class="code-list" data-reason-list></ul>
+          </article>
+        </section>
+
+        <section class="content-grid" aria-label="目标仓位与指标证据">
+          <article class="surface-card allocation-card">
+            <div class="panel-head"><div><p class="card-label">Backend-produced target weights</p><h2>目标仓位</h2></div><span class="provenance-chip">只读</span></div>
+            <p class="card-note">数值直接来自当前状态响应；不会在浏览器归一化、覆盖或生成仓位。</p>
+            <ul class="weight-list" data-weight-list></ul>
+            <div class="allocation-foot"><span>返回总和：<strong data-weight-total>1.000</strong></span><span data-invalid-weight-count>无效项：0</span></div>
+          </article>
+
+          <article class="surface-card indicator-card">
+            <div class="panel-head"><div><p class="card-label">Evidence fields</p><h2>指标证据</h2></div><span class="provenance-chip">API 原值</span></div>
+            <p class="card-note">仅展示后端返回的指标对象；缺失字段保持缺失，不由前端补算。</p>
+            <ul class="indicator-list" data-indicator-list></ul>
+          </article>
+        </section>
+
+        <section class="lower-grid" aria-label="质量与可追溯信息">
+          <article class="surface-card quality-card" data-quality-panel>
+            <div class="panel-head"><div><p class="card-label">Data quality</p><h2>数据质量</h2></div><code data-quality-key>ok</code></div>
+            <p class="quality-summary">当前状态：<strong data-quality-value>正常</strong></p>
+            <ul class="issue-list" data-quality-issues></ul>
+            <p class="quality-missing" data-missing-fields>必需字段已返回</p>
+          </article>
+          <article class="surface-card provenance-card">
+            <div class="panel-head"><div><p class="card-label">Traceability</p><h2>版本与时间</h2></div><span class="provenance-chip">可追溯</span></div>
+            <dl class="metadata-grid" data-metadata-grid></dl>
+          </article>
+        </section>
+
+        <aside class="boundary-notice" aria-label="确认状态边界">
+          <span class="notice-icon" aria-hidden="true">i</span>
+          <div><strong>确认状态边界</strong><p>冻结 API v1.0.0 当前没有 `confirmation_status` 字段。即使 signal_date、execution_date 和 data_quality 存在，本页面也只显示“未提供”，不会把它们推断为 confirmed 或 provisional。</p></div>
+        </aside>
+
+        <footer class="dashboard-footer"><span>Northstar Personal Research · M13 · <strong>SIMULATED</strong> fixture 可切换</span><span>只读监控 · 无纸上确认 · 无券商连接</span></footer>
+      </main>
+    </div>
+    <script type="module" src="./dashboard.mjs"></script>
+  </body>
+</html>
