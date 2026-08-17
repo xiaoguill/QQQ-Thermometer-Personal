@@ -4,6 +4,7 @@ from .contracts import (
     DEFAULT_CONTRACT_PATH,
     ContractError,
     StrategyContractRegistry,
+    StrategyVersionContract,
     load_contract,
 )
 from .policy import STRATEGY_VERSION, generate_target_snapshot
@@ -12,6 +13,7 @@ __all__ = [
     "DEFAULT_CONTRACT_PATH",
     "ContractError",
     "StrategyContractRegistry",
+    "StrategyVersionContract",
     "load_contract",
     "STRATEGY_VERSION",
     "generate_target_snapshot",

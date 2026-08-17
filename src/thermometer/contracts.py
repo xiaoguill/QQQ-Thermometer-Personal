@@ -181,6 +181,106 @@ def _validate_strategy_version(strategy: Mapping[str, Any], assets: Mapping[str,
 
 
 @dataclass(frozen=True)
+class StrategyVersionContract:
+    """Read-only, version-scoped contract view for machine consumers.
+
+    The frozen JSON remains the only source of strategy truth.  This view adds
+    a deterministic hash and explicit schemas without copying strategy rules
+    into the UI, API, or execution layers.
+    """
+
+    _raw: Mapping[str, Any]
+    config_hash: str
+
+    @property
+    def version(self) -> str:
+        return str(self._raw["version"])
+
+    @property
+    def display_name(self) -> str:
+        return str(self._raw["display_name"])
+
+    @property
+    def status(self) -> str:
+        return str(self._raw["status"])
+
+    @property
+    def implementation_state(self) -> str:
+        return str(self._raw["implementation_state"])
+
+    @property
+    def strategy_family(self) -> str:
+        return str(self._raw["strategy_family"])
+
+    @property
+    def states(self) -> tuple[str, ...]:
+        return tuple(self._raw["states"])
+
+    @property
+    def strategy_assets(self) -> tuple[str, ...]:
+        return tuple(self._raw["strategy_assets"])
+
+    @property
+    def benchmark_assets(self) -> tuple[str, ...]:
+        return tuple(self._raw["benchmark_assets"])
+
+    @property
+    def state_schema(self) -> dict[str, Any]:
+        return {
+            "type": "string",
+            "enum": list(self.states),
+        }
+
+    @property
+    def asset_schema(self) -> dict[str, Any]:
+        return {
+            "strategy_assets": list(self.strategy_assets),
+            "benchmark_assets": list(self.benchmark_assets),
+        }
+
+    @property
+    def weight_schema(self) -> dict[str, Any]:
+        return copy.deepcopy(dict(self._raw["weight_schema"]))
+
+    @property
+    def timing(self) -> dict[str, Any]:
+        return copy.deepcopy(dict(self._raw["timing"]))
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        return copy.deepcopy(dict(self._raw["parameters"]))
+
+    @property
+    def signal_execution_schema(self) -> dict[str, Any]:
+        timing = self._raw["timing"]
+        return {
+            "signal_date": {
+                "type": "string",
+                "format": "date",
+                "cutoff": timing["signal_cutoff"],
+                "uses_data_through": "signal_date",
+            },
+            "execution_date": {
+                "type": "string",
+                "format": "date",
+                "rule": "after_signal_date",
+                "delay_trading_days": timing["execution_delay_trading_days"],
+                "price_basis": timing["execution_price_basis"],
+            },
+        }
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a defensive, JSON-serializable version contract snapshot."""
+
+        result = copy.deepcopy(dict(self._raw))
+        result["config_hash"] = self.config_hash
+        result["state_schema"] = self.state_schema
+        result["asset_schema"] = self.asset_schema
+        result["signal_execution_schema"] = self.signal_execution_schema
+        return result
+
+
+@dataclass(frozen=True)
 class StrategyContractRegistry:
     """Validated read-only view over the strategy contract registry."""
 
@@ -212,6 +312,27 @@ class StrategyContractRegistry:
             if strategy["version"] == version:
                 return strategy
         raise ContractError(f"unknown strategy version: {version}")
+
+    def get_version_contract(self, version: str) -> StrategyVersionContract:
+        """Return the deterministic machine contract for one registered version."""
+
+        strategy = self.get_strategy(version)
+        strategy_copy = copy.deepcopy(dict(strategy))
+        return StrategyVersionContract(strategy_copy, _sha256(strategy_copy))
+
+    def version_contract(self, version: str) -> StrategyVersionContract:
+        """Alias that reads naturally at call sites consuming a version contract."""
+
+        return self.get_version_contract(version)
+
+    def strategy_config_hash(self, version: str) -> str:
+        return self.get_version_contract(version).config_hash
+
+    def version_config_hash(self, version: str) -> str:
+        return self.strategy_config_hash(version)
+
+    def signal_execution_schema(self, version: str) -> dict[str, Any]:
+        return self.get_version_contract(version).signal_execution_schema
 
     def validate_weights(self, version: str, weights: Mapping[str, Any]) -> dict[str, float]:
         strategy = self.get_strategy(version)
@@ -256,9 +377,21 @@ class StrategyContractRegistry:
         _require(isinstance(snapshot["reason_codes"], list), "reason_codes must be a list")
         _require(all(isinstance(code, str) and code for code in snapshot["reason_codes"]), "reason_codes must contain non-empty strings")
         _require(isinstance(snapshot["input_data_version"], str) and snapshot["input_data_version"], "input_data_version must be non-empty")
+        if "strategy_config_hash" in snapshot:
+            expected_hash = self.strategy_config_hash(snapshot["strategy_version"])
+            _require(snapshot["strategy_config_hash"] == expected_hash, "strategy_config_hash does not match the registered version")
         normalized_weights = self.validate_weights(snapshot["strategy_version"], snapshot["target_weights"])
         result = copy.deepcopy(dict(snapshot))
         result["target_weights"] = normalized_weights
+        return result
+
+    def validate_versioned_target_snapshot(self, snapshot: Mapping[str, Any]) -> dict[str, Any]:
+        """Validate a target snapshot that carries its version config hash."""
+
+        _require(isinstance(snapshot, Mapping), "target snapshot must be an object")
+        _require("strategy_config_hash" in snapshot, "target snapshot must include strategy_config_hash")
+        result = self.validate_target_snapshot(snapshot)
+        result["strategy_config_hash"] = self.strategy_config_hash(result["strategy_version"])
         return result
 
 
