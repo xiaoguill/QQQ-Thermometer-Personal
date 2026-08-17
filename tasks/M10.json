@@ -6,7 +6,7 @@
   "change_class": "backend",
   "route_id": "backend",
   "role": "backend_builder",
-  "base_ref": "verification-baseline-v3.8",
+  "base_ref": "verification-baseline-v3.10",
   "task_contract_authority": "trusted_ref_only",
   "requires_user_approval": true,
   "baseline_promotion_required": true,

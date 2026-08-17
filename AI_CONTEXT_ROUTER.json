@@ -105,7 +105,8 @@
         "src/storage/",
         "src/jobs/",
         "tests/api/",
-        "tests/backend/"
+        "tests/backend/",
+        "tests/integration/"
       ],
       "default_role": "backend_builder",
       "task_contract_pattern": "tasks/{task_id}.json",
