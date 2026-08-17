@@ -8,6 +8,20 @@ from .contracts import (
     load_contract,
 )
 from .policy import STRATEGY_VERSION, generate_target_snapshot
+from .regime import (
+    ACTIVE_STATES,
+    ALL_STATES,
+    REGIME_IMPLEMENTATION_VERSION,
+    RegimeConfig,
+    RegimeError,
+    RegimeEvidence,
+    RegimeInput,
+    RegimeRun,
+    RegimeSnapshot,
+    RegimeState,
+    evaluate_regime,
+    replay_regimes,
+)
 
 __all__ = [
     "DEFAULT_CONTRACT_PATH",
@@ -17,4 +31,16 @@ __all__ = [
     "load_contract",
     "STRATEGY_VERSION",
     "generate_target_snapshot",
+    "ACTIVE_STATES",
+    "ALL_STATES",
+    "REGIME_IMPLEMENTATION_VERSION",
+    "RegimeConfig",
+    "RegimeError",
+    "RegimeEvidence",
+    "RegimeInput",
+    "RegimeRun",
+    "RegimeSnapshot",
+    "RegimeState",
+    "evaluate_regime",
+    "replay_regimes",
 ]
