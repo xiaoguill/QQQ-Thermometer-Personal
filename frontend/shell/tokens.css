@@ -1,0 +1,55 @@
+:root {
+  color-scheme: dark;
+  --ns-canvas: #0a1020;
+  --ns-surface: #121c30;
+  --ns-surface-raised: #1a2840;
+  --ns-surface-soft: #202f49;
+  --ns-border: #3a4d6d;
+  --ns-border-strong: #5a7198;
+  --ns-text: #f5f8ff;
+  --ns-muted: #c3d0e3;
+  --ns-subtle: #aebdd3;
+  --ns-focus: #8ec5ff;
+  --ns-confirmed: #8de8b0;
+  --ns-provisional: #8cc3ff;
+  --ns-loading: #c6d5e9;
+  --ns-stale: #ffd37d;
+  --ns-partial: #ffc37a;
+  --ns-failed: #ffaaa8;
+  --ns-review: #d4b7ff;
+  --ns-space-1: 4px;
+  --ns-space-2: 8px;
+  --ns-space-3: 12px;
+  --ns-space-4: 16px;
+  --ns-space-5: 20px;
+  --ns-space-6: 24px;
+  --ns-space-8: 32px;
+  --ns-radius-sm: 8px;
+  --ns-radius-md: 12px;
+  --ns-radius-lg: 18px;
+  --ns-shadow: 0 20px 55px rgba(0, 0, 0, .24);
+  --ns-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ns-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --ns-canvas: #edf3fa;
+  --ns-surface: #f8fbff;
+  --ns-surface-raised: #ffffff;
+  --ns-surface-soft: #e5edf7;
+  --ns-border: #b9c8dc;
+  --ns-border-strong: #7e94b2;
+  --ns-text: #16243a;
+  --ns-muted: #425776;
+  --ns-subtle: #536b8c;
+  --ns-focus: #155fbe;
+  --ns-confirmed: #126d42;
+  --ns-provisional: #155fbe;
+  --ns-loading: #536b8c;
+  --ns-stale: #805600;
+  --ns-partial: #854900;
+  --ns-failed: #a73531;
+  --ns-review: #6841a6;
+  --ns-shadow: 0 18px 44px rgba(36, 59, 93, .13);
+}

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a1020" />
+    <title>Northstar · Shell Preview</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+    <div class="northstar-shell" data-shell-root data-api-base="/api" data-theme="dark" data-mode="SIMULATED">
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true">N</div>
+          <div>
+            <p class="eyebrow">PRIVATE RESEARCH</p>
+            <p class="brand-name">Northstar</p>
+          </div>
+        </div>
+
+        <nav class="nav-stack" aria-label="页面导航">
+          <button id="nav-status" class="nav-item is-active" type="button" data-view="status" aria-controls="panel-status" aria-current="page">
+            <span class="nav-icon" aria-hidden="true">◒</span><span>状态壳层</span>
+          </button>
+          <button id="nav-boundaries" class="nav-item" type="button" data-view="boundaries" aria-controls="panel-boundaries">
+            <span class="nav-icon" aria-hidden="true">◇</span><span>数据边界</span>
+          </button>
+          <button id="nav-preview" class="nav-item" type="button" data-view="preview" aria-controls="panel-preview">
+            <span class="nav-icon" aria-hidden="true">□</span><span>后续占位</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-note">
+          <span class="mode-badge"><span aria-hidden="true">◆</span> SIMULATED</span>
+          <p>个人本地壳层 · 只读 · 无券商连接</p>
+        </div>
+      </aside>
+
+      <main id="main-content" class="main-content">
+        <header class="topbar">
+          <div class="breadcrumb"><span>个人研究台</span><span aria-hidden="true"> / </span><strong>前端壳层</strong></div>
+          <div class="metadata-strip" aria-label="数据上下文">
+            <span class="metadata-chip" data-metadata="mode"><span aria-hidden="true">◆</span>模式：模拟</span>
+            <span class="metadata-chip" data-metadata="time">时间：未连接</span>
+            <span class="metadata-chip" data-metadata="confirmation">确认：未提供</span>
+            <span class="metadata-chip" data-metadata="version">策略版本：由 API 提供</span>
+            <span class="metadata-chip" data-metadata="quality">数据质量：未提供</span>
+          </div>
+        </header>
+
+        <section class="page-heading" aria-labelledby="page-title">
+          <div>
+            <p class="kicker">M12 · FRONTEND SHELL</p>
+            <h1 id="page-title">把状态放在边界之内</h1>
+            <p class="subtitle">这是独立前端的布局、设计令牌和只读 API client 预览。它不计算温度、不生成目标仓位，也不把模拟状态当成实时行情。</p>
+          </div>
+          <button class="theme-button" type="button" data-action="toggle-theme" aria-pressed="false">浅色显示</button>
+        </section>
+
+        <section class="panel is-active" id="panel-status" data-panel="status" role="tabpanel" aria-labelledby="nav-status" tabindex="-1">
+          <div class="fixture-toolbar" role="group" aria-label="状态测试夹具">
+            <span class="fixture-toolbar-label">状态夹具</span>
+            <button class="fixture-button" type="button" data-fixture="loading" aria-pressed="false">加载中</button>
+            <button class="fixture-button" type="button" data-fixture="empty" aria-pressed="true">暂无快照</button>
+            <button class="fixture-button" type="button" data-fixture="stale" aria-pressed="false">过期</button>
+            <button class="fixture-button" type="button" data-fixture="partial" aria-pressed="false">部分数据</button>
+            <button class="fixture-button" type="button" data-fixture="failed" aria-pressed="false">失败</button>
+            <button class="fixture-button" type="button" data-fixture="needs_review" aria-pressed="false">待复核</button>
+          </div>
+
+          <div class="state-stage" aria-live="polite">
+            <article class="state-card tone-loading" data-fixture-card="loading" hidden>
+              <div class="state-icon" aria-hidden="true">…</div>
+              <div class="state-copy"><p class="card-label">加载中</p><h2>等待本地数据接口</h2><p>尚未读取任何状态快照；壳层不会根据日期或颜色推断策略状态。</p></div>
+              <div class="state-meta">shell-loading-v1</div>
+            </article>
+            <article class="state-card tone-empty" data-fixture-card="empty">
+              <div class="state-icon" aria-hidden="true">○</div>
+              <div class="state-copy"><p class="card-label">暂无快照</p><h2>尚无可展示的确认快照</h2><p>请先由本地任务生成可追溯快照；空数据不会被渲染成正常状态。</p></div>
+              <div class="state-meta">shell-empty-v1</div>
+            </article>
+            <article class="state-card tone-stale" data-fixture-card="stale" hidden>
+              <div class="state-icon" aria-hidden="true">!</div>
+              <div class="state-copy"><p class="card-label">数据过期</p><h2>已有数据，但不满足新鲜度要求</h2><p>壳层会保留问题说明，并要求在继续使用前复核数据时间和质量。</p></div>
+              <div class="state-meta">shell-stale-v1</div>
+            </article>
+            <article class="state-card tone-partial" data-fixture-card="partial" hidden>
+              <div class="state-icon" aria-hidden="true">△</div>
+              <div class="state-copy"><p class="card-label">部分数据</p><h2>响应只包含部分字段</h2><p>缺失字段不会由浏览器补算；目标仓位和策略结论继续显示为未提供。</p></div>
+              <div class="state-meta">shell-partial-v1</div>
+            </article>
+            <article class="state-card tone-failed" data-fixture-card="failed" hidden>
+              <div class="state-icon" aria-hidden="true">×</div>
+              <div class="state-copy"><p class="card-label">读取失败</p><h2>本地 API 没有返回可用结果</h2><p>错误信息会以安全文本展示；壳层不会重试、下单或切换数据源。</p></div>
+              <div class="state-meta">shell-failed-v1</div>
+            </article>
+            <article class="state-card tone-review" data-fixture-card="needs_review" hidden>
+              <div class="state-icon" aria-hidden="true">?</div>
+              <div class="state-copy"><p class="card-label">待复核</p><h2>数据质量需要人工检查</h2><p>在质量状态恢复前，页面只展示问题上下文，不把结果标为确认信号。</p></div>
+              <div class="state-meta">shell-needs-review-v1</div>
+            </article>
+          </div>
+
+          <p class="status-message" data-status-message role="status">当前仅展示 shell-empty-v1 模拟状态。</p>
+
+          <div class="boundary-grid">
+            <article class="surface-card">
+              <p class="card-label">壳层承诺</p>
+              <h2>信息可以被看懂</h2>
+              <ul class="boundary-list">
+                <li>元数据始终显示时间、确认状态、策略版本和数据质量。</li>
+                <li>状态同时使用文字、符号和颜色，不依赖单一颜色。</li>
+                <li>模拟 fixture 有独立 ID，不代表实时数据。</li>
+              </ul>
+            </article>
+            <article class="surface-card">
+              <p class="card-label">只读 API client</p>
+              <h2>只请求同源 GET</h2>
+              <ul class="boundary-list">
+                <li>路径来自冻结 OpenAPI 的只读查询端点。</li>
+                <li>响应内容以安全文本处理，不使用 innerHTML。</li>
+                <li class="is-blocked">没有纸上确认 POST、券商、行情源或远程 API。</li>
+              </ul>
+              <button class="outline-button" type="button" data-action="try-api">尝试本地只读 API</button>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-boundaries" data-panel="boundaries" role="tabpanel" aria-labelledby="nav-boundaries" tabindex="-1" hidden>
+          <div class="placeholder-panel">
+            <div><p class="kicker">CONTRACT BOUNDARY</p><h2>数据边界说明</h2><p>这里仅展示前端消费接口的边界。温度、解释、组合和回放页面分别属于后续模块，不在 M12 重新实现策略逻辑。</p></div>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-preview" data-panel="preview" role="tabpanel" aria-labelledby="nav-preview" tabindex="-1" hidden>
+          <div class="placeholder-panel">
+            <div><p class="kicker">NEXT MODULES</p><h2>后续页面占位</h2><p>Dashboard、Signal Explanation、Replay 与 Performance 只在各自任务合同通过后接入；当前页面不提供买卖结论。</p></div>
+          </div>
+        </section>
+
+        <footer class="page-footer">
+          <span>Northstar Personal Research · M12 shell preview · SIMULATED</span>
+          <span>本地只读监控 · 无券商连接 · 无自动下单</span>
+        </footer>
+      </main>
+    </div>
+    <script type="module" src="./shell.mjs"></script>
+  </body>
+</html>
