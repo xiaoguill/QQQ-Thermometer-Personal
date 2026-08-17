@@ -1,9 +1,9 @@
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 from src.api import ApiAccessPolicy, ReadApiService, create_app, create_http_server
+import src.api.http_server as http_server_module
 from src.storage.sqlite_store import SQLiteRepository, SQLiteStore
 
 
@@ -281,12 +281,16 @@ class ReadApiIntegrationTests(unittest.TestCase):
             def server_close(self):
                 self.closed = True
 
-        with patch("src.api.http_server.ThreadingHTTPServer", FakeServer):
+        original_server = http_server_module.ThreadingHTTPServer
+        http_server_module.ThreadingHTTPServer = FakeServer
+        try:
             server = create_http_server(self.app, host="127.0.0.1", port=0)
             self.assertEqual(server.server_address, ("127.0.0.1", 0))
             self.assertFalse(server.closed)
             server.server_close()
             self.assertTrue(server.closed)
+        finally:
+            http_server_module.ThreadingHTTPServer = original_server
         with self.assertRaises(ValueError):
             create_http_server(self.app, host="0.0.0.0", port=8765)
 
