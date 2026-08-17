@@ -1,0 +1,105 @@
+import hashlib
+import json
+import unittest
+from datetime import date, timedelta
+
+from src.storage.indicators import calculate_indicator_snapshots
+from src.storage.normalization import NormalizedBar, NormalizationResult, TradingCalendar
+from src.thermometer.contracts import load_contract
+from src.thermometer.regime import RegimeConfig, RegimeInput, replay_regimes
+from src.thermometer.target_weights import build_target_weights
+
+
+class TargetWeightIntegrationTests(unittest.TestCase):
+    calendar = TradingCalendar()
+
+    def _bars(self, symbol: str, dates: tuple[str, ...], *, quality: str = "OK") -> tuple[NormalizedBar, ...]:
+        result = []
+        for index, signal_date in enumerate(dates):
+            if symbol == "QQQ":
+                close = 100.0 + index * 0.20
+                basis = "adjusted_ohlcv"
+            elif symbol == "VIX":
+                close = 18.0
+                basis = "index_level"
+            else:
+                close = 22.0
+                basis = "index_level"
+            result.append(
+                NormalizedBar(
+                    symbol=symbol,
+                    bar_date=signal_date,
+                    open=close,
+                    high=close,
+                    low=close,
+                    close=close,
+                    volume=None,
+                    sources=("m07-integration-fixture",),
+                    snapshot_ids=(f"{symbol}-{signal_date}",),
+                    retrieved_at_by_source=(("m07-integration-fixture", f"{signal_date}T22:00:00Z"),),
+                    price_basis=basis,
+                    timezone="America/New_York",
+                    quality=quality,
+                )
+            )
+        return tuple(result)
+
+    def _normalization(self, symbol: str, dates: tuple[str, ...], *, quality: str = "OK") -> NormalizationResult:
+        return NormalizationResult(
+            as_of=f"{dates[-1]}T22:00:00Z",
+            calendar_id=self.calendar.calendar_id,
+            normalization_version="m03-normalized-bars/v1",
+            quality=quality,
+            bars=self._bars(symbol, dates, quality=quality),
+            quality_events=(),
+        )
+
+    def test_m03_m04_m05_chain_produces_full_normal_target_vector(self):
+        first = date.fromisoformat("2023-01-03")
+        dates = self.calendar.sessions("2023-01-03", (first + timedelta(days=260)).isoformat())[:160]
+        qqq = self._normalization("QQQ", dates)
+        vix = self._normalization("VIX", dates)
+        vix3m = self._normalization("VIX3M", dates)
+        indicator_run = calculate_indicator_snapshots((qqq, vix, vix3m), calendar=self.calendar)
+        regimes = replay_regimes(
+            [RegimeInput(snapshot, qqq.bars[index]) for index, snapshot in enumerate(indicator_run.snapshots)],
+            config=RegimeConfig.from_registry(load_contract()),
+            calendar=self.calendar,
+        )
+        result = build_target_weights(regimes.snapshots[-1])
+        self.assertEqual(result.state, "normal")
+        self.assertGreaterEqual(result.medium_gate_streak, 5)
+        self.assertAlmostEqual(result.target_weights["QQQ"], 0.6)
+        self.assertAlmostEqual(result.target_weights["BIL"], 0.4)
+        expected_hash = hashlib.sha256(
+            json.dumps(
+                regimes.snapshots[-1].as_dict(),
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
+        self.assertEqual(result.regime_snapshot_hash, expected_hash)
+        self.assertEqual(result.data_quality, "OK")
+
+    def test_data_quality_failure_propagates_to_bil_only_target(self):
+        first = date.fromisoformat("2023-01-03")
+        dates = self.calendar.sessions("2023-01-03", (first + timedelta(days=260)).isoformat())[:160]
+        qqq = self._normalization("QQQ", dates, quality="NEEDS_REVIEW")
+        vix = self._normalization("VIX", dates)
+        vix3m = self._normalization("VIX3M", dates)
+        indicator_run = calculate_indicator_snapshots((qqq, vix, vix3m), calendar=self.calendar)
+        regimes = replay_regimes(
+            [RegimeInput(snapshot, qqq.bars[index]) for index, snapshot in enumerate(indicator_run.snapshots)],
+            config=RegimeConfig.from_registry(load_contract()),
+            calendar=self.calendar,
+        )
+        result = build_target_weights(regimes.snapshots[-1])
+        self.assertEqual(result.state, "needs_review")
+        self.assertEqual(result.target_weights["BIL"], 1.0)
+        self.assertTrue(all(value == 0.0 for symbol, value in result.target_weights.items() if symbol != "BIL"))
+        self.assertEqual(result.data_quality, "NEEDS_REVIEW")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -40,6 +40,15 @@ from .explanation import (
     PUBLICATION_PROVISIONAL,
     build_explanation,
 )
+from .target_weights import (
+    TARGET_WEIGHT_IMPLEMENTATION_VERSION,
+    TARGET_WEIGHT_SCHEMA,
+    WEIGHT_STATUS_CANDIDATE_ONLY,
+    TargetWeightError,
+    TargetWeightService,
+    TargetWeightSnapshot,
+    build_target_weights,
+)
 
 __all__ = [
     "DEFAULT_CONTRACT_PATH",
@@ -77,4 +86,11 @@ __all__ = [
     "PUBLICATION_NEEDS_REVIEW",
     "PUBLICATION_PROVISIONAL",
     "build_explanation",
+    "TARGET_WEIGHT_IMPLEMENTATION_VERSION",
+    "TARGET_WEIGHT_SCHEMA",
+    "WEIGHT_STATUS_CANDIDATE_ONLY",
+    "TargetWeightError",
+    "TargetWeightService",
+    "TargetWeightSnapshot",
+    "build_target_weights",
 ]
