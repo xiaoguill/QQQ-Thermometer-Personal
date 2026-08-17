@@ -140,6 +140,9 @@
           "qqq_above_ema10",
           "qqq_realized_volatility_20d_declining"
         ],
+        "recovery_rebound_5d_min": 0.03,
+        "recovery_rebound_10d_min": 0.05,
+        "recovery_rv_comparison_days": 5,
         "medium_gate_trend_window_days": 150,
         "medium_gate_momentum_window_days": 126,
         "medium_gate_confirmation_days": 5,
