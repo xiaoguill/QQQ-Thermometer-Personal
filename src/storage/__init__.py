@@ -48,6 +48,23 @@ from .sqlite_store import (
     StorageValidationError,
     StoredRecord,
 )
+from .paper_portfolio import (
+    PAPER_EXECUTION_IMPLEMENTATION_VERSION,
+    PAPER_LEDGER_EVENT_SCHEMA,
+    PAPER_PORTFOLIO_SCHEMA,
+    PAPER_RECONCILIATION_SCHEMA,
+    PAPER_STATUS,
+    PaperDayInput,
+    PaperDayResult,
+    PaperExecutionConfig,
+    PaperInputError,
+    PaperPortfolioError,
+    PaperPortfolioService,
+    PaperPortfolioState,
+    PaperPrice,
+    PaperReconciliation,
+    PaperReconciliationError,
+)
 
 __all__ = [
     "DEFAULT_PRICE_FIELD_MAPPING",
@@ -90,4 +107,19 @@ __all__ = [
     "StorageSchemaError",
     "StorageValidationError",
     "StoredRecord",
+    "PAPER_EXECUTION_IMPLEMENTATION_VERSION",
+    "PAPER_LEDGER_EVENT_SCHEMA",
+    "PAPER_PORTFOLIO_SCHEMA",
+    "PAPER_RECONCILIATION_SCHEMA",
+    "PAPER_STATUS",
+    "PaperDayInput",
+    "PaperDayResult",
+    "PaperExecutionConfig",
+    "PaperInputError",
+    "PaperPortfolioError",
+    "PaperPortfolioService",
+    "PaperPortfolioState",
+    "PaperPrice",
+    "PaperReconciliation",
+    "PaperReconciliationError",
 ]
