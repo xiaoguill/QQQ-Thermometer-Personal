@@ -19,7 +19,7 @@
       "forbidden": ["OWNERSHIP.yaml", "contracts/", "verification/", "configs/frozen/", ".github/workflows/verification.yml", "src/api/", "src/storage/", "src/jobs/"]
     },
     "backend_builder": {
-      "write": ["src/api/", "src/storage/", "src/jobs/", "tests/api/", "tests/backend/"],
+      "write": ["src/api/", "src/storage/", "src/jobs/", "tests/api/", "tests/backend/", "tests/integration/"],
       "read_only": ["contracts/", "src/thermometer/", "frontend/", "docs/"],
       "forbidden": ["OWNERSHIP.yaml", "contracts/", "verification/", "configs/frozen/", ".github/workflows/verification.yml", "frontend/", "src/thermometer/"]
     },

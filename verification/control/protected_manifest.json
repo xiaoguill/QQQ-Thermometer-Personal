@@ -5,7 +5,7 @@
   "entries": {
     ".github/workflows/verification.yml": "1ff293d870717c84441cc40dc1ff516132506b6a40132886a9b4c6d41e89e0b8",
     "AI_CONTEXT_ROUTER.json": "e57ef47ee8e1e922e6a6b95c7d94b47963d4c34278bda04a1c8ff01bd491d2e4",
-    "OWNERSHIP.yaml": "5c792e1246c902a60f309371c2432be540bf341141561bd17c1b70aa0c2c7cc2",
+    "OWNERSHIP.yaml": "01bcbbca7f919a938abb357a8c02e1650de35b35646ce69174467e54683b418a",
     "configs/frozen/strategy_contract.json": "c19329dbfa878766c9605f2045d48ef1f38ec9a5379ef25292bc432476c54d44",
     "contracts/README.md": "6ce9d85bca2fd8b2f728858fc7ba42b2daeee912e4ee520f1e089426918c5fcc",
     "contracts/openapi.json": "45b36620f2a9854c7e0ddb31b71a4a1a0c1264d5a5b7b4e5115c8a471c00928d",
