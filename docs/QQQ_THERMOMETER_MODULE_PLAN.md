@@ -21,6 +21,8 @@
 ```text
 M00 治理冻结
   ↓
+M00.5 Context Governance Hardening
+  ↓
 M01 策略/版本合同
   ↓
 M02 数据源适配与原始快照
@@ -65,6 +67,26 @@ M15 全链路验证与私有发布
 验收：根规则与局部规则存在；模块计划和治理边界可被 Codex 按顺序执行；现有脏工作区未被覆盖。
 
 交付：本目录中的治理文档。
+
+### M00.5 — Context Governance Hardening（独立治理任务）
+
+目标：把“任务 → 上下文 → 权限 → 验收”连接为机器可读、可验证的链路，不改变策略规则、API 语义、数据源或回测结果。
+
+机器真源与执行合同：
+
+- `AI_CONTEXT_ROUTER.json`：按路径和任务类型选择必读上下文；不定义策略规则。
+- `tasks/M00.5.json`：当前治理变更的任务合同；普通 Candidate 不得自行扩大任务范围。
+- `docs/DOCUMENT_REGISTRY.json`：登记文档类型、状态、权威等级和对应机器真源。
+- `OWNERSHIP.yaml`：维护最终路径权限；Router 不重复取代它。
+- `verification/` 与 workflow：由 Trusted ref 的 Task Contract 检查实际 diff 和验收门槛。
+
+允许：新增或更新 Router、Task Contract、文档注册表、任务启动索引和验证器的 task scope gate。
+
+禁止：修改 `configs/frozen/`、`contracts/`、研究策略、数据、指标、权重、回测结果或真实交易能力。
+
+验收：Router、Task Contract 和文档注册表可由标准库解析；缺少 task_id、未知 task、缺失必读上下文、角色不匹配或越过 allowed write paths 时 fail closed；当前治理候选通过本地证据检查，并在新 Trusted baseline 审阅后才能进入 CI 验证。
+
+交付：独立治理 Candidate、task scope 验收、保护清单更新、Evidence 和治理变更报告。完成后停止，等待用户确认，不自动开始 M01。
 
 ### M01 — 策略与版本合同
 

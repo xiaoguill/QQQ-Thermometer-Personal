@@ -23,7 +23,8 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--candidate-repo", required=True)
     run.add_argument("--trusted-ref", required=True)
     run.add_argument("--candidate-sha", required=True)
-    run.add_argument("--candidate-role", required=True, choices=("frontend_builder", "backend_builder", "domain_builder", "integrator"))
+    run.add_argument("--candidate-role", required=True, choices=("frontend_builder", "backend_builder", "domain_builder", "integrator", "governance_maintainer"))
+    run.add_argument("--task-id", required=True, help="Task Contract identifier resolved from the trusted verification baseline")
     run.add_argument("--output", required=True)
     run.add_argument("--bootstrap", action="store_true", help="allow trusted ref == candidate only for initial bootstrap review")
     promote = subparsers.add_parser("promote")
@@ -39,6 +40,7 @@ def main(argv: list[str] | None = None) -> int:
             trusted_ref=args.trusted_ref,
             candidate_sha=args.candidate_sha,
             candidate_role=args.candidate_role,
+            task_id=args.task_id,
             output_dir=args.output,
             bootstrap=args.bootstrap,
         )

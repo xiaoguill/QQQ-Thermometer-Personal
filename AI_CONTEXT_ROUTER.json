@@ -1,0 +1,177 @@
+{
+  "$schema": "qqq-ai-context-router/v1",
+  "router_version": "1.0.0",
+  "mode": "task_scoped_context",
+  "path_match_semantics": "exact_or_directory_prefix",
+  "precedence": {
+    "process": [
+      "system_or_user_request",
+      "root_agents",
+      "local_agents",
+      "task_contract",
+      "architecture_or_implementation_guides",
+      "reference_or_historical_docs"
+    ],
+    "truth": [
+      "configs/frozen/strategy_contract.json",
+      "contracts/openapi.json",
+      "OWNERSHIP.yaml",
+      "verification/control/policy.json",
+      "verification/control/protected_manifest.json",
+      "task_contract_scope_only"
+    ],
+    "conflict_action": "stop_and_report"
+  },
+  "global_required": [
+    "AGENTS.md",
+    "OWNERSHIP.yaml",
+    "AI_CONTEXT_ROUTER.json"
+  ],
+  "protected_truth": {
+    "strategy": "configs/frozen/strategy_contract.json",
+    "api": "contracts/openapi.json",
+    "permissions": "OWNERSHIP.yaml",
+    "verification": "verification/control/policy.json",
+    "task_scope": "trusted_ref:tasks/{task_id}.json"
+  },
+  "routes": {
+    "governance_change": {
+      "path_prefixes": [
+        "AGENTS.md",
+        "OWNERSHIP.yaml",
+        "AI_CONTEXT_ROUTER.json",
+        "tasks/",
+        "docs/DOCUMENT_REGISTRY.json",
+        "docs/PERSONAL_WORKSPACE_INDEX.md",
+        "docs/QQQ_THERMOMETER_MODULE_PLAN.md",
+        "verification/",
+        ".github/workflows/verification.yml"
+      ],
+      "default_role": "governance_maintainer",
+      "task_contract_pattern": "tasks/{task_id}.json",
+      "required_context": [
+        "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
+        "docs/QQQ_THERMOMETER_GOVERNANCE_BOUNDARIES.md",
+        "docs/WORKTREE_RESTORE_PROTOCOL.md"
+      ],
+      "optional_context": [
+        "docs/QQQ_PARALLEL_DEVELOPMENT_GOVERNANCE.md",
+        "docs/QQQ_THERMOMETER_MODULE_PLAN.md"
+      ]
+    },
+    "strategy_domain": {
+      "path_prefixes": [
+        "src/thermometer/",
+        "tests/unit/",
+        "tests/data_contracts/",
+        "tests/integration/",
+        "tests/e2e/"
+      ],
+      "default_role": "domain_builder",
+      "task_contract_pattern": "tasks/{task_id}.json",
+      "required_context": [
+        "configs/frozen/strategy_contract.json",
+        "docs/QQQ_THERMOMETER_GOVERNANCE_BOUNDARIES.md",
+        "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
+        "docs/QQQ_THERMOMETER_ARCHITECTURE.md"
+      ],
+      "optional_context": [
+        "docs/V10_CANDIDATE_CONTRACT.md",
+        "docs/reference/v10_preserve_shock_recovery/REPORT.md"
+      ]
+    },
+    "data_pipeline": {
+      "path_prefixes": [
+        "src/data/",
+        "src/storage/",
+        "tests/integration/",
+        "docs/trading_calendar_guide.md"
+      ],
+      "default_role": "backend_builder",
+      "task_contract_pattern": "tasks/{task_id}.json",
+      "required_context": [
+        "docs/trading_calendar_guide.md",
+        "docs/QQQ_THERMOMETER_GOVERNANCE_BOUNDARIES.md",
+        "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
+        "docs/PERSONAL_USE_GOVERNANCE.md"
+      ],
+      "optional_context": [
+        "docs/QQQ_THERMOMETER_ARCHITECTURE.md"
+      ]
+    },
+    "backend": {
+      "path_prefixes": [
+        "src/api/",
+        "src/storage/",
+        "src/jobs/",
+        "tests/api/",
+        "tests/backend/"
+      ],
+      "default_role": "backend_builder",
+      "task_contract_pattern": "tasks/{task_id}.json",
+      "required_context": [
+        "contracts/openapi.json",
+        "docs/QQQ_THERMOMETER_GOVERNANCE_BOUNDARIES.md",
+        "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
+        "docs/PERSONAL_USE_GOVERNANCE.md"
+      ],
+      "optional_context": [
+        "docs/QQQ_THERMOMETER_ARCHITECTURE.md"
+      ]
+    },
+    "frontend": {
+      "path_prefixes": [
+        "frontend/",
+        "tests/frontend/"
+      ],
+      "default_role": "frontend_builder",
+      "task_contract_pattern": "tasks/{task_id}.json",
+      "required_context": [
+        "contracts/openapi.json",
+        "docs/FRONTEND_REFERENCE_BOUNDARIES.md",
+        "docs/QQQ_THERMOMETER_GOVERNANCE_BOUNDARIES.md",
+        "docs/PERSONAL_USE_GOVERNANCE.md"
+      ],
+      "optional_context": [
+        "docs/QQQ_THERMOMETER_ARCHITECTURE.md"
+      ]
+    },
+    "research": {
+      "path_prefixes": [
+        "research/",
+        "docs/reference/"
+      ],
+      "default_role": "domain_builder",
+      "task_contract_pattern": "tasks/{task_id}.json",
+      "required_context": [
+        "docs/V10_CANDIDATE_CONTRACT.md",
+        "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
+        "docs/QQQ_THERMOMETER_MODULE_PLAN.md"
+      ],
+      "optional_context": [
+        "configs/frozen/strategy_contract.json"
+      ]
+    },
+    "verification_change": {
+      "path_prefixes": [
+        "verification/",
+        ".github/workflows/verification.yml",
+        "OWNERSHIP.yaml",
+        "AI_CONTEXT_ROUTER.json",
+        "tasks/",
+        "docs/DOCUMENT_REGISTRY.json"
+      ],
+      "default_role": "governance_maintainer",
+      "task_contract_pattern": "tasks/{task_id}.json",
+      "required_context": [
+        "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
+        "verification/README.md",
+        "verification/control/policy.json",
+        "verification/control/protected_manifest.json"
+      ],
+      "optional_context": [
+        "docs/QQQ_PARALLEL_DEVELOPMENT_GOVERNANCE.md"
+      ]
+    }
+  }
+}

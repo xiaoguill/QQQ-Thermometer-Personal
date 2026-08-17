@@ -10,6 +10,24 @@
 - 每次任务开始时先读取本文件以及目标文件路径上最近的局部 `AGENTS.md`。
 - 本文件只治理工作方式，不自动授权修改策略、接入券商、发送订单或部署公网服务。
 
+### AI 启动顺序
+
+机器化任务必须遵循以下顺序；自然语言说明不能替代 Task Contract 或受保护真源：
+
+```text
+AGENTS.md
+  → AI_CONTEXT_ROUTER.json
+  → 明确 task_id 与 role
+  → tasks/<task_id>.json（必须来自 Trusted ref）
+  → 目标路径上的局部 AGENTS.md
+  → required_context
+  → git status / HEAD / allowed_write_paths
+  → 只执行当前任务并运行 acceptance_gates
+  → 停止，等待用户确认
+```
+
+上下文路由见 [`AI_CONTEXT_ROUTER.json`](AI_CONTEXT_ROUTER.json)，任务合同见 [`tasks/`](tasks/)，文档权威等级见 [`docs/DOCUMENT_REGISTRY.json`](docs/DOCUMENT_REGISTRY.json)。这些文件负责选择和分类上下文，不能覆盖策略、API、权限或验证真源。
+
 局部规则：
 
 - 研究与回测：[`research/qqq_drawdown_strategy/AGENTS.md`](research/qqq_drawdown_strategy/AGENTS.md)

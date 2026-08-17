@@ -3,6 +3,10 @@
   "manifest_path": "verification/control/protected_manifest.json",
   "exact_paths": [
     "OWNERSHIP.yaml",
+    "AI_CONTEXT_ROUTER.json",
+    "docs/DOCUMENT_REGISTRY.json",
+    "tasks/README.md",
+    "tasks/M00.5.json",
     "contracts/openapi.json",
     "contracts/README.md",
     "configs/frozen/strategy_contract.json",
@@ -18,7 +22,9 @@
     "verification/golden/negative_cases.json",
     "verification/tests/unit/test_contract_acceptance.py",
     "verification/tests/unit/test_parallel_governance_acceptance.py",
+    "verification/tests/integration/test_governance_acceptance.py",
     "verification/tests/integration/test_contract_acceptance.py",
+    "verification/tests/e2e/test_governance_acceptance.py",
     "verification/tests/e2e/test_contract_acceptance.py",
     ".github/workflows/verification.yml"
   ],
@@ -26,6 +32,9 @@
     "verification/",
     "configs/frozen/",
     "contracts/",
+    "tasks/",
+    "AI_CONTEXT_ROUTER.json",
+    "docs/DOCUMENT_REGISTRY.json",
     ".github/workflows/verification.yml"
   ]
 }

@@ -3,6 +3,9 @@
 ## 规则与治理
 
 - `AGENTS.md`：全局协作、验证和安全规则。
+- `AI_CONTEXT_ROUTER.json`：根据任务路径选择必读上下文和默认角色；不作为策略真源。
+- `tasks/`：每个模块的机器可读 Task Contract；当前治理变更为 `tasks/M00.5.json`。
+- `docs/DOCUMENT_REGISTRY.json`：文档类型、状态、权威等级和机器真源索引。
 - `docs/PERSONAL_USE_GOVERNANCE.md`：个人使用边界、人工确认和数据处理规则。
 - `docs/QQQ_THERMOMETER_GOVERNANCE_BOUNDARIES.md`：温度计、策略、订单和数据层的责任边界。
 - `docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md`：回测和数据复核的最低证据要求。

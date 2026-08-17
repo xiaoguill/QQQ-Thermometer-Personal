@@ -19,6 +19,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -41,6 +42,9 @@ GOLDEN_REL = Path("verification/golden/contract_cases.json")
 NEGATIVE_REL = Path("verification/golden/negative_cases.json")
 CONTRACT_REL = Path("configs/frozen/strategy_contract.json")
 OWNERSHIP_REL = Path("OWNERSHIP.yaml")
+ROUTER_REL = Path("AI_CONTEXT_ROUTER.json")
+TASKS_REL = Path("tasks")
+DOCUMENT_REGISTRY_REL = Path("docs/DOCUMENT_REGISTRY.json")
 
 
 @dataclass
@@ -489,6 +493,202 @@ def _path_matches(path: str, patterns: Iterable[str]) -> bool:
     return False
 
 
+def _task_contract_relative(task_id: str) -> str:
+    if not isinstance(task_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", task_id):
+        raise VerificationFailure("task_id must be a stable ASCII identifier")
+    return (TASKS_REL / f"{task_id}.json").as_posix()
+
+
+def _tracked_path_exists(repo: Path, ref: str, relative: str) -> bool:
+    return relative in _tracked_files(repo, ref)
+
+
+def _context_registry_gate(
+    trusted_repo: Path,
+    candidate_repo: Path,
+    trusted_ref: str,
+    candidate_sha: str,
+    task_id: str,
+) -> GateResult:
+    """Validate candidate context metadata without trusting it for scope authority."""
+
+    try:
+        task_relative = _task_contract_relative(task_id)
+        router = _json_git_file(candidate_repo, candidate_sha, ROUTER_REL.as_posix())
+        registry = _json_git_file(candidate_repo, candidate_sha, DOCUMENT_REGISTRY_REL.as_posix())
+        task = _json_git_file(candidate_repo, candidate_sha, task_relative)
+    except (VerificationFailure, OSError, ValueError) as exc:
+        return GateResult("context_registry", "BLOCKED", "candidate context registry or task contract is unreadable", {"task_id": task_id, "error": str(exc)})
+
+    errors: list[str] = []
+    if router.get("$schema") != "qqq-ai-context-router/v1":
+        errors.append("router schema is not qqq-ai-context-router/v1")
+    if router.get("path_match_semantics") != "exact_or_directory_prefix":
+        errors.append("router path matching semantics are not explicit")
+    if not isinstance(router.get("global_required"), list) or not all(isinstance(item, str) for item in router["global_required"]):
+        errors.append("router global_required must be a string list")
+    routes = router.get("routes")
+    if not isinstance(routes, Mapping) or not routes:
+        errors.append("router routes must be a non-empty object")
+
+    if task.get("$schema") != "qqq-task-contract/v1":
+        errors.append("task contract schema is not qqq-task-contract/v1")
+    if task.get("task_id") != task_id:
+        errors.append("task contract task_id does not match the requested task_id")
+    route_id = task.get("route_id")
+    if not isinstance(route_id, str) or not isinstance(routes, Mapping) or route_id not in routes:
+        errors.append("task route_id is not registered in the router")
+        route = {}
+    else:
+        route = routes[route_id]
+    if not isinstance(route, Mapping):
+        errors.append("task route definition is malformed")
+        route = {}
+    if task.get("role") != route.get("default_role"):
+        errors.append("task role does not match the route default role")
+
+    entries = registry.get("entries")
+    if registry.get("$schema") != "qqq-document-registry/v1" or not isinstance(entries, list) or not entries:
+        errors.append("document registry schema or entries are malformed")
+        entries = []
+    entry_paths: set[str] = set()
+    for entry in entries:
+        if not isinstance(entry, Mapping) or not isinstance(entry.get("path"), str):
+            errors.append("document registry contains a malformed entry")
+            continue
+        path = entry["path"]
+        if path in entry_paths:
+            errors.append(f"document registry contains duplicate path: {path}")
+        entry_paths.add(path)
+        if not _tracked_path_exists(candidate_repo, candidate_sha, path):
+            errors.append(f"document registry path is not tracked: {path}")
+
+    required_context: list[str] = []
+    for source in (
+        router.get("global_required", []),
+        route.get("required_context", []),
+        task.get("required_context", []),
+    ):
+        if not isinstance(source, list) or not all(isinstance(item, str) for item in source):
+            errors.append("required context must be a string list")
+            continue
+        for item in source:
+            if item not in required_context:
+                required_context.append(item)
+    for path in required_context:
+        if not _tracked_path_exists(candidate_repo, candidate_sha, path):
+            errors.append(f"required context path is not tracked: {path}")
+
+    truth = router.get("protected_truth")
+    if not isinstance(truth, Mapping):
+        errors.append("router protected_truth is missing")
+    else:
+        if truth.get("strategy") != CONTRACT_REL.as_posix():
+            errors.append("router strategy truth does not point to the frozen strategy contract")
+        if truth.get("api") != "contracts/openapi.json":
+            errors.append("router API truth does not point to contracts/openapi.json")
+
+    if not isinstance(task.get("allowed_write_paths"), list) or not all(isinstance(item, str) for item in task["allowed_write_paths"]):
+        errors.append("task allowed_write_paths must be a string list")
+    if not isinstance(task.get("forbidden_write_paths"), list) or not all(isinstance(item, str) for item in task["forbidden_write_paths"]):
+        errors.append("task forbidden_write_paths must be a string list")
+    if not isinstance(task.get("protected_write_paths"), list) or not all(isinstance(item, str) for item in task["protected_write_paths"]):
+        errors.append("task protected_write_paths must be a string list")
+    if not isinstance(task.get("acceptance_gates"), list) or not task["acceptance_gates"]:
+        errors.append("task acceptance_gates must be a non-empty list")
+
+    if errors:
+        return GateResult("context_registry", "BLOCKED", "context router, document registry, or task contract failed validation", {"task_id": task_id, "errors": errors})
+    return GateResult(
+        "context_registry",
+        "PASS",
+        "candidate context router, document registry, and task contract are structurally valid",
+        {"task_id": task_id, "route_id": route_id, "required_context_count": len(required_context), "document_count": len(entry_paths)},
+    )
+
+
+def _task_scope_gate(
+    trusted_repo: Path,
+    candidate_repo: Path,
+    trusted_ref: str,
+    candidate_sha: str,
+    candidate_role: str,
+    task_id: str,
+) -> GateResult:
+    """Enforce task scope from the trusted task contract, never from Candidate metadata."""
+
+    try:
+        task_relative = _task_contract_relative(task_id)
+        router = _json_git_file(trusted_repo, trusted_ref, ROUTER_REL.as_posix())
+        task = _json_git_file(trusted_repo, trusted_ref, task_relative)
+    except (VerificationFailure, OSError, ValueError) as exc:
+        return GateResult("task_scope", "BLOCKED", "trusted task contract or context router is unavailable", {"task_id": task_id, "error": str(exc)})
+
+    errors: list[str] = []
+    if task.get("task_id") != task_id:
+        errors.append("trusted task contract task_id mismatch")
+    if task.get("role") != candidate_role:
+        errors.append("candidate role does not match the trusted task contract")
+    if task.get("status") not in {"approved", "active", "ready_for_verification"}:
+        errors.append("trusted task contract is not approved for verification")
+    route_id = task.get("route_id")
+    routes = router.get("routes")
+    route = routes.get(route_id) if isinstance(routes, Mapping) and isinstance(route_id, str) else None
+    if not isinstance(route, Mapping):
+        errors.append("trusted task route is not registered")
+        route = {}
+
+    allowed = task.get("allowed_write_paths")
+    forbidden = task.get("forbidden_write_paths")
+    if not isinstance(allowed, list) or not all(isinstance(item, str) for item in allowed):
+        errors.append("trusted task allowed_write_paths is malformed")
+        allowed = []
+    if not isinstance(forbidden, list) or not all(isinstance(item, str) for item in forbidden):
+        errors.append("trusted task forbidden_write_paths is malformed")
+        forbidden = []
+    protected_write = task.get("protected_write_paths")
+    if not isinstance(protected_write, list) or not all(isinstance(item, str) for item in protected_write):
+        errors.append("trusted task protected_write_paths is malformed")
+        protected_write = []
+    try:
+        protected_contract = _json_git_file(trusted_repo, trusted_ref, PROTECTED_PATHS_REL.as_posix())
+        protected_patterns = list(protected_contract.get("exact_paths", [])) + list(protected_contract.get("prefixes", []))
+    except VerificationFailure as exc:
+        errors.append(f"trusted protected path contract is unreadable: {exc}")
+        protected_patterns = []
+    route_paths = route.get("path_prefixes")
+    if not isinstance(route_paths, list) or not all(isinstance(item, str) for item in route_paths):
+        errors.append("trusted route path_prefixes is malformed")
+        route_paths = []
+
+    changed = _changed_paths(trusted_repo, trusted_ref, candidate_repo, candidate_sha)
+    violations: list[dict[str, str]] = []
+    for path in changed:
+        if _path_matches(path, forbidden):
+            violations.append({"path": path, "reason": "task_forbidden_write_path"})
+        elif _path_matches(path, protected_patterns) and (
+            task.get("change_class") != "verification_change" or not _path_matches(path, protected_write)
+        ):
+            violations.append({"path": path, "reason": "protected_write_not_authorized_by_task"})
+        elif not _path_matches(path, allowed):
+            violations.append({"path": path, "reason": "outside_task_allowed_write_paths"})
+        elif not _path_matches(path, route_paths):
+            violations.append({"path": path, "reason": "outside_task_route_paths"})
+    if errors or violations:
+        return GateResult(
+            "task_scope",
+            "BLOCKED",
+            "candidate changes do not satisfy the trusted task contract scope",
+            {"task_id": task_id, "candidate_role": candidate_role, "changed_paths": changed, "violations": violations, "errors": errors},
+        )
+    return GateResult(
+        "task_scope",
+        "PASS",
+        "candidate changes are within the trusted task contract scope",
+        {"task_id": task_id, "route_id": route_id, "changed_paths": changed, "allowed_write_paths": allowed},
+    )
+
+
 def _changed_paths(
     base_repo: Path,
     base_ref: str,
@@ -535,15 +735,16 @@ def _ownership_gate(
     role = roles[candidate_role]
     read_only = ownership.get("protected_read_only")
     write = role.get("write") if isinstance(role, Mapping) else None
+    protected_write = role.get("protected_write", []) if isinstance(role, Mapping) else None
     forbidden = role.get("forbidden") if isinstance(role, Mapping) else None
-    if not isinstance(read_only, list) or not isinstance(write, list) or not isinstance(forbidden, list):
+    if not isinstance(read_only, list) or not isinstance(write, list) or not isinstance(protected_write, list) or not isinstance(forbidden, list):
         return GateResult(
             "ownership_scope",
             "BLOCKED",
             "ownership contract path lists are malformed",
             {"candidate_role": candidate_role},
         )
-    if not all(isinstance(value, str) for values in (read_only, write, forbidden) for value in values):
+    if not all(isinstance(value, str) for values in (read_only, write, protected_write, forbidden) for value in values):
         return GateResult(
             "ownership_scope",
             "BLOCKED",
@@ -554,6 +755,8 @@ def _ownership_gate(
     changed = _changed_paths(trusted_repo, trusted_ref, candidate_repo, candidate_sha)
     violations: list[dict[str, str]] = []
     for path in changed:
+        if _path_matches(path, protected_write):
+            continue
         if _path_matches(path, read_only):
             violations.append({"path": path, "reason": "protected_read_only"})
         elif _path_matches(path, forbidden):
@@ -571,7 +774,7 @@ def _ownership_gate(
         "ownership_scope",
         "PASS",
         "candidate changes are within the trusted path ownership contract",
-        {"candidate_role": candidate_role, "changed_paths": changed, "write_scope": write},
+        {"candidate_role": candidate_role, "changed_paths": changed, "write_scope": write, "protected_write_scope": protected_write},
     )
 
 
@@ -643,6 +846,7 @@ def run_verification(
     trusted_ref: str,
     candidate_sha: str,
     candidate_role: str,
+    task_id: str,
     output_dir: str | Path,
     bootstrap: bool = False,
 ) -> tuple[int, Path]:
@@ -695,6 +899,8 @@ def run_verification(
         else:
             gates.append(GateResult("policy_integrity", "PASS", "trusted policy is fail-closed", {"policy_id": policy.get("policy_id")}))
 
+        gates.append(_context_registry_gate(trusted_repo, candidate_repo, resolved_trusted_ref, resolved_candidate_sha, task_id))
+        gates.append(_task_scope_gate(trusted_repo, candidate_repo, resolved_trusted_ref, resolved_candidate_sha, candidate_role, task_id))
         gates.append(_ownership_gate(trusted_repo, candidate_repo, resolved_trusted_ref, resolved_candidate_sha, candidate_role))
         gates.append(_scope_gate(trusted_repo, candidate_repo, resolved_trusted_ref, resolved_candidate_sha, protected))
         gates.append(_manifest_gate(trusted_repo, candidate_repo, resolved_trusted_ref, resolved_candidate_sha))
@@ -829,6 +1035,7 @@ def run_verification(
             "verified_head_sha": candidate_head,
             "trusted_ref": resolved_trusted_ref,
             "candidate_role": candidate_role,
+            "task_id": task_id,
             "trusted_head_sha": trusted_head,
             "verifier_version": VERIFIER_VERSION,
             "policy_id": policy.get("policy_id"),
@@ -885,6 +1092,7 @@ def run_verification(
             "candidate_sha": candidate_sha,
             "trusted_ref": trusted_ref,
             "candidate_role": candidate_role,
+            "task_id": task_id,
             "verifier_version": VERIFIER_VERSION,
             "result": "BLOCKED",
             "status_transition": "UNVERIFIED",

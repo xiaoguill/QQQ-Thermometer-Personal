@@ -1,0 +1,191 @@
+{
+  "$schema": "qqq-document-registry/v1",
+  "registry_version": "1.0.0",
+  "default_status": "active",
+  "authority_levels": {
+    "L0": "process_entry",
+    "L1": "machine_truth_or_permission",
+    "L2": "normative_governance",
+    "L3": "task_contract",
+    "L4": "architecture_or_plan",
+    "L5": "implementation_guide",
+    "L6": "reference",
+    "L7": "historical_record"
+  },
+  "entries": [
+    {
+      "path": "AGENTS.md",
+      "doc_id": "QQQ-AGENTS-ROOT",
+      "type": "process_entry",
+      "status": "active",
+      "authority": "L0",
+      "read_when": ["every_task"],
+      "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml"]
+    },
+    {
+      "path": "OWNERSHIP.yaml",
+      "doc_id": "QQQ-OWNERSHIP-001",
+      "type": "permission_contract",
+      "status": "active",
+      "authority": "L1",
+      "read_when": ["every_code_change", "verification"],
+      "machine_truth": []
+    },
+    {
+      "path": "AI_CONTEXT_ROUTER.json",
+      "doc_id": "QQQ-CONTEXT-ROUTER-001",
+      "type": "context_router",
+      "status": "active",
+      "authority": "L1",
+      "read_when": ["every_task"],
+      "machine_truth": ["OWNERSHIP.yaml", "configs/frozen/strategy_contract.json", "contracts/openapi.json"]
+    },
+    {
+      "path": "configs/frozen/strategy_contract.json",
+      "doc_id": "QQQ-STRATEGY-CONTRACT-001",
+      "type": "strategy_contract",
+      "status": "active_frozen",
+      "authority": "L1",
+      "read_when": ["strategy_domain", "data_pipeline", "replay", "verification"],
+      "machine_truth": []
+    },
+    {
+      "path": "contracts/openapi.json",
+      "doc_id": "QQQ-API-CONTRACT-001",
+      "type": "api_contract",
+      "status": "active_frozen",
+      "authority": "L1",
+      "read_when": ["backend", "frontend", "api_verification"],
+      "machine_truth": []
+    },
+    {
+      "path": "verification/control/policy.json",
+      "doc_id": "QQQ-VERIFICATION-POLICY-001",
+      "type": "verification_policy",
+      "status": "active_frozen",
+      "authority": "L1",
+      "read_when": ["verification", "governance_change"],
+      "machine_truth": ["verification/control/protected_manifest.json"]
+    },
+    {
+      "path": "tasks/M00.5.json",
+      "doc_id": "QQQ-TASK-M00.5",
+      "type": "task_contract",
+      "status": "approved",
+      "authority": "L3",
+      "read_when": ["M00.5", "governance_change"],
+      "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml"]
+    },
+    {
+      "path": "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
+      "doc_id": "QQQ-GOV-VERIFICATION-001",
+      "type": "normative_governance",
+      "status": "active",
+      "authority": "L2",
+      "read_when": ["verification", "quant_change", "governance_change"],
+      "machine_truth": ["verification/control/policy.json"]
+    },
+    {
+      "path": "docs/QQQ_THERMOMETER_GOVERNANCE_BOUNDARIES.md",
+      "doc_id": "QQQ-GOV-PRODUCT-001",
+      "type": "normative_governance",
+      "status": "active",
+      "authority": "L2",
+      "read_when": ["product", "strategy", "data", "frontend", "backend"],
+      "machine_truth": ["configs/frozen/strategy_contract.json", "contracts/openapi.json"]
+    },
+    {
+      "path": "docs/PERSONAL_USE_GOVERNANCE.md",
+      "doc_id": "QQQ-GOV-PERSONAL-001",
+      "type": "normative_scope",
+      "status": "active",
+      "authority": "L2",
+      "read_when": ["product_scope", "paper", "private_use"],
+      "machine_truth": []
+    },
+    {
+      "path": "docs/WORKTREE_RESTORE_PROTOCOL.md",
+      "doc_id": "QQQ-GOV-WORKTREE-001",
+      "type": "normative_git_governance",
+      "status": "active",
+      "authority": "L2",
+      "read_when": ["every_task", "rollback", "cleanup"],
+      "machine_truth": ["git_status", "artifact_manifest"]
+    },
+    {
+      "path": "docs/QQQ_PARALLEL_DEVELOPMENT_GOVERNANCE.md",
+      "doc_id": "QQQ-GOV-PARALLEL-001",
+      "type": "normative_concurrency",
+      "status": "active",
+      "authority": "L2",
+      "read_when": ["parallel_work", "governance_change"],
+      "machine_truth": ["OWNERSHIP.yaml", "verification/control/policy.json"]
+    },
+    {
+      "path": "docs/QQQ_THERMOMETER_ARCHITECTURE.md",
+      "doc_id": "QQQ-ARCH-001",
+      "type": "architecture",
+      "status": "active",
+      "authority": "L4",
+      "read_when": ["architecture", "domain", "backend", "frontend"],
+      "machine_truth": []
+    },
+    {
+      "path": "docs/QQQ_THERMOMETER_MODULE_PLAN.md",
+      "doc_id": "QQQ-PLAN-001",
+      "type": "module_plan",
+      "status": "active",
+      "authority": "L4",
+      "read_when": ["module_selection", "task_planning"],
+      "machine_truth": ["tasks/{task_id}.json"]
+    },
+    {
+      "path": "docs/trading_calendar_guide.md",
+      "doc_id": "QQQ-GUIDE-CALENDAR-001",
+      "type": "implementation_guide",
+      "status": "active",
+      "authority": "L5",
+      "read_when": ["data_pipeline", "replay", "execution_timing"],
+      "machine_truth": ["strategy_contract.execution"]
+    },
+    {
+      "path": "docs/PERSONAL_WORKSPACE_INDEX.md",
+      "doc_id": "QQQ-INDEX-001",
+      "type": "human_navigation_index",
+      "status": "active",
+      "authority": "L6",
+      "read_when": ["orientation"],
+      "machine_truth": ["docs/DOCUMENT_REGISTRY.json"]
+    },
+    {
+      "path": "docs/V10_CANDIDATE_CONTRACT.md",
+      "doc_id": "QQQ-V10-REFERENCE-001",
+      "type": "strategy_reference",
+      "status": "active_reference",
+      "authority": "L6",
+      "read_when": ["research", "strategy_explanation"],
+      "machine_truth": ["configs/frozen/strategy_contract.json"],
+      "not_normative": true
+    },
+    {
+      "path": "docs/FRONTEND_REFERENCE_BOUNDARIES.md",
+      "doc_id": "QQQ-FRONTEND-REFERENCE-001",
+      "type": "frontend_reference",
+      "status": "active_reference",
+      "authority": "L6",
+      "read_when": ["frontend"],
+      "machine_truth": ["contracts/openapi.json"],
+      "not_strategy_truth": true
+    },
+    {
+      "path": "docs/REPO_CLEANUP_AUDIT_20260812.md",
+      "doc_id": "QQQ-AUDIT-CLEANUP-20260812",
+      "type": "historical_audit",
+      "status": "historical",
+      "authority": "L7",
+      "read_when": ["repository_cleanup", "historical_investigation"],
+      "machine_truth": [],
+      "not_normative": true
+    }
+  ]
+}

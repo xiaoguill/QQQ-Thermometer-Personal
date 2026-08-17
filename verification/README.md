@@ -23,10 +23,13 @@ $candidate = (git -C . rev-parse HEAD)
   --trusted-ref <protected-baseline-sha> `
   --candidate-sha $candidate `
   --candidate-role integrator `
+  --task-id M01 `
   --output <external-evidence-directory>
 ```
 
-Candidate 代码只在隔离 Python 子进程中运行。Golden、Negative、受保护清单和 Gate 逻辑来自 trusted checkout，Candidate 不能提供 expected 值，也不能修改这些文件后继续通过。
+Candidate 代码只在隔离 Python 子进程中运行。Golden、Negative、受保护清单、Router、Task Contract 和 Gate 逻辑来自 trusted checkout，Candidate 不能提供 expected 值、任务权限或修改这些文件后继续通过验证。`task_id` 缺失或不在 trusted checkout 中时必须 fail closed。
+
+`task_scope` 会从 trusted ref 读取 `tasks/<task_id>.json`，检查 Candidate 角色、route、required context、allowed write paths 和 forbidden write paths。治理变更可以修改验证器本身，但必须作为独立 Verification Change Task 完成，并在新的 Trusted baseline 审阅后才可称为 `CI_VERIFIED`。
 
 ## 状态规则
 

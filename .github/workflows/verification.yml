@@ -20,6 +20,11 @@ on:
           - backend_builder
           - domain_builder
           - integrator
+          - governance_maintainer
+      task_id:
+        description: Task Contract identifier resolved from the trusted baseline
+        required: true
+        type: string
   pull_request:
 
 permissions:
@@ -63,6 +68,7 @@ jobs:
             --trusted-ref "$(git -C trusted rev-parse HEAD)" \
             --candidate-sha "$(git -C candidate rev-parse HEAD)" \
             --candidate-role "${{ inputs.candidate_role || 'integrator' }}" \
+            --task-id "${{ inputs.task_id || 'UNDECLARED' }}" \
             --output "$GITHUB_WORKSPACE/evidence"
 
       - name: Require VERIFIED evidence and bind it to Candidate SHA

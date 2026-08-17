@@ -1,0 +1,102 @@
+{
+  "$schema": "qqq-task-contract/v1",
+  "task_id": "M00.5",
+  "title": "Context Governance Hardening",
+  "status": "approved",
+  "change_class": "verification_change",
+  "route_id": "governance_change",
+  "role": "governance_maintainer",
+  "base_ref": "verification-baseline-v1",
+  "task_contract_authority": "trusted_ref_only",
+  "requires_user_approval": true,
+  "baseline_promotion_required": true,
+  "required_context": [
+    "AGENTS.md",
+    "OWNERSHIP.yaml",
+    "AI_CONTEXT_ROUTER.json",
+    "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
+    "docs/QQQ_THERMOMETER_GOVERNANCE_BOUNDARIES.md",
+    "docs/QQQ_PARALLEL_DEVELOPMENT_GOVERNANCE.md",
+    "docs/WORKTREE_RESTORE_PROTOCOL.md",
+    "docs/QQQ_THERMOMETER_MODULE_PLAN.md",
+    "verification/README.md",
+    "verification/control/policy.json",
+    "verification/control/protected_manifest.json"
+  ],
+  "allowed_write_paths": [
+    "AGENTS.md",
+    "OWNERSHIP.yaml",
+    "AI_CONTEXT_ROUTER.json",
+    "tasks/",
+    "docs/DOCUMENT_REGISTRY.json",
+    "docs/PERSONAL_WORKSPACE_INDEX.md",
+    "docs/QQQ_THERMOMETER_MODULE_PLAN.md",
+    "verification/harness.py",
+    "verification/cli.py",
+    "verification/README.md",
+    "verification/control/policy.json",
+    "verification/control/protected_paths.json",
+    "verification/control/protected_manifest.json",
+    "verification/tests/",
+    ".github/workflows/verification.yml",
+    "tests/data_contracts/"
+  ],
+  "protected_write_paths": [
+    "OWNERSHIP.yaml",
+    "AI_CONTEXT_ROUTER.json",
+    "tasks/",
+    "docs/DOCUMENT_REGISTRY.json",
+    "verification/",
+    ".github/workflows/verification.yml"
+  ],
+  "forbidden_write_paths": [
+    "configs/frozen/",
+    "contracts/",
+    "src/",
+    "frontend/",
+    "research/",
+    "docs/reference/",
+    "docs/REPO_CLEANUP_AUDIT_20260812.md"
+  ],
+  "invariants": [
+    "strategy_contract_unchanged",
+    "api_contract_unchanged",
+    "no_new_indicators_or_parameters",
+    "no_data_refresh_or_backtest_change",
+    "no_real_broker_or_order_capability",
+    "json_standard_library_compatible",
+    "ordinary_candidates_cannot_self_authorize_task_scope"
+  ],
+  "acceptance_gates": [
+    "context_registry",
+    "task_scope",
+    "ownership_scope",
+    "protected_scope",
+    "protected_manifest",
+    "test_integrity",
+    "developer_tests",
+    "independent_tests",
+    "candidate_sha",
+    "workspace_clean",
+    "evidence_integrity"
+  ],
+  "stop_conditions": [
+    "task_contract_missing_from_trusted_ref",
+    "required_context_missing",
+    "router_or_registry_malformed",
+    "candidate_changes_outside_allowed_write_paths",
+    "strategy_or_api_contract_changed",
+    "protected_baseline_promotion_not_reviewed",
+    "test_failure_or_skipped_protected_test"
+  ],
+  "expected_artifacts": [
+    "candidate_commit",
+    "local_evidence_bundle",
+    "protected_manifest_update",
+    "governance_change_report"
+  ],
+  "completion_status": {
+    "builder_may_report": ["READY_FOR_VERIFICATION", "BASELINE_PROMOTION_REQUIRED"],
+    "builder_may_not_report": ["VERIFIED", "CI_VERIFIED", "PRODUCT_BASELINE"]
+  }
+}

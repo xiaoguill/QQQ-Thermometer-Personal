@@ -7,7 +7,10 @@
     "contracts/",
     "verification/",
     "configs/frozen/",
-    ".github/workflows/verification.yml"
+    ".github/workflows/verification.yml",
+    "AI_CONTEXT_ROUTER.json",
+    "tasks/",
+    "docs/DOCUMENT_REGISTRY.json"
   ],
   "roles": {
     "frontend_builder": {
@@ -28,7 +31,13 @@
     "integrator": {
       "write": ["frontend/", "src/api/", "src/storage/", "src/jobs/", "src/thermometer/", "src/web/", "tests/", "docs/", "README.md", "README_PERSONAL.md"],
       "read_only": ["contracts/", "verification/", "configs/frozen/", "OWNERSHIP.yaml"],
-      "forbidden": ["OWNERSHIP.yaml", "contracts/", "verification/", "configs/frozen/", ".github/workflows/verification.yml"]
+      "forbidden": ["OWNERSHIP.yaml", "contracts/", "verification/", "configs/frozen/", ".github/workflows/verification.yml", "AI_CONTEXT_ROUTER.json", "tasks/", "docs/DOCUMENT_REGISTRY.json"]
+    },
+    "governance_maintainer": {
+      "write": ["AGENTS.md", "OWNERSHIP.yaml", "AI_CONTEXT_ROUTER.json", "tasks/", "docs/DOCUMENT_REGISTRY.json", "docs/PERSONAL_WORKSPACE_INDEX.md", "docs/QQQ_THERMOMETER_MODULE_PLAN.md", "verification/", ".github/workflows/verification.yml", "tests/data_contracts/"],
+      "protected_write": ["OWNERSHIP.yaml", "AI_CONTEXT_ROUTER.json", "tasks/", "docs/DOCUMENT_REGISTRY.json", "verification/", ".github/workflows/verification.yml"],
+      "read_only": ["contracts/", "configs/frozen/", "src/", "frontend/", "research/"],
+      "forbidden": ["contracts/", "configs/frozen/", "src/", "frontend/", "research/", "docs/reference/", "docs/REPO_CLEANUP_AUDIT_20260812.md"]
     }
   }
 }
