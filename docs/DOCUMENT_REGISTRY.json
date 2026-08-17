@@ -140,6 +140,15 @@
       "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml", "configs/frozen/strategy_contract.json", "contracts/openapi.json"]
     },
     {
+      "path": "tasks/M08.json",
+      "doc_id": "QQQ-TASK-M08",
+      "type": "task_contract",
+      "status": "approved",
+      "authority": "L3",
+      "read_when": ["M08", "data_pipeline", "storage", "migrations", "repositories"],
+      "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml", "docs/PERSONAL_USE_GOVERNANCE.md", "verification/control/policy.json"]
+    },
+    {
       "path": "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
       "doc_id": "QQQ-GOV-VERIFICATION-001",
       "type": "normative_governance",
