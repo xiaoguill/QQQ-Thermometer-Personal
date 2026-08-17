@@ -137,6 +137,25 @@
         "docs/QQQ_THERMOMETER_ARCHITECTURE.md"
       ]
     },
+    "release_acceptance": {
+      "path_prefixes": [
+        "tests/e2e/",
+        "docs/release/"
+      ],
+      "default_role": "integrator",
+      "task_contract_pattern": "tasks/{task_id}.json",
+      "required_context": [
+        "contracts/openapi.json",
+        "docs/QQQ_THERMOMETER_GOVERNANCE_BOUNDARIES.md",
+        "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
+        "docs/PERSONAL_USE_GOVERNANCE.md",
+        "docs/WORKTREE_RESTORE_PROTOCOL.md"
+      ],
+      "optional_context": [
+        "docs/QQQ_THERMOMETER_ARCHITECTURE.md",
+        "docs/QQQ_THERMOMETER_MODULE_PLAN.md"
+      ]
+    },
     "research": {
       "path_prefixes": [
         "research/",
