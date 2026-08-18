@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="QQQ Thermometer M17 unified local portal">
+  <title>Northstar / Unified Portal</title>
+  <link rel="stylesheet" href="/m17/styles.css">
+</head>
+<body>
+  <div class="portal-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="返回统一入口">
+        <span class="brand-mark" aria-hidden="true"><i></i><b></b></span>
+        <span><small>NORTHSTAR</small><strong>QQQ Thermometer</strong></span>
+      </a>
+      <div class="topbar-meta">
+        <span class="privacy-chip"><span class="status-dot" id="privacyDot"></span>本机只读</span>
+        <span class="clock" id="clock">--</span>
+        <span class="connection-chip" id="connectionChip"><span class="status-dot" id="connectionDot"></span><span id="connectionText">连接中</span></span>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <section class="intro-row">
+        <div>
+          <p class="eyebrow">M17 / UNIFIED PERSONAL PORTAL</p>
+          <h1>把观察、确认与纸上计划放在<span>一张桌面上。</span></h1>
+          <p class="intro-copy">盘中行情只作为临时观察；策略状态和目标权重仍以既有确认 API 为准。这里提供实时温度、目标差异与回放入口，但不会创建订单。</p>
+        </div>
+        <div class="intro-actions">
+          <button class="button primary" id="refreshButton" type="button">刷新观察</button>
+          <button class="button secondary" id="planButton" type="button">生成纸上计划</button>
+        </div>
+      </section>
+
+      <section class="hero-grid" aria-label="市场状态">
+        <article class="panel temperature-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">LIVE OBSERVATION</p><h2>实时温度</h2></div>
+            <span class="tag provisional">盘中临时观察</span>
+          </div>
+          <div class="temperature-body">
+            <div class="temperature-dial" id="temperatureDial" aria-label="实时温度">
+              <div class="dial-core"><strong id="temperatureValue">--</strong><small>/ 100</small></div>
+            </div>
+            <div class="temperature-copy">
+              <p class="micro-label">当前观测状态</p>
+              <h3 id="liveState">等待数据</h3>
+              <p id="liveSummary">尚未收到 Massive 盘中观察。缺失数据时不会推断行情状态。</p>
+              <div class="inline-facts"><span id="liveQuality">质量 --</span><span id="liveAsOf">更新时间 --</span></div>
+            </div>
+          </div>
+          <div class="scale"><span>冷</span><div><i></i><b id="temperatureMarker"></b></div><span>热</span></div>
+        </article>
+
+        <article class="panel confirmed-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">CONFIRMED STRATEGY</p><h2>确认策略</h2></div>
+            <span class="tag confirmed" id="confirmedTag">尚未确认</span>
+          </div>
+          <div class="confirmed-state">
+            <span class="state-orb" id="stateOrb" aria-hidden="true"></span>
+            <div><strong id="confirmedState">需要复核</strong><p id="confirmedReason">既有确认 API 尚未提供可用状态。</p></div>
+          </div>
+          <dl class="fact-grid">
+            <div><dt>策略版本</dt><dd id="strategyVersion">--</dd></div>
+            <div><dt>信号日期</dt><dd id="signalDate">--</dd></div>
+            <div><dt>趋势</dt><dd id="strategyTrend">--</dd></div>
+            <div><dt>信号一致度</dt><dd id="signalAgreement">--</dd></div>
+          </dl>
+          <p class="guardrail"><span>●</span>目标权重只从确认结果读取，不由盘中温度重新计算。</p>
+        </article>
+      </section>
+
+      <section class="metric-grid" aria-label="数据摘要">
+        <article class="metric-card"><p>Massive Key</p><strong id="massiveKey">--</strong><small id="massiveStatus">--</small></article>
+        <article class="metric-card"><p>轮询频率</p><strong id="refreshInterval">--</strong><small>配置文件可调整</small></article>
+        <article class="metric-card"><p>确认 API</p><strong id="confirmedApi">--</strong><small id="confirmedQuality">--</small></article>
+        <article class="metric-card"><p>纸上输入</p><strong id="paperInput">--</strong><small id="paperInputDetail">--</small></article>
+        <article class="metric-card"><p>失败计数</p><strong id="failureCount">--</strong><small>连续轮询失败</small></article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel table-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">TARGET MAP</p><h2>确认目标仓位</h2></div>
+            <span class="quiet-label">只读 · confirmed</span>
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>标的</th><th>目标权重</th><th>来源</th></tr></thead><tbody id="targetRows"></tbody></table>
+          </div>
+          <p class="table-note" id="targetNote">目标仓位等待确认结果。</p>
+        </article>
+
+        <article class="panel plan-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">PAPER-ONLY WORKBENCH</p><h2>纸上调仓计划</h2></div>
+            <span class="tag paper">不产生订单</span>
+          </div>
+          <div class="plan-status" id="planStatus"><span class="status-dot"></span><strong>尚未生成</strong></div>
+          <p class="plan-reason" id="planReason">点击“生成纸上计划”后，服务器会使用本地显式持仓与最新观察估值。</p>
+          <div class="table-wrap compact"><table><thead><tr><th>标的</th><th>方向</th><th>目标差异</th></tr></thead><tbody id="planRows"></tbody></table></div>
+          <p class="table-note" id="planNote">需要在 configs/paper/m17.json 填写个人纸上现金或持仓。</p>
+        </article>
+      </section>
+
+      <section class="content-grid lower-grid">
+        <article class="panel observation-panel">
+          <div class="panel-heading"><div><p class="eyebrow">MASSIVE OBSERVATIONS</p><h2>最新数据质量</h2></div><span class="quiet-label" id="batchTime">--</span></div>
+          <div class="observation-list" id="observationRows"></div>
+        </article>
+        <article class="panel health-panel">
+          <div class="panel-heading"><div><p class="eyebrow">LOCAL HEALTH</p><h2>运行边界</h2></div><span class="quiet-label">Asia/Shanghai</span></div>
+          <div class="health-list" id="healthRows"></div>
+          <div class="navigation-block"><p class="eyebrow">LEGACY MODULES</p><nav aria-label="旧模块页面">
+            <a href="/dashboard/index.html">Dashboard 回测</a><a href="/m14/index.html">M14 回放审计</a><a href="/demo/index.html">原 Demo</a><a href="/shell/index.html">M12 壳层</a><a href="/m16/index.html">M16 实时页</a>
+          </nav></div>
+        </article>
+      </section>
+
+      <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    </main>
+
+    <footer class="footer"><span>M17 unified portal · local personal use</span><span>Massive → provisional observation · Confirmed API → strategy target · Paper plan → no execution</span></footer>
+  </div>
+  <script src="/m17/app.js" defer></script>
+</body>
+</html>

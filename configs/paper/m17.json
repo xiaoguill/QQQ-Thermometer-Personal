@@ -1,0 +1,8 @@
+{
+  "$schema": "qqq-m17-paper-input/v1",
+  "portfolio_id": "personal-paper-default",
+  "base_currency": "USD",
+  "starting_cash": 0,
+  "positions": {},
+  "note": "只读纸上计划输入。请按个人实际持仓修改本地文件；系统不会读取券商账户。"
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "qqq-m17-private-release-manifest/v1",
+  "task_id": "M17",
+  "version": "m17-unified-portal/v1",
+  "status": "CANDIDATE_PENDING_EVIDENCE",
+  "trusted_baseline": {
+    "ref": "verification-baseline-v3.27",
+    "commit": "6a8d49c2697ae73de00785303329f6a217fb459f",
+    "previous_ref": "verification-baseline-v3.26",
+    "previous_m16_release": "m16-private-release-candidate-v2"
+  },
+  "entrypoint": "python -m src.api.m17 --config configs/m17/unified.json",
+  "url": "http://127.0.0.1:4173/",
+  "display_timezone": "Asia/Shanghai",
+  "refresh_interval_seconds": 900,
+  "paper_only": true,
+  "execution_allowed": false,
+  "order_created": false,
+  "broker_connected": false,
+  "legacy_routes_preserved": [
+    "/dashboard/index.html",
+    "/m14/index.html",
+    "/demo/index.html",
+    "/shell/index.html",
+    "/m16/index.html"
+  ],
+  "candidate_commit": "PENDING_FINAL_CANDIDATE_COMMIT",
+  "evidence": {
+    "local": "PENDING_HARNESS_EVIDENCE",
+    "github_ci": "PENDING_GITHUB_CI_EVIDENCE",
+    "promotion_status": "BASELINE_PROMOTION_REQUIRED"
+  },
+  "rollback": {
+    "ref": "m16-private-release-candidate-v2",
+    "commit": "41c0da6ab697bf6f434b670d4844b814218948cd"
+  }
+}

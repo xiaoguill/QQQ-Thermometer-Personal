@@ -1,0 +1,14 @@
+{
+  "$schema": "qqq-m17-unified-runtime/v1",
+  "m17_version": "m17-unified-portal/v1",
+  "host": "127.0.0.1",
+  "port": 4173,
+  "static_root": "frontend",
+  "m16_config_path": "configs/realtime/massive.json",
+  "confirmed_api_base_url": "http://127.0.0.1:8765",
+  "confirmed_api_token_env": "QQQ_LOCAL_API_TOKEN",
+  "paper_config_path": "configs/paper/m17.json",
+  "display_timezone": "Asia/Shanghai",
+  "heartbeat_seconds": 15,
+  "confirmed_api_timeout_seconds": 5
+}
