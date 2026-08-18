@@ -1,0 +1,27 @@
+{
+  "$schema": "qqq-realtime-config/v1",
+  "provider": "massive",
+  "mode": "rest_poll",
+  "base_url": "https://api.massive.com",
+  "api_key_env": "MASSIVE_API_KEY",
+  "refresh_interval_seconds": 900,
+  "request_timeout_seconds": 15,
+  "display_timezone": "Asia/Shanghai",
+  "market_timezone": "America/New_York",
+  "max_source_age_seconds": 1800,
+  "future_skew_seconds": 60,
+  "symbols": [
+    {"symbol": "QQQ", "asset_class": "stocks", "role": "strategy_input"},
+    {"symbol": "QLD", "asset_class": "stocks", "role": "target_asset"},
+    {"symbol": "VOO", "asset_class": "stocks", "role": "benchmark"},
+    {"symbol": "SPY", "asset_class": "stocks", "role": "benchmark"},
+    {"symbol": "BIL", "asset_class": "stocks", "role": "defensive_asset"},
+    {"symbol": "TLT", "asset_class": "stocks", "role": "defensive_asset"},
+    {"symbol": "IAU", "asset_class": "stocks", "role": "defensive_asset"},
+    {"symbol": "XLU", "asset_class": "stocks", "role": "defensive_asset"},
+    {"symbol": "SVXY", "asset_class": "stocks", "role": "target_asset"},
+    {"symbol": "VXX", "asset_class": "stocks", "role": "defensive_asset"},
+    {"symbol": "I:VIX", "asset_class": "indices", "role": "strategy_input"},
+    {"symbol": "I:VIX3M", "asset_class": "indices", "role": "strategy_input"}
+  ]
+}
