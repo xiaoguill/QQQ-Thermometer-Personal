@@ -4,9 +4,9 @@
   "version": "m17-unified-portal/v1",
   "status": "BASELINE_PROMOTION_REQUIRED",
   "trusted_baseline": {
-    "ref": "verification-baseline-v3.27",
-    "commit": "6a8d49c2697ae73de00785303329f6a217fb459f",
-    "previous_ref": "verification-baseline-v3.26",
+    "ref": "verification-baseline-v3.28",
+    "commit": "85bce72f200ad5c1c9ed29a16cfbe2de3624ed6b",
+    "previous_ref": "verification-baseline-v3.27",
     "previous_m16_release": "m16-private-release-candidate-v2"
   },
   "entrypoint": "python -m src.api.m17 --config configs/m17/unified.json",
@@ -24,7 +24,7 @@
     "/shell/index.html",
     "/m16/index.html"
   ],
-  "candidate_ref": "m17-private-release-candidate",
+  "candidate_ref": "m17-private-release-candidate-v2",
   "candidate_commit": "bound to candidate_ref tag",
   "evidence": {
     "local": "external bundle keyed by candidate commit: m17-local-evidence-<candidate-sha>/evidence.json",
