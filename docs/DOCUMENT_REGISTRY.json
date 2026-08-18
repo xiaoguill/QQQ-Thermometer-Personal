@@ -212,6 +212,15 @@
       "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml", "tasks/M14.json", "docs/PERSONAL_USE_GOVERNANCE.md", "verification/control/policy.json"]
     },
     {
+      "path": "tasks/M16.json",
+      "doc_id": "QQQ-TASK-M16",
+      "type": "task_contract",
+      "status": "approved",
+      "authority": "L3",
+      "read_when": ["M16", "realtime", "massive", "observation", "notifications", "sse"],
+      "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml", "tasks/M15.json", "contracts/openapi.json", "verification/control/policy.json"]
+    },
+    {
       "path": "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
       "doc_id": "QQQ-GOV-VERIFICATION-001",
       "type": "normative_governance",
