@@ -44,11 +44,12 @@ class _NoRedirectHandler(HTTPRedirectHandler):
         return None
 
 
-_NO_REDIRECT_OPENER = build_opener(_NoRedirectHandler)
-
-
 def _open_request(request: Request, *, timeout: int):
-    return _NO_REDIRECT_OPENER.open(request, timeout=timeout)
+    # Build lazily so importing the read-only adapter never initializes TLS.
+    # This also keeps isolated verification processes able to run without a
+    # network or certificate subsystem being touched.
+    opener = build_opener(_NoRedirectHandler)
+    return opener.open(request, timeout=timeout)
 
 
 def _decode_payload(body: bytes) -> dict[str, Any]:
