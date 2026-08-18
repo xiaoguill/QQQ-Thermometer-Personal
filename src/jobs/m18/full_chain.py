@@ -341,6 +341,8 @@ class M18FullChainPipeline:
             runtime_boundary=runtime,
             latest_data_quality=tuple(event.as_dict() for event in normalization.quality_events),
             reason_codes=_reason_codes((str(value) for value in reason_codes),),
+            latest_indicator=None if latest_indicator is None else latest_indicator.as_dict(),
+            explanation=None if latest_explanation is None else latest_explanation.as_dict(),
         )
         return M18PipelineOutput(
             snapshot=snapshot,

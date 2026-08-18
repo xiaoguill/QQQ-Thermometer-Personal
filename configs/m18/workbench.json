@@ -1,0 +1,22 @@
+{
+  "$schema": "qqq-m18-runtime-config/v1",
+  "m18_version": "m18-full-chain/v1",
+  "host": "127.0.0.1",
+  "port": 4180,
+  "static_root": "frontend/m18",
+  "database_path": "%LOCALAPPDATA%/QQQ-Thermometer-Personal/m18.sqlite3",
+  "realtime_config_path": "configs/realtime/massive.json",
+  "display_timezone": "Asia/Shanghai",
+  "refresh_interval_seconds": 900,
+  "history_start_date": "2008-01-01",
+  "history_end_date": null,
+  "history_symbols": null,
+  "paper_portfolio_id": "m18-paper",
+  "paper": {
+    "initial_cash": 100000,
+    "cost_bps": 5.0,
+    "slippage_bps": 0.0,
+    "price_basis": "adjusted_ohlcv",
+    "allow_fractional_shares": true
+  }
+}

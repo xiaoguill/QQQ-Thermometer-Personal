@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QQQ Thermometer · M18 Workbench</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">◎</span><div><strong>QQQ</strong><small>THERMOMETER</small></div></div>
+      <div class="side-caption">PERSONAL WORKBENCH</div>
+      <nav class="nav" aria-label="工作台导航">
+        <a class="nav-link active" href="#overview"><span>01</span>全链路总览</a>
+        <a class="nav-link" href="#strategy"><span>02</span>确认策略</a>
+        <a class="nav-link" href="#paper"><span>03</span>纸上计划</a>
+        <a class="nav-link" href="#modules"><span>04</span>M00.5–M17</a>
+      </nav>
+      <div class="side-note"><span class="dot"></span><div><strong>LOCAL / PAPER ONLY</strong><p>页面只读<br>不会连接券商或创建订单</p></div></div>
+      <div class="side-footer">M18 · FULL-CHAIN / V1<br><span>Asia/Shanghai display</span></div>
+    </aside>
+
+    <main class="content" id="overview">
+      <header class="topbar">
+        <div><p class="eyebrow">M18 / UNIFIED OBSERVATION</p><h1>市场温度工作台</h1><p class="subline">把数据、质量、策略确认与纸上计划放在同一条可回放链路里。</p></div>
+        <div class="top-actions"><span class="pill" id="refreshPill">等待读取</span><button id="refreshButton" type="button">刷新读模型</button></div>
+      </header>
+
+      <section class="notice" id="notice" hidden></section>
+
+      <section class="hero-grid">
+        <article class="panel live-panel">
+          <div class="panel-head"><div><p class="eyebrow">M16 / PROVISIONAL</p><h2>实时温度</h2></div><span class="status-chip provisional">盘中观察</span></div>
+          <div class="live-main">
+            <div class="dial" id="provisionalDial"><div class="dial-inner"><strong id="provisionalTemperature">—</strong><span>/ 100</span><small id="provisionalLabel">等待盘中观察</small></div></div>
+            <div class="live-copy"><p class="label">当前观察状态</p><h3 id="provisionalState">未发布温度</h3><p id="provisionalReason">M16 只提供盘中观察；正式策略不会由盘中数据改写。</p><dl class="facts"><div><dt>观察时间</dt><dd id="provisionalTime">—</dd></div><div><dt>来源版本</dt><dd id="provisionalVersion">—</dd></div><div><dt>观测标的</dt><dd id="provisionalSymbols">—</dd></div></dl></div>
+          </div>
+          <div class="scale"><span>冷</span><i><b id="provisionalMarker"></b></i><span>热</span></div>
+          <div class="observation-strip" id="observationStrip"></div>
+        </article>
+
+        <article class="panel confirmed-panel" id="strategy">
+          <div class="panel-head"><div><p class="eyebrow">M04 → M07 / CONFIRMED</p><h2>确认策略</h2></div><span class="status-chip confirmed" id="confirmedChip">未确认</span></div>
+          <div class="confirmed-main"><span class="state-orb" id="confirmedOrb"></span><div><p class="label">正式收盘状态</p><h3 id="confirmedState">需要复核</h3><p id="confirmedReason">等待 M04–M07 的完整确认链路。</p></div></div>
+          <div class="metric-row"><div><span>正式温度</span><strong id="confirmedTemperature">—</strong></div><div><span>信号日</span><strong id="signalDate">—</strong></div><div><span>执行日</span><strong id="executionDate">—</strong></div></div>
+          <div class="version-line"><span>策略版本</span><strong id="strategyVersion">—</strong><span>数据版本</span><strong id="dataVersion">—</strong></div>
+        </article>
+      </section>
+
+      <section class="summary-grid">
+        <article class="metric-card"><span>最新数据质量</span><strong id="overallQuality">—</strong><small id="qualityCaption">尚未读取 M18 读模型</small></article>
+        <article class="metric-card"><span>运行边界</span><strong id="runtimeStatus">—</strong><small id="runtimeCaption">—</small></article>
+        <article class="metric-card"><span>纸上调仓计划</span><strong id="paperStatus">—</strong><small id="paperCaption">不会创建订单</small></article>
+        <article class="metric-card"><span>确认目标仓位</span><strong id="targetCount">—</strong><small id="targetCaption">只读 CONFIRMED 结果</small></article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel" id="paper"><div class="panel-head"><div><p class="eyebrow">M09 / PAPER LEDGER</p><h2>纸上调仓计划</h2></div><span class="status-chip" id="paperChip">—</span></div><div id="paperBody" class="table-wrap"></div></article>
+        <article class="panel"><div class="panel-head"><div><p class="eyebrow">M07 / TARGET MAP</p><h2>确认目标仓位</h2></div><span class="status-chip confirmed">只读</span></div><div id="targetBody" class="weight-list"></div></article>
+      </section>
+
+      <section class="content-grid lower-grid">
+        <article class="panel"><div class="panel-head"><div><p class="eyebrow">M02 → M04 / EVIDENCE</p><h2>数据质量与指标</h2></div><span class="panel-meta" id="qualityAsOf">—</span></div><div id="qualityBody" class="evidence-list"></div><div class="indicator-box"><div class="subhead"><span>M04 最新指标</span><span id="indicatorDate">—</span></div><div id="indicatorBody" class="indicator-grid"></div></div></article>
+        <article class="panel"><div class="panel-head"><div><p class="eyebrow">M06 / EXPLANATION</p><h2>状态依据</h2></div><span class="panel-meta" id="explanationQuality">—</span></div><div id="explanationBody" class="explanation-body"></div></article>
+      </section>
+
+      <section class="panel module-panel" id="modules"><div class="panel-head"><div><p class="eyebrow">PROVENANCE / MODULE INVENTORY</p><h2>M00.5–M17 模块状态</h2></div><span class="panel-meta" id="moduleCount">—</span></div><div class="table-wrap"><table><thead><tr><th>模块</th><th>职责</th><th>状态</th><th>质量</th><th>发布</th><th>版本 / 运行</th><th>原因</th></tr></thead><tbody id="moduleBody"></tbody></table></div></section>
+
+      <footer class="footer"><span>数据源与时间戳由后端读模型提供 · 内部时间 UTC · 页面显示 Asia/Shanghai</span><span id="lastUpdated">最后读取：—</span></footer>
+    </main>
+  </div>
+</body>
+</html>

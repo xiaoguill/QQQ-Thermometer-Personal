@@ -13,7 +13,7 @@ import hashlib
 import json
 import math
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from typing import Any, Mapping, Sequence
 
@@ -313,6 +313,7 @@ class ProvisionalObservation:
     run_id: str | None
     reason_codes: tuple[str, ...] = ()
     source_symbols: tuple[str, ...] = ()
+    observations: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         _require(self.status in MODULE_STATUS_VALUES, "unsupported provisional status")
@@ -330,6 +331,12 @@ class ProvisionalObservation:
         _optional_text(self.state, "provisional.state", maximum=128)
         object.__setattr__(self, "reason_codes", _unique_strings(self.reason_codes, "provisional.reason_codes"))
         object.__setattr__(self, "source_symbols", _unique_strings(self.source_symbols, "provisional.source_symbols"))
+        _require(isinstance(self.observations, Mapping), "provisional.observations must be an object")
+        safe_observations: dict[str, Mapping[str, Any]] = {}
+        for symbol, payload in self.observations.items():
+            _require(isinstance(payload, Mapping), f"provisional.observations.{symbol} must be an object")
+            safe_observations[str(symbol)] = _json_copy(payload, f"provisional.observations.{symbol}")
+        object.__setattr__(self, "observations", dict(sorted(safe_observations.items())))
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -344,6 +351,7 @@ class ProvisionalObservation:
             "run_id": self.run_id,
             "reason_codes": list(self.reason_codes),
             "source_symbols": list(self.source_symbols),
+            "observations": _json_copy(self.observations, "provisional.observations"),
         }
 
     @classmethod
@@ -360,6 +368,7 @@ class ProvisionalObservation:
             run_id=value.get("run_id"),
             reason_codes=tuple(value.get("reason_codes", ())),
             source_symbols=tuple(value.get("source_symbols", ())),
+            observations=value.get("observations", {}),
         )
 
 
@@ -586,6 +595,8 @@ class FullChainSnapshot:
     runtime_boundary: RuntimeBoundary
     latest_data_quality: tuple[Mapping[str, Any], ...] = ()
     reason_codes: tuple[str, ...] = ()
+    latest_indicator: Mapping[str, Any] | None = None
+    explanation: Mapping[str, Any] | None = None
 
     def __post_init__(self) -> None:
         _text(self.run_id, "run_id")
@@ -608,6 +619,10 @@ class FullChainSnapshot:
         _require(isinstance(self.latest_data_quality, tuple), "latest_data_quality must be a tuple")
         for item in self.latest_data_quality:
             _json_copy(item, "latest_data_quality item")
+        if self.latest_indicator is not None:
+            _json_copy(self.latest_indicator, "latest_indicator")
+        if self.explanation is not None:
+            _json_copy(self.explanation, "explanation")
         reasons = _unique_strings(self.reason_codes, "reason_codes")
         object.__setattr__(self, "created_at", created)
         object.__setattr__(self, "as_of", as_of)
@@ -642,6 +657,8 @@ class FullChainSnapshot:
             "runtime_boundary": self.runtime_boundary.as_dict(),
             "latest_data_quality": [_json_copy(item, "latest_data_quality item") for item in self.latest_data_quality],
             "reason_codes": list(self.reason_codes),
+            "latest_indicator": None if self.latest_indicator is None else _json_copy(self.latest_indicator, "latest_indicator"),
+            "explanation": None if self.explanation is None else _json_copy(self.explanation, "explanation"),
         }
         _json_copy(payload, "full_chain_snapshot")
         return payload
@@ -674,6 +691,8 @@ class FullChainSnapshot:
             runtime_boundary=RuntimeBoundary.from_dict(value.get("runtime_boundary")),
             latest_data_quality=tuple(value.get("latest_data_quality", ())),
             reason_codes=tuple(value.get("reason_codes", ())),
+            latest_indicator=value.get("latest_indicator"),
+            explanation=value.get("explanation"),
         )
 
 
