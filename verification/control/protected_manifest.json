@@ -1,11 +1,11 @@
 {
   "schema": "qqq-protected-manifest/v1",
-  "manifest_version": "1.20.0",
+  "manifest_version": "1.21.0",
   "source": "trusted-protected-ref-git-blob-sha256",
   "entries": {
     ".github/workflows/verification.yml": "1ff293d870717c84441cc40dc1ff516132506b6a40132886a9b4c6d41e89e0b8",
     "AI_CONTEXT_ROUTER.json": "5c9f77203ad4176c2812a9a9603cb8ba19f099c963fb3d44fc9ab4474dce65c5",
-    "OWNERSHIP.yaml": "1f8b08cb2ed733609469bf98d558a621c02cf7dbfc500d8d48ea404fdbd4c0f7",
+    "OWNERSHIP.yaml": "83c8e7cdcd6c4c2a484ec930994f8a33add1220885c252e42e3bf64f59c13f1e",
     "configs/frozen/strategy_contract.json": "29233398143762cf0afd57a92de209db1fd5e1635e6206bae154418be3b5ad99",
     "contracts/README.md": "6ce9d85bca2fd8b2f728858fc7ba42b2daeee912e4ee520f1e089426918c5fcc",
     "contracts/openapi.json": "45b36620f2a9854c7e0ddb31b71a4a1a0c1264d5a5b7b4e5115c8a471c00928d",
