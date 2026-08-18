@@ -199,6 +199,49 @@
         "frontend/m14/README.md"
       ]
     },
+    "unified_personal_portal": {
+      "path_prefixes": [
+        "configs/m17/",
+        "configs/paper/",
+        "src/api/m17/",
+        "src/paper/m17/",
+        "frontend/m17/",
+        "tests/api/m17/",
+        "tests/paper/m17/",
+        "tests/frontend/m17/",
+        "tests/e2e/m17/",
+        "docs/m17/"
+      ],
+      "default_role": "integrator",
+      "task_contract_pattern": "tasks/{task_id}.json",
+      "required_context": [
+        "contracts/openapi.json",
+        "docs/QQQ_THERMOMETER_GOVERNANCE_BOUNDARIES.md",
+        "docs/PERSONAL_USE_GOVERNANCE.md",
+        "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
+        "docs/QQQ_THERMOMETER_ARCHITECTURE.md",
+        "docs/QQQ_THERMOMETER_MODULE_PLAN.md",
+        "tasks/M15.json",
+        "tasks/M16.json",
+        "src/api/read_api.py",
+        "src/api/http_server.py",
+        "src/api/live_api.py",
+        "src/api/live_server.py",
+        "src/realtime/config.py",
+        "src/realtime/runtime.py",
+        "frontend/shell/README.md",
+        "frontend/dashboard/README.md",
+        "frontend/m14/README.md",
+        "frontend/demo/README.md",
+        "frontend/m16/README.md"
+      ],
+      "optional_context": [
+        "src/notifications/events.py",
+        "src/realtime/models.py",
+        "frontend/shell/api-client.mjs",
+        "frontend/m16/app.js"
+      ]
+    },
     "research": {
       "path_prefixes": [
         "research/",
