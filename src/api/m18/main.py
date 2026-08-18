@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -20,6 +21,23 @@ from src.storage.sqlite_store import SQLiteRepository, SQLiteStore
 from .config import DEFAULT_CONFIG_PATH, M18Config, load_m18_config
 from .http_server import create_http_server
 from .service import M18ApiService, create_empty_snapshot
+
+
+_SENSITIVE_ERROR_PATTERN = re.compile(
+    r"(?i)(api[_-]?key|authorization|bearer|token|secret|password)"
+    r"(?:\s*[:=]\s*|\s+)[^,;\s]+"
+)
+
+
+def _safe_startup_error(exc: BaseException) -> str:
+    """Return a bounded diagnostic without exposing credentials or payloads."""
+
+    message = str(exc).strip() or "no_message"
+    message = _SENSITIVE_ERROR_PATTERN.sub(
+        lambda match: f"{match.group(1)}=<redacted>",
+        message,
+    )
+    return f"{type(exc).__name__}: {message[:240]}"
 
 
 def _latest_session(calendar: TradingCalendar, start_date: str, end_date: str) -> str:
@@ -144,6 +162,7 @@ def build_application(config: M18Config, *, environ: dict[str, str] | None = Non
             # Keep the server available with a typed fail-closed state. The
             # exception type is safe to expose locally as a reason code; the
             # key and provider response are never included.
+            print(f"M18 startup refresh failed: {_safe_startup_error(exc)}", flush=True)
             runtime = _runtime_boundary(
                 config,
                 configured=key_configured,
