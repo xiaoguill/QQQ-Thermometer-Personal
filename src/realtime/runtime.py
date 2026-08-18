@@ -131,6 +131,10 @@ class RuntimeBundle:
     event_bus: LiveEventBus
     live_api: LiveApiService
     runtime: RealtimeRuntime
+    confirmed_read_model_path: str | None = None
+
+    def close(self) -> None:
+        return None
 
 
 def create_runtime_from_env(
@@ -142,9 +146,23 @@ def create_runtime_from_env(
     client = MassiveClient.from_env(config, environ=environ)
     poller = RealtimePoller(config, client)
     event_bus = LiveEventBus()
-    live_api = create_live_app(event_bus)
+    live_api = create_live_app(event_bus, confirmed_read_model_path=config.confirmed_read_model_path)
     runtime = RealtimeRuntime(config, poller, live_api)
-    return RuntimeBundle(config, client, poller, event_bus, live_api, runtime)
+    return RuntimeBundle(config, client, poller, event_bus, live_api, runtime, config.confirmed_read_model_path)
 
 
-__all__ = ["RealtimeRuntime", "RuntimeBundle", "RuntimeSnapshot", "create_runtime_from_env"]
+def create_unavailable_live_app(
+    config_path: str | Path = DEFAULT_CONFIG_PATH,
+    *,
+    reason: str = "MASSIVE_API_KEY_UNAVAILABLE",
+) -> tuple[RealtimeConfig, LiveApiService]:
+    """Start a visible fail-closed page when the provider runtime cannot start."""
+
+    config = load_realtime_config(config_path)
+    event_bus = LiveEventBus()
+    live_api = create_live_app(event_bus, confirmed_read_model_path=config.confirmed_read_model_path)
+    live_api.publish_service_status(reason, occurred_at_utc=datetime.now(timezone.utc))
+    return config, live_api
+
+
+__all__ = ["RealtimeRuntime", "RuntimeBundle", "RuntimeSnapshot", "create_runtime_from_env", "create_unavailable_live_app"]

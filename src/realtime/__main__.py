@@ -8,7 +8,8 @@ from pathlib import Path
 from src.api.live_server import create_live_server
 
 from .config import DEFAULT_CONFIG_PATH
-from .runtime import create_runtime_from_env
+from .massive_client import MissingApiKeyError
+from .runtime import create_runtime_from_env, create_unavailable_live_app
 
 
 DEFAULT_STATIC_ROOT = Path(__file__).resolve().parents[2] / "frontend" / "m16"
@@ -22,21 +23,33 @@ def main() -> int:
     parser.add_argument("--static-root", default=str(DEFAULT_STATIC_ROOT))
     args = parser.parse_args()
 
-    bundle = create_runtime_from_env(args.config)
-    server = create_live_server(bundle.live_api, host=args.host, port=args.port, static_root=args.static_root)
-    bundle.runtime.start()
+    bundle = None
+    runtime = None
+    try:
+        bundle = create_runtime_from_env(args.config)
+        config = bundle.config
+        live_api = bundle.live_api
+        runtime = bundle.runtime
+    except MissingApiKeyError:
+        config, live_api = create_unavailable_live_app(args.config)
+        print("M16 live observer: Massive API key is unavailable; serving fail-closed page")
+    server = create_live_server(live_api, host=args.host, port=args.port, static_root=args.static_root)
+    if runtime is not None:
+        runtime.start()
     print(f"M16 live observer: http://{args.host}:{server.server_address[1]}/")
-    print(f"refresh_interval_seconds={bundle.config.refresh_interval_seconds} display_timezone={bundle.config.display_timezone}")
+    print(f"refresh_interval_seconds={config.refresh_interval_seconds} display_timezone={config.display_timezone}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         return 0
     finally:
-        bundle.runtime.stop()
+        if runtime is not None:
+            runtime.stop()
+        if bundle is not None:
+            bundle.close()
         server.server_close()
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

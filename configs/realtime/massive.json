@@ -10,6 +10,7 @@
   "market_timezone": "America/New_York",
   "max_source_age_seconds": 1800,
   "future_skew_seconds": 0,
+  "confirmed_read_model_path": null,
   "symbols": [
     {"symbol": "QQQ", "asset_class": "stocks", "role": "strategy_input"},
     {"symbol": "QLD", "asset_class": "stocks", "role": "target_asset"},

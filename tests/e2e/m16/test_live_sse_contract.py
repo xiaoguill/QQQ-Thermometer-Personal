@@ -25,6 +25,17 @@ class M16LiveSseContractTests(unittest.TestCase):
         self.assertEqual(next(stream.iter_frames()), b": connected\n\n")
         self.assertTrue(stream.next_frame(timeout_seconds=0).startswith(b"id: evt-"))
 
+    def test_service_status_notification_allows_a_later_recovery_transition(self):
+        bus = LiveEventBus()
+        first = bus.publish_service_status("ready", occurred_at_utc=NOW)
+        self.assertIsNotNone(first)
+        self.assertIsNone(bus.publish_service_status("ready", occurred_at_utc=NOW))
+        degraded = bus.publish_service_status("degraded", occurred_at_utc=NOW)
+        recovered = bus.publish_service_status("ready", occurred_at_utc=NOW)
+        self.assertIsNotNone(degraded)
+        self.assertIsNotNone(recovered)
+        self.assertNotEqual(first.event_id, recovered.event_id)
+
     def test_external_client_is_rejected_before_stream_body(self):
         service = LiveApiService(
             LiveEventBus(),

@@ -58,6 +58,14 @@ class RealtimeConfigTests(unittest.TestCase):
         with self.assertRaises(RealtimeConfigError):
             RealtimeConfig.from_mapping(_raw_config(base_url="https://user:secret@api.massive.com"))
 
+    def test_confirmed_read_model_path_is_optional_and_local_only(self):
+        config = RealtimeConfig.from_mapping(_raw_config(confirmed_read_model_path="D:/private/qqq.sqlite"))
+        self.assertEqual(config.confirmed_read_model_path, "D:/private/qqq.sqlite")
+        with self.assertRaises(RealtimeConfigError):
+            RealtimeConfig.from_mapping(_raw_config(confirmed_read_model_path="https://example.test/qqq.sqlite"))
+        with self.assertRaises(RealtimeConfigError):
+            RealtimeConfig.from_mapping(_raw_config(confirmed_read_model_path=":memory:"))
+
     def test_invalid_symbols_and_quality_window_fail_closed(self):
         with self.assertRaises(RealtimeConfigError):
             RealtimeConfig.from_mapping(_raw_config(symbols=[]))

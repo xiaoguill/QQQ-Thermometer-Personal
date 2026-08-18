@@ -60,15 +60,27 @@ def _decode_payload(body: bytes) -> dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
+def _decode_success_payload(body: bytes) -> dict[str, Any]:
+    """Decode a successful provider response without downgrading bad JSON to PARTIAL."""
+
+    try:
+        payload = json.loads(body.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise MassiveClientError("INVALID_PROVIDER_PAYLOAD") from exc
+    if not isinstance(payload, dict):
+        raise MassiveClientError("INVALID_PROVIDER_PAYLOAD")
+    return payload
+
+
 class UrllibJsonTransport:
     def request(self, url: str, *, headers: dict[str, str], timeout: int) -> TransportResponse:
         request = Request(url, method="GET", headers=headers)
         try:
             with _open_request(request, timeout=timeout) as response:  # noqa: S310 - HTTPS origin is validated
-                payload = json.loads(response.read().decode("utf-8"))
+                payload = _decode_success_payload(response.read())
                 return TransportResponse(
                     status_code=int(response.status),
-                    payload=payload if isinstance(payload, dict) else {},
+                    payload=payload,
                     headers={key.lower(): value for key, value in response.headers.items()},
                 )
         except HTTPError as exc:
@@ -250,6 +262,12 @@ class MassiveClient:
         item = next((candidate for candidate in results if isinstance(candidate, dict) and candidate.get("ticker") == declaration.symbol), None)
         if item is None:
             raise MassiveClientError("NOT_FOUND")
+        provider_error = item.get("error")
+        if provider_error:
+            normalized_error = str(provider_error).strip().upper()
+            if normalized_error in {"NOT_ENTITLED", "NOT_FOUND", "RATE_LIMITED"}:
+                raise MassiveClientError(normalized_error)
+            raise MassiveClientError("PROVIDER_RESPONSE_ERROR")
         session = item.get("session") if isinstance(item.get("session"), dict) else {}
         last = _first_number(item.get("value"), session.get("close"))
         source_timestamp = _timestamp(item.get("last_updated"))

@@ -6,7 +6,7 @@
     confirmedEndpoint: "/api/thermometer/latest",
     refreshIntervalSeconds: 900
   }, window.__QQQ_LIVE_CONFIG__ || {});
-  const state = { observations: {}, events: [], source: "massive", lastEventId: null, stream: null, reconnectTimer: null };
+  const state = { observations: {}, events: [], eventIds: new Set(), source: "massive", lastEventId: null, stream: null, reconnectTimer: null, notifiedEventIds: new Set() };
   const $ = (selector) => document.querySelector(selector);
 
   function escapeText(value) { return value == null ? "--" : String(value); }
@@ -22,6 +22,50 @@
     toast.hidden = false;
     window.clearTimeout(showToast.timer);
     showToast.timer = window.setTimeout(() => { toast.hidden = true; }, 3000);
+  }
+  function restoreSessionState() {
+    try {
+      state.lastEventId = sessionStorage.getItem("qqq-live-last-event-id") || null;
+      const saved = JSON.parse(sessionStorage.getItem("qqq-live-notified-event-ids") || "[]");
+      if (Array.isArray(saved)) state.notifiedEventIds = new Set(saved.filter((item) => typeof item === "string").slice(-512));
+    } catch (_) {}
+  }
+  function persistNotificationIds() {
+    try { sessionStorage.setItem("qqq-live-notified-event-ids", JSON.stringify(Array.from(state.notifiedEventIds).slice(-512))); } catch (_) {}
+  }
+  function notificationLabel() {
+    if (!("Notification" in window)) return "浏览器不支持";
+    if (Notification.permission === "granted") return "桌面提醒已启用";
+    if (Notification.permission === "denied") return "桌面提醒已拒绝";
+    return "启用桌面提醒";
+  }
+  function renderNotificationState() {
+    const button = $("#notificationButton");
+    if (!button) return;
+    button.textContent = notificationLabel();
+    button.disabled = !("Notification" in window) || Notification.permission === "denied";
+  }
+  async function enableNotifications() {
+    if (!("Notification" in window)) { showToast("当前浏览器不支持桌面提醒"); return; }
+    try {
+      await Notification.requestPermission();
+      renderNotificationState();
+      showToast(Notification.permission === "granted" ? "桌面提醒已启用" : "未启用桌面提醒");
+    } catch (_) { showToast("桌面提醒权限请求失败"); }
+  }
+  function notifyLocal(eventType, envelope) {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    if (!["quality.changed", "service.status", "state.candidate"].includes(eventType)) return;
+    if (envelope.notification !== true) return;
+    const eventId = envelope.event_id || (eventType + ":" + (envelope.occurred_at || ""));
+    if (state.notifiedEventIds.has(eventId)) return;
+    state.notifiedEventIds.add(eventId);
+    if (state.notifiedEventIds.size > 512) state.notifiedEventIds.delete(state.notifiedEventIds.values().next().value);
+    persistNotificationIds();
+    const payload = envelope.payload || {};
+    const title = eventType === "quality.changed" ? "QQQ 温度计：数据质量需要关注" : eventType === "service.status" ? "QQQ 温度计：服务状态变化" : "QQQ 温度计：确认态候选变化";
+    const detail = eventType === "quality.changed" ? ((payload.symbols || []).map((item) => item.symbol + ":" + item.quality + (item.error_code ? " (" + item.error_code + ")" : "")).join(" · ") || "质量状态变化") : eventType === "state.candidate" ? ((payload.state || "状态") + " · " + (payload.signal_date || "")) : (payload.detail || payload.status || "只读状态变化");
+    try { new Notification(title, { body: detail, tag: "qqq-m16-" + eventId }); } catch (_) { showToast(detail); }
   }
   function setConnection(kind, label) {
     const chip = $("#connectionChip");
@@ -48,6 +92,22 @@
       if (dot) { dot.classList.remove("is-ok", "is-warn", "is-error"); dot.classList.add(qualityClass(item.quality)); }
     });
   }
+  function resetObservations() {
+    state.observations = {};
+    document.querySelectorAll("[data-last]").forEach((node) => { node.textContent = "--"; });
+    document.querySelectorAll("[data-source]").forEach((node) => { node.textContent = "等待源时间"; });
+    document.querySelectorAll("[data-quality-dot]").forEach((node) => { node.classList.remove("is-ok", "is-warn", "is-error"); });
+    $("#observationState").textContent = "等待新的观察快照";
+    $("#observationDescription").textContent = "当前观察游标已重置或链路已断开；旧读数不再视为 OK。";
+    renderQuality();
+  }
+  function markObservationsStale(errorCode) {
+    Object.values(state.observations).forEach((item) => {
+      if (item.quality === "OK") { item.quality = "STALE"; item.error_code = errorCode; }
+    });
+    renderMetrics();
+    renderQuality();
+  }
   function renderQuality() {
     const items = Object.values(state.observations);
     const ok = items.filter((item) => item.quality === "OK").length;
@@ -67,9 +127,11 @@
     renderMetrics(); renderQuality();
   }
   function renderEvent(eventType, envelope) {
-    const title = eventType === "quality.changed" ? "数据质量需要关注" : eventType === "service.status" ? "服务状态变化" : eventType === "cursor.reset" ? "重连游标已重置" : "行情观察批次";
+    if (envelope.event_id && state.eventIds.has(envelope.event_id)) return;
+    if (envelope.event_id) state.eventIds.add(envelope.event_id);
+    const title = eventType === "quality.changed" ? "数据质量需要关注" : eventType === "service.status" ? "服务状态变化" : eventType === "state.candidate" ? "确认态候选变化" : eventType === "cursor.reset" ? "重连游标已重置" : "行情观察批次";
     const payload = envelope.payload || envelope;
-    const detail = eventType === "observation.batch" ? ((payload.observations || []).filter((item) => !item.is_duplicate).map((item) => item.symbol + "=" + (item.last == null ? "--" : Number(item.last).toFixed(2))).join(" · ") || "重复批次") : eventType === "quality.changed" ? ((payload.symbols || []).map((item) => item.symbol + ":" + item.quality).join(" · ") || "质量状态变化") : payload.status || payload.reset_to || "只读事件";
+    const detail = eventType === "observation.batch" ? ((payload.observations || []).filter((item) => !item.is_duplicate).map((item) => item.symbol + "=" + (item.last == null ? "--" : Number(item.last).toFixed(2))).join(" · ") || "重复批次") : eventType === "quality.changed" ? ((payload.symbols || []).map((item) => item.symbol + ":" + item.quality + (item.error_code ? " (" + item.error_code + ")" : "")).join(" · ") || "质量状态变化") : eventType === "state.candidate" ? ((payload.state || "状态") + " · " + (payload.signal_date || "")) : payload.status || payload.reset_to || "只读事件";
     state.events.unshift({ title, detail, occurredAt: envelope.occurred_at || new Date().toISOString(), alert: eventType === "quality.changed" || eventType === "cursor.reset" });
     state.events = state.events.slice(0, 12);
     $("#eventList").innerHTML = state.events.map((item) => '<div class="event-row"><span class="event-mark ' + (item.alert ? "is-alert" : "") + '"></span><div><strong>' + escapeText(item.title) + '</strong><p>' + escapeText(item.detail) + '</p></div><time>' + formatTime(item.occurredAt, false) + '</time></div>').join("");
@@ -78,18 +140,22 @@
     try {
       const envelope = JSON.parse(message.data);
       if (message.lastEventId) { state.lastEventId = message.lastEventId; try { sessionStorage.setItem("qqq-live-last-event-id", state.lastEventId); } catch (_) {} }
-      if (eventType === "observation.batch") renderObservationBatch(envelope.payload || {});
-      if (eventType === "cursor.reset") { state.events = []; $("#eventList").innerHTML = '<div class="empty-row">重连游标已重置，等待新事件。</div>'; }
+      if (eventType === "observation.batch") { renderObservationBatch(envelope.payload || {}); loadConfirmed(); }
+      if (eventType === "service.status" && ["failed", "degraded"].includes((envelope.payload || {}).status)) markObservationsStale("SSE_SERVICE_" + String((envelope.payload || {}).status).toUpperCase());
+      if (eventType === "cursor.reset") { state.events = []; state.eventIds.clear(); $("#eventList").innerHTML = '<div class="empty-row">重连游标已重置，等待新事件。</div>'; resetObservations(); }
       renderEvent(eventType, envelope);
+      notifyLocal(eventType, envelope);
     } catch (_) { showToast("收到无法解析的实时事件，已保持当前读数"); }
   }
   function connect() {
     if (!window.EventSource || !/^https?:$/.test(window.location.protocol)) { setConnection("error", "需要本地 HTTP"); showToast("请通过本地 HTTP 服务打开页面，不能使用 file:// 实时连接"); return; }
     if (state.stream) state.stream.close();
     setConnection("warn", "正在连接 SSE");
-    try { state.stream = new EventSource(config.eventEndpoint); } catch (_) { setConnection("error", "SSE 不可用"); return; }
+    let endpoint = config.eventEndpoint;
+    try { const url = new URL(config.eventEndpoint, window.location.href); if (state.lastEventId) url.searchParams.set("after", state.lastEventId); endpoint = url.toString(); } catch (_) {}
+    try { state.stream = new EventSource(endpoint); } catch (_) { setConnection("error", "SSE 不可用"); return; }
     state.stream.onopen = () => setConnection("live", "SSE 已连接");
-    state.stream.onerror = () => { setConnection("warn", "等待重连"); };
+    state.stream.onerror = () => { setConnection("warn", "等待重连"); markObservationsStale("SSE_DISCONNECTED"); };
     ["observation.batch", "quality.changed", "service.status", "state.candidate", "cursor.reset"].forEach((type) => state.stream.addEventListener(type, (message) => handleEvent(type, message)));
   }
   async function loadConfirmed() {
@@ -107,6 +173,7 @@
   }
   $("#refreshSeconds").textContent = String(config.refreshIntervalSeconds);
   $("#reconnectButton").addEventListener("click", () => { connect(); loadConfirmed(); showToast("已请求重新连接本地观察链路"); });
+  $("#notificationButton").addEventListener("click", enableNotifications);
   $("#clearEvents").addEventListener("click", () => { state.events = []; $("#eventList").innerHTML = '<div class="empty-row">事件视图已清空；不会删除服务端事件。</div>'; });
-  window.setInterval(renderClock, 1000); renderClock(); loadConfirmed(); connect();
+  window.setInterval(renderClock, 1000); renderClock(); restoreSessionState(); renderNotificationState(); loadConfirmed(); connect();
 }());

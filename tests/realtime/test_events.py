@@ -24,6 +24,17 @@ class LiveEventTests(unittest.TestCase):
         self.assertEqual([item.event_id for item in cursor.events], [second.event_id])
         self.assertTrue(all(item.notification for item in cursor.events))
 
+    def test_service_recovery_after_degradation_is_a_new_transition(self):
+        bus = LiveEventBus()
+        first = bus.publish_service_status("ready", occurred_at_utc=NOW)
+        self.assertIsNotNone(first)
+        self.assertIsNone(bus.publish_service_status("ready", occurred_at_utc=NOW + timedelta(seconds=1)))
+        degraded = bus.publish_service_status("degraded", occurred_at_utc=NOW + timedelta(seconds=2))
+        recovered = bus.publish_service_status("ready", occurred_at_utc=NOW + timedelta(seconds=3))
+        self.assertIsNotNone(degraded)
+        self.assertIsNotNone(recovered)
+        self.assertNotEqual(first.event_id, recovered.event_id)
+
     def test_expired_cursor_fails_closed_without_replaying_unknown_events(self):
         bus = LiveEventBus(max_events=2)
         old = bus.publish_service_status("one", occurred_at_utc=NOW)
@@ -79,6 +90,24 @@ class LiveEventTests(unittest.TestCase):
         self.assertEqual(len(events), 2)
         self.assertEqual(events[1].event_type, "quality.changed")
         self.assertTrue(events[1].notification)
+
+    def test_state_candidate_is_confirmed_only_and_semantically_deduplicated(self):
+        bus = LiveEventBus()
+        payload = {
+            "state": "normal",
+            "strategy_version": "v10_preserve_shock_recovery",
+            "signal_date": "2024-01-03",
+            "data_quality": "ok",
+            "confirmed": True,
+            "provisional": False,
+        }
+        event = bus.publish_state_candidate(payload, occurred_at_utc=NOW)
+        self.assertIsNotNone(event)
+        self.assertEqual(event.event_type, "state.candidate")
+        self.assertTrue(event.notification)
+        self.assertIsNone(bus.publish_state_candidate(payload, occurred_at_utc=NOW))
+        with self.assertRaises(ValueError):
+            bus.publish_state_candidate({**payload, "provisional": True}, occurred_at_utc=NOW)
 
     def test_live_service_and_server_remain_private(self):
         bus = LiveEventBus()

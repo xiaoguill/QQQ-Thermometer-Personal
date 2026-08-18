@@ -6,8 +6,8 @@
   "candidate": {
     "branch": "codex/m16-realtime-observation",
     "implementation_commit": "09078f9ce06b9903f9b3c7bc59334a034b41c0d5",
-    "release_candidate_ref": "m16-private-release-candidate",
-    "commit_resolution": "git rev-parse m16-private-release-candidate^{commit}"
+    "release_candidate_ref": "m16-private-release-candidate-v2",
+    "commit_resolution": "git rev-parse m16-private-release-candidate-v2^{commit}"
   },
   "governance": {
     "task_id": "M16",
@@ -39,7 +39,9 @@
     "broker_access": false,
     "public_deployment": false,
     "api_key_location": "process_environment_only",
-    "api_key_env": "MASSIVE_API_KEY"
+    "api_key_env": "MASSIVE_API_KEY",
+    "confirmed_read_model_path": null,
+    "confirmed_read_model_mode": "optional_existing_local_sqlite_read_only"
   },
   "verification": {
     "implementation_evidence_anchor": "M16.4 implementation commit; M16.5 adds only this private release registration",
@@ -84,6 +86,12 @@
       "真实券商连接、下单、转账或自动交易",
       "公网部署、多用户权限和生产级高可用"
     ]
+  },
+  "reports": {
+    "source_contract": "docs/realtime/M16_MASSIVE_DATA_SOURCE.md",
+    "replay_and_quality": "docs/realtime/M16_REPLAY_AND_QUALITY_REPORT.md",
+    "sse_notification_dedup": "docs/realtime/M16_SSE_NOTIFICATION_DEDUP_REPORT.md",
+    "private_access_secret_scan": "docs/realtime/M16_PRIVATE_ACCESS_SECRET_SCAN_REPORT.md"
   },
   "secret_policy": {
     "committed_secrets": false,

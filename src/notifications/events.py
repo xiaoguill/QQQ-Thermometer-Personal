@@ -102,6 +102,8 @@ class LiveEventBus:
         self._events: deque[LiveEvent] = deque(maxlen=max_events)
         self._seen_ids: deque[str] = deque(maxlen=max_seen_ids)
         self._seen_set: set[str] = set()
+        self._service_signature: tuple[str, str] | None = None
+        self._service_epoch = 0
         self._condition = Condition(RLock())
 
     @property
@@ -215,10 +217,42 @@ class LiveEventBus:
         payload: dict[str, Any] = {"status": status.strip()}
         if detail:
             payload["detail"] = detail[:500]
+        signature = (status.strip(), detail or "")
+        # A steady status is idempotent, but a later return to that status
+        # after a different status is a new transition and must be observable.
+        with self._condition:
+            if signature == self._service_signature:
+                return None
+            self._service_signature = signature
+            self._service_epoch += 1
+            return self.publish(
+                "service.status",
+                payload,
+                dedupe_key=f"service:{self._service_epoch}:{status.strip()}:{detail or ''}",
+                occurred_at_utc=occurred_at_utc,
+                notification=True,
+            )
+
+    def publish_state_candidate(
+        self,
+        payload: Mapping[str, Any],
+        *,
+        occurred_at_utc: datetime,
+    ) -> LiveEvent | None:
+        """Publish a read-model-derived candidate state, never an intraday strategy signal."""
+
+        required = ("state", "strategy_version", "signal_date", "data_quality")
+        if any(not isinstance(payload.get(name), str) or not str(payload.get(name)).strip() for name in required):
+            raise ValueError("state candidate is missing required fields")
+        if payload.get("provisional") is not False or payload.get("confirmed") is not True:
+            raise ValueError("state candidate must be confirmed and non-provisional")
+        normalized = deepcopy(dict(payload))
+        material = _canonical_json({name: normalized[name] for name in required})
+        digest = hashlib.sha256(material.encode("utf-8")).hexdigest()[:24]
         return self.publish(
-            "service.status",
-            payload,
-            dedupe_key=f"service:{status.strip()}:{detail or ''}",
+            "state.candidate",
+            normalized,
+            dedupe_key=f"state:{digest}",
             occurred_at_utc=occurred_at_utc,
             notification=True,
         )

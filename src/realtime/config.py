@@ -35,6 +35,7 @@ class RealtimeConfig:
     max_source_age_seconds: int
     future_skew_seconds: int
     symbols: tuple[RealtimeSymbol, ...]
+    confirmed_read_model_path: str | None = None
 
     @classmethod
     def from_mapping(cls, raw: Mapping[str, Any]) -> "RealtimeConfig":
@@ -66,6 +67,7 @@ class RealtimeConfig:
             max_source_age_seconds=raw.get("max_source_age_seconds", 0),
             future_skew_seconds=raw.get("future_skew_seconds", 0),
             symbols=symbols,
+            confirmed_read_model_path=raw.get("confirmed_read_model_path"),
         )
         value.validate()
         return value
@@ -116,6 +118,12 @@ class RealtimeConfig:
             raise RealtimeConfigError("future_skew_seconds must be an integer")
         if self.future_skew_seconds < 0:
             raise RealtimeConfigError("future_skew_seconds cannot be negative")
+        if self.confirmed_read_model_path is not None:
+            if not isinstance(self.confirmed_read_model_path, str) or not self.confirmed_read_model_path.strip():
+                raise RealtimeConfigError("confirmed_read_model_path must be a non-empty local path or null")
+            path_text = self.confirmed_read_model_path.strip()
+            if path_text == ":memory:" or path_text.lower().startswith(("http://", "https://", "//", "\\\\")):
+                raise RealtimeConfigError("confirmed_read_model_path must be a local SQLite path")
         for name in (self.display_timezone, self.market_timezone):
             try:
                 ZoneInfo(name)
@@ -140,6 +148,7 @@ class RealtimeConfig:
             "market_timezone": self.market_timezone,
             "max_source_age_seconds": self.max_source_age_seconds,
             "future_skew_seconds": self.future_skew_seconds,
+            "confirmed_read_model_path": self.confirmed_read_model_path,
             "symbols": [item.__dict__.copy() for item in self.symbols],
         }
 

@@ -34,8 +34,9 @@ def _config():
 
 
 class FakeTransport:
-    def __init__(self, *, index_status: int = 200, stock_payload: dict | None = None):
+    def __init__(self, *, index_status: int = 200, index_item_error: str | None = None, stock_payload: dict | None = None):
         self.index_status = index_status
+        self.index_item_error = index_item_error
         self.stock_payload = stock_payload or {
             "request_id": "stock-request-1",
             "ticker": {
@@ -59,14 +60,17 @@ class FakeTransport:
             return TransportResponse(self.index_status, {"status": "ERROR"}, {})
         timestamp = int((NOW - timedelta(minutes=4)).timestamp() * 1_000_000_000)
         value = 14.5 if ticker == "I:VIX" else 22.0
+        item = {
+            "ticker": ticker,
+            "value": value,
+            "last_updated": timestamp,
+            "session": {"close": value, "previous_close": value - 0.5},
+        }
+        if self.index_item_error:
+            item = {"ticker": ticker, "error": self.index_item_error}
         return TransportResponse(200, {
             "request_id": f"index-{ticker}",
-            "results": [{
-                "ticker": ticker,
-                "value": value,
-                "last_updated": timestamp,
-                "session": {"close": value, "previous_close": value - 0.5},
-            }],
+            "results": [item],
         }, {})
 
 
@@ -96,6 +100,44 @@ class MassiveClientTests(unittest.TestCase):
         self.assertEqual(next(item for item in batch.observations if item.symbol == "I:VIX").quality, "NOT_ENTITLED")
         self.assertEqual(next(item for item in batch.observations if item.symbol == "I:VIX").error_code, "NOT_ENTITLED")
         self.assertEqual(next(item for item in batch.observations if item.symbol == "QQQ").quality, "OK")
+
+    def test_index_item_provider_errors_are_not_downgraded_to_partial(self):
+        for provider_error, expected in (("NOT_ENTITLED", "NOT_ENTITLED"), ("NOT_FOUND", "NOT_FOUND")):
+            with self.subTest(provider_error=provider_error):
+                batch = MassiveClient(
+                    _config(),
+                    "secret-value",
+                    transport=FakeTransport(index_item_error=provider_error),
+                ).fetch_batch(fetched_at_utc=NOW)
+                vix = next(item for item in batch.observations if item.symbol == "I:VIX")
+                self.assertEqual(vix.quality, expected)
+                self.assertEqual(vix.error_code, expected)
+
+    def test_successful_invalid_json_is_failed_not_partial(self):
+        import src.realtime.massive_client as module
+
+        class InvalidJsonResponse:
+            status = 200
+            headers = {}
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return None
+
+            @staticmethod
+            def read():
+                return b"not-json"
+
+        original = module._open_request
+        module._open_request = lambda request, *, timeout: InvalidJsonResponse()
+        try:
+            batch = MassiveClient(_config(), "secret-value").fetch_batch(fetched_at_utc=NOW)
+        finally:
+            module._open_request = original
+        self.assertTrue(all(item.quality == "FAILED" for item in batch.observations))
+        self.assertTrue(all(item.error_code == "FAILED" for item in batch.observations))
 
     def test_missing_source_timestamp_is_partial_not_confirmed(self):
         payload = {"ticker": {"day": {"c": 500.5, "v": 12345}, "prevDay": {"c": 499.0}}}

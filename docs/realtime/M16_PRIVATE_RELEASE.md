@@ -14,7 +14,7 @@ M16 已形成可在个人电脑上运行的只读实时观察候选版本：Mass
 |---|---|
 | 候选分支 | `codex/m16-realtime-observation` |
 | 实现提交 | `09078f9ce06b9903f9b3c7bc59334a034b41c0d5` |
-| 私有候选 ref | `m16-private-release-candidate`（解析到最终登记提交） |
+| 私有候选 ref | `m16-private-release-candidate-v2`（解析到最终登记提交） |
 | M16 验证 Trusted ref | `verification-baseline-v3.26` |
 | 回滚 ref | `verification-baseline-v3.26` |
 | M15 保留 ref | `verification-baseline-v3.21` |
@@ -27,9 +27,12 @@ M16 已形成可在个人电脑上运行的只读实时观察候选版本：Mass
 - 数据源为 Massive，只使用市场数据接口，不使用账户、订单或券商接口。
 - 配置文件是 [`configs/realtime/massive.json`](../../configs/realtime/massive.json)；默认 `refresh_interval_seconds` 为 `900`，需要调整刷新频率时只修改该版本化非秘密配置并重新验证。
 - API key 只从当前进程的 `MASSIVE_API_KEY` 环境变量读取，不写入配置、URL、HTML、日志或 Git。
+- 如果 API key 未设置，启动链仍提供本地 fail-closed 页面并显示 `MASSIVE_API_KEY_UNAVAILABLE`，不会伪造行情。
 - 页面和 SSE 只绑定 `127.0.0.1`；不绑定 `0.0.0.0`，不做公网部署。
 - 页面使用 `Asia/Shanghai`（UTC+8）显示；市场交易时段按 `America/New_York` 解释。
+- 如需显示既有确认态，可在配置中设置 `confirmed_read_model_path`；M16 只读挂载既有 `/api/thermometer/latest`，不创建、写入或重新计算确认记录。
 - 盘中观察是临时、可失效的 `PROVISIONAL` 数据，不能改变既有确认状态、目标权重或 paper ledger。
+- 桌面提醒由用户在页面点击授权后启用，只在本机浏览器消费 `quality.changed`、`service.status` 和 `state.candidate` 事件，不发送到外部服务。
 - `MASSIVE_API_KEY` 未设置、未授权、标的不存在、限流、过期、时间异常、缺字段或解析失败时，页面必须显示数据质量问题，不把旧值伪装成有效确认值。
 
 PowerShell 启动示例：
