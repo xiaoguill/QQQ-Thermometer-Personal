@@ -19,9 +19,9 @@ M16 的盘中观察只允许进入 `PROVISIONAL`，质量不满足条件时 fail
 
 ## 证据
 
-- `tests/realtime` 局部质量/客户端/轮询/运行时测试：36 项通过。
-- `tests/e2e/m16`：19 项通过，包含 provisional 边界、SSE 契约和启动链。
-- M16.5 本地与 GitHub Actions Evidence 均为 18/18 门禁通过，失败 0，跳过 0。
+- `tests/realtime` 局部质量/客户端/轮询/运行时测试：43 项通过。
+- `tests/e2e/m16`：20 项通过，包含 provisional 边界、SSE 契约、恢复通知和启动链。
+- M16.7 本地与 GitHub Actions Evidence 均为 18/18 门禁通过，Harness 汇总 163 项，失败 0，跳过 0。
 - 真实 Massive 请求不在离线 Harness 中执行；使用正式运行时的 `MASSIVE_API_KEY` 后，供应商返回仍经过同一质量路径。
 
 ## 尚不代表的内容

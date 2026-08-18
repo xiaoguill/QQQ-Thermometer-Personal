@@ -5,7 +5,7 @@
   "visibility": "private_personal",
   "candidate": {
     "branch": "codex/m16-realtime-observation",
-    "implementation_commit": "09078f9ce06b9903f9b3c7bc59334a034b41c0d5",
+    "implementation_commit": "c05a68777498ebc045c377bbdad1b87275f71c7e",
     "release_candidate_ref": "m16-private-release-candidate-v2",
     "commit_resolution": "git rev-parse m16-private-release-candidate-v2^{commit}"
   },
@@ -44,32 +44,32 @@
     "confirmed_read_model_mode": "optional_existing_local_sqlite_read_only"
   },
   "verification": {
-    "implementation_evidence_anchor": "M16.4 implementation commit; M16.5 adds only this private release registration",
+    "implementation_evidence_anchor": "M16.6/M16.7 corrected implementation commit; release registration remains additive",
     "acceptance_gates": "18/18",
     "local": {
-      "run_id": "verify-20260818T031104Z-347d68c3ea24",
+      "run_id": "verify-20260818T040803Z-5d0ce3dd551b",
       "result": "PASS",
       "status_transition": "VERIFIED",
-      "developer_tests": 137,
+      "developer_tests": 138,
       "independent_tests": 11,
-      "total_tests": 162,
+      "total_tests": 163,
       "failed": 0,
       "skipped": 0,
-      "evidence_path": "../m16.4-local-evidence-09078f9/evidence.json",
-      "evidence_sha256": "3f4d9b3b6ad1bf96074c8f2edfe42e2c5a5bde9bdf9f3e1d85a74d1f6a66231c"
+      "evidence_path": "../m16.7-local-evidence-c05a687-r2/evidence.json",
+      "evidence_sha256": "3254f62aca5fe333213bd1e5dfe5a6bb7e1bc17db28c1dec6468f8418d78571a"
     },
     "github_actions": {
-      "run_id": "32094664145",
+      "run_id": "32098136709",
       "run_attempt": 1,
       "result": "PASS",
       "status_transition": "VERIFIED",
-      "developer_tests": 137,
+      "developer_tests": 138,
       "independent_tests": 11,
-      "total_tests": 162,
+      "total_tests": 163,
       "failed": 0,
       "skipped": 0,
-      "evidence_path": "../m16.4-ci-evidence-32094664145/qqq-verification-evidence-09078f9ce06b9903f9b3c7bc59334a034b41c0d5/evidence.json",
-      "evidence_sha256": "6c06cca3f28bd2336892ee847badddfad1917b1daa014e0c5be1f28314d27a16"
+      "evidence_path": "../m16.7-ci-evidence-32098136709/qqq-verification-evidence-c05a68777498ebc045c377bbdad1b87275f71c7e/evidence.json",
+      "evidence_sha256": "7b004e38e7a44478ed990f7c299badc221fa79113c484710939282bac8119492"
     }
   },
   "release_scope": {

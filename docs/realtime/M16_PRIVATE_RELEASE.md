@@ -13,7 +13,7 @@ M16 已形成可在个人电脑上运行的只读实时观察候选版本：Mass
 | 项目 | 值 |
 |---|---|
 | 候选分支 | `codex/m16-realtime-observation` |
-| 实现提交 | `09078f9ce06b9903f9b3c7bc59334a034b41c0d5` |
+| 实现提交 | `c05a68777498ebc045c377bbdad1b87275f71c7e` |
 | 私有候选 ref | `m16-private-release-candidate-v2`（解析到最终登记提交） |
 | M16 验证 Trusted ref | `verification-baseline-v3.26` |
 | 回滚 ref | `verification-baseline-v3.26` |
@@ -48,14 +48,14 @@ python -m src.realtime --config configs/realtime/massive.json --host 127.0.0.1 -
 
 本地受控验证：
 
-- `18/18` acceptance gates 通过；开发测试 `137`，独立测试 `11`，合计 `162`；失败 `0`，跳过 `0`。
-- Run ID：`verify-20260818T031104Z-347d68c3ea24`。
-- Evidence：`../m16.4-local-evidence-09078f9/evidence.json`。
+- `18/18` acceptance gates 通过；开发测试 `138`，独立测试 `11`，合计 `163`；失败 `0`，跳过 `0`。
+- Run ID：`verify-20260818T040803Z-5d0ce3dd551b`。
+- Evidence：`../m16.7-local-evidence-c05a687-r2/evidence.json`；Evidence SHA-256：`3254f62aca5fe333213bd1e5dfe5a6bb7e1bc17db28c1dec6468f8418d78571a`。
 
 GitHub Actions 独立验证：
 
-- Run ID：`32094664145`；`18/18` acceptance gates 通过；开发测试 `137`，独立测试 `11`，合计 `162`；失败 `0`，跳过 `0`。
-- Evidence：`../m16.4-ci-evidence-32094664145/qqq-verification-evidence-09078f9ce06b9903f9b3c7bc59334a034b41c0d5/evidence.json`。
+- Run ID：`32098136709`；`18/18` acceptance gates 通过；开发测试 `138`，独立测试 `11`，合计 `163`；失败 `0`，跳过 `0`。
+- Evidence：`../m16.7-ci-evidence-32098136709/qqq-verification-evidence-c05a68777498ebc045c377bbdad1b87275f71c7e/evidence.json`；Evidence SHA-256：`7b004e38e7a44478ed990f7c299badc221fa79113c484710939282bac8119492`。
 
 上述路径指向工作区旁的 Evidence archive，而不是仓库内的临时生成物。哈希、候选提交和 Trusted ref 均记录在机器可读 manifest 中。
 
