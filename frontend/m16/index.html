@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b1324" />
+    <title>Northstar Live · QQQ Thermometer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="live-shell" id="liveShell">
+      <aside class="live-rail" aria-label="实时温度计导航">
+        <div class="brand">
+          <div class="brand-orbit" aria-hidden="true"><span></span></div>
+          <div><p class="overline">PRIVATE / LIVE</p><p class="brand-name">Northstar</p></div>
+        </div>
+        <div class="rail-rule"></div>
+        <nav class="rail-nav">
+          <a class="rail-link is-active" href="#overview"><span class="rail-glyph">◎</span><span>实时温度</span></a>
+          <a class="rail-link" href="#quality"><span class="rail-glyph">◇</span><span>数据质量</span></a>
+          <a class="rail-link" href="#events"><span class="rail-glyph">≋</span><span>事件日志</span></a>
+          <a class="rail-link" href="#boundary"><span class="rail-glyph">⊙</span><span>确认边界</span></a>
+        </nav>
+        <div class="rail-footer">
+          <div class="privacy-pill"><span class="live-dot" id="railStatusDot"></span><span>本地私有模式</span></div>
+          <p>只读观察 · 无自动交易</p>
+          <p class="rail-version">M16 / observer</p>
+        </div>
+      </aside>
+
+      <main class="live-main">
+        <header class="live-topbar">
+          <div class="crumb"><span>个人研究台</span><b>/</b><strong>实时温度</strong></div>
+          <div class="top-status">
+            <span class="connection-chip is-pending" id="connectionChip"><span class="live-dot"></span><span id="connectionText">等待本地连接</span></span>
+            <span class="clock" id="clockText">UTC+8 --:--:--</span>
+          </div>
+        </header>
+
+        <section class="intro" id="overview">
+          <div>
+            <p class="overline accent">REAL-TIME OBSERVATION / ASIA-SHANGHAI</p>
+            <h1>市场温度 <span class="title-slash">/</span> 实时观察</h1>
+            <p class="intro-copy">把盘中行情、数据质量和收盘确认放在同一条可追溯链路上。盘中观察不会直接改变策略目标仓位。</p>
+          </div>
+          <div class="intro-actions">
+            <button class="outline-button" type="button" id="reconnectButton">重新连接</button>
+            <span class="refresh-note">窗口 <b id="refreshSeconds">900</b>s · 15 min</span>
+          </div>
+        </section>
+
+        <section class="hero-grid">
+          <article class="hero-card temperature-panel">
+            <div class="panel-head"><div><p class="panel-kicker">INTRADAY TEMPERATURE</p><h2>实时风险温度</h2></div><span class="provisional-tag">PROVISIONAL</span></div>
+            <div class="temperature-line">
+              <div class="dial" id="temperatureDial" aria-label="实时温度等待数据">
+                <div class="dial-inner"><strong id="temperatureValue">--</strong><small>/ 100</small><span id="temperatureLabel">等待观察</span></div>
+              </div>
+              <div class="temperature-copy">
+                <p class="copy-label">状态读数</p>
+                <h3 id="observationState">尚未收到实时批次</h3>
+                <p id="observationDescription">连接本地 SSE 后，页面会显示 Massive 行情快照、源时间和质量状态。没有确认数据时不显示推断。</p>
+                <div class="micro-meta"><span class="live-dot" id="heroStatusDot"></span><span id="lastBatchText">等待首个观察批次</span></div>
+              </div>
+            </div>
+            <div class="temperature-scale"><span>冷</span><div><i></i><b id="scaleMarker"></b></div><span>热</span></div>
+          </article>
+
+          <article class="hero-card boundary-panel" id="boundary">
+            <div class="panel-head"><div><p class="panel-kicker">CONFIRMED BOUNDARY</p><h2>确认状态</h2></div><span class="confirmed-tag" id="confirmedQuality">未连接</span></div>
+            <div class="confirmed-state"><span class="state-orb" id="confirmedOrb"></span><div><strong id="confirmedState">等待收盘确认</strong><p id="confirmedReason">盘中事件不会替代 M04–M07 的收盘确认链路。</p></div></div>
+            <dl class="facts-grid">
+              <div><dt>策略版本</dt><dd id="strategyVersion">--</dd></div>
+              <div><dt>信号日</dt><dd id="signalDate">--</dd></div>
+              <div><dt>数据质量</dt><dd id="confirmedDataQuality">--</dd></div>
+              <div><dt>运行标识</dt><dd id="runId">--</dd></div>
+            </dl>
+            <p class="boundary-note"><span>↳</span> 实时页面只做观察与提醒，不生成新的目标权重。</p>
+          </article>
+        </section>
+
+        <section class="metric-strip" aria-label="实时核心标的">
+          <article class="metric-tile" data-symbol-card="QQQ"><div class="tile-top"><span>QQQ</span><span class="quality-dot" data-quality-dot="QQQ"></span></div><strong data-last="QQQ">--</strong><small data-source="QQQ">等待源时间</small></article>
+          <article class="metric-tile" data-symbol-card="QLD"><div class="tile-top"><span>QLD</span><span class="quality-dot" data-quality-dot="QLD"></span></div><strong data-last="QLD">--</strong><small data-source="QLD">等待源时间</small></article>
+          <article class="metric-tile" data-symbol-card="I:VIX"><div class="tile-top"><span>VIX</span><span class="quality-dot" data-quality-dot="I:VIX"></span></div><strong data-last="I:VIX">--</strong><small data-source="I:VIX">等待源时间</small></article>
+          <article class="metric-tile" data-symbol-card="I:VIX3M"><div class="tile-top"><span>VIX3M</span><span class="quality-dot" data-quality-dot="I:VIX3M"></span></div><strong data-last="I:VIX3M">--</strong><small data-source="I:VIX3M">等待源时间</small></article>
+          <article class="metric-tile" data-symbol-card="VOO"><div class="tile-top"><span>VOO</span><span class="quality-dot" data-quality-dot="VOO"></span></div><strong data-last="VOO">--</strong><small data-source="VOO">等待源时间</small></article>
+        </section>
+
+        <section class="content-grid">
+          <article class="data-panel" id="quality">
+            <div class="panel-head"><div><p class="panel-kicker">SOURCE HEALTH</p><h2>数据质量</h2></div><span class="quiet-label" id="qualitySummary">0 / 0 OK</span></div>
+            <div class="health-overview"><div class="health-ring" id="healthRing"><strong id="healthPercent">--</strong><small>质量</small></div><div><h3 id="healthTitle">等待数据</h3><p id="healthDescription">每个标的保留源时间、抓取时间和质量标记；过期、未来或未授权数据会 fail-closed。</p></div></div>
+            <div class="quality-list" id="qualityList"><div class="empty-row">尚未收到行情观察。</div></div>
+          </article>
+
+          <article class="data-panel event-panel" id="events">
+            <div class="panel-head"><div><p class="panel-kicker">EVENT STREAM</p><h2>事件日志</h2></div><button class="small-button" type="button" id="clearEvents">清空视图</button></div>
+            <div class="event-list" id="eventList"><div class="empty-row">SSE 连接后，事件会出现在这里。</div></div>
+          </article>
+        </section>
+
+        <footer class="live-footer"><span>数据源：Massive · REST poll → local SSE</span><span>显示时区：Asia/Shanghai (UTC+8)</span><span>策略确认：既有 M04–M07</span></footer>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
