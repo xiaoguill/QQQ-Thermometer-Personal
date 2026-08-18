@@ -32,7 +32,7 @@ class DataSourceIntegrationTests(unittest.TestCase):
     def test_supported_universe_and_price_basis_are_explicit(self) -> None:
         self.assertEqual(
             set(SUPPORTED_SYMBOLS),
-            {"QQQ", "QLD", "VOO", "SPY", "BIL", "TLT", "IAU", "XLU", "SVXY", "VIX", "VIX3M"},
+            {"QQQ", "QLD", "VOO", "SPY", "BIL", "TLT", "IAU", "XLU", "SVXY", "VXX", "VIX", "VIX3M"},
         )
         request = self._request(symbols=("QLD", "QQQ"))
         self.assertEqual(request.symbols, ("QLD", "QQQ"))
