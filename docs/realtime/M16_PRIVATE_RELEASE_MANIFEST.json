@@ -5,8 +5,9 @@
   "visibility": "private_personal",
   "candidate": {
     "branch": "codex/m16-realtime-observation",
-    "commit": "09078f9ce06b9903f9b3c7bc59334a034b41c0d5",
-    "tag": null
+    "implementation_commit": "09078f9ce06b9903f9b3c7bc59334a034b41c0d5",
+    "release_candidate_ref": "m16-private-release-candidate",
+    "commit_resolution": "git rev-parse m16-private-release-candidate^{commit}"
   },
   "governance": {
     "task_id": "M16",
@@ -41,6 +42,7 @@
     "api_key_env": "MASSIVE_API_KEY"
   },
   "verification": {
+    "implementation_evidence_anchor": "M16.4 implementation commit; M16.5 adds only this private release registration",
     "acceptance_gates": "18/18",
     "local": {
       "run_id": "verify-20260818T031104Z-347d68c3ea24",

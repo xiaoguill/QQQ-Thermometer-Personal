@@ -13,7 +13,8 @@ M16 已形成可在个人电脑上运行的只读实时观察候选版本：Mass
 | 项目 | 值 |
 |---|---|
 | 候选分支 | `codex/m16-realtime-observation` |
-| 候选提交 | `09078f9ce06b9903f9b3c7bc59334a034b41c0d5` |
+| 实现提交 | `09078f9ce06b9903f9b3c7bc59334a034b41c0d5` |
+| 私有候选 ref | `m16-private-release-candidate`（解析到最终登记提交） |
 | M16 验证 Trusted ref | `verification-baseline-v3.26` |
 | 回滚 ref | `verification-baseline-v3.26` |
 | M15 保留 ref | `verification-baseline-v3.21` |
