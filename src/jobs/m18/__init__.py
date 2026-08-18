@@ -16,6 +16,13 @@ from .read_model import (
     RuntimeBoundary,
     default_module_statuses,
 )
+from .full_chain import (
+    M18FullChainPipeline,
+    M18PipelineError,
+    M18PipelineOutput,
+    M18PipelineRequest,
+    M18_PIPELINE_VERSION,
+)
 
 __all__ = [
     "CONFIRMED",
@@ -32,4 +39,9 @@ __all__ = [
     "ProvisionalObservation",
     "RuntimeBoundary",
     "default_module_statuses",
+    "M18FullChainPipeline",
+    "M18PipelineError",
+    "M18PipelineOutput",
+    "M18PipelineRequest",
+    "M18_PIPELINE_VERSION",
 ]
