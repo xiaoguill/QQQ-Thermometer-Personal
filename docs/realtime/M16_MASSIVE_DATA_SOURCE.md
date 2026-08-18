@@ -5,6 +5,8 @@
 ## 时点与时区
 
 - Massive 返回的市场时间保留原始时间戳；内部统一转换为 UTC。
+- 股票 Single Ticker Snapshot 按 `ticker.day`、`ticker.prevDay`、`ticker.lastTrade`、`ticker.min` 和 `ticker.updated` 解析；`lastTrade.t` 按纳秒、`min.t` 按毫秒处理，不把本地抓取时间冒充成行情时间。
+- 任何非正价格、负成交量、未来时间戳、时间回退、过期或不完整输入都不会被标为可用的 `OK` 数据；未来时间戳严格零容忍。
 - 页面显示时使用 `Asia/Shanghai`（东八区）。
 - 美股市场日历和交易时段仍按 `America/New_York` 解释。
 - 盘中观察标记为 `PROVISIONAL`，不改变确认状态或目标仓位。
@@ -18,6 +20,8 @@ Massive API key 只从环境变量 `MASSIVE_API_KEY` 读取，并通过 Authoriz
 
 - 股票观察使用 Massive Stocks Snapshot 的逐标的只读端点。
 - 指数观察使用 Massive Indices Snapshot；`I:VIX` 和 `I:VIX3M` 的可用性由启动时的供应商响应确认，未找到或未授权时必须显示数据质量错误。
+- 连接使用固定的 `https://api.massive.com` origin，并关闭 HTTP 重定向；HTTP 401/403/404/429 会被分类为授权、标的或限流错误。
+- 轮询批次使用不含本地抓取时间和请求 ID 的语义去重键；重复批次可被后续事件层抑制。连续服务失败只增加下一次调度延迟，不在错误时自旋。
 - 配置中的股票/指数清单只用于观察和策略输入准备，不会改变冻结策略资产集合或权重。
 
 ## 数据质量

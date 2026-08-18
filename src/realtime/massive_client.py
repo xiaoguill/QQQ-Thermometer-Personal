@@ -10,7 +10,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Protocol
 from urllib.parse import quote, urlencode, urljoin
-from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from .config import RealtimeConfig
 from .models import ObservationBatch, RealtimeObservation, RealtimeSymbol
@@ -36,18 +37,56 @@ class JsonTransport(Protocol):
         ...
 
 
+class _NoRedirectHandler(HTTPRedirectHandler):
+    """Do not follow provider redirects, especially to another host."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # type: ignore[no-untyped-def]
+        return None
+
+
+_NO_REDIRECT_OPENER = build_opener(_NoRedirectHandler)
+
+
+def _open_request(request: Request, *, timeout: int):
+    return _NO_REDIRECT_OPENER.open(request, timeout=timeout)
+
+
+def _decode_payload(body: bytes) -> dict[str, Any]:
+    try:
+        payload = json.loads(body.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
 class UrllibJsonTransport:
     def request(self, url: str, *, headers: dict[str, str], timeout: int) -> TransportResponse:
         request = Request(url, method="GET", headers=headers)
         try:
-            with urlopen(request, timeout=timeout) as response:  # noqa: S310 - HTTPS base URL is validated
+            with _open_request(request, timeout=timeout) as response:  # noqa: S310 - HTTPS origin is validated
                 payload = json.loads(response.read().decode("utf-8"))
                 return TransportResponse(
                     status_code=int(response.status),
                     payload=payload if isinstance(payload, dict) else {},
                     headers={key.lower(): value for key, value in response.headers.items()},
                 )
-        except Exception as exc:  # provider/network errors become an explicit failed observation
+        except HTTPError as exc:
+            # HTTPError is also a response. Preserve only the status and a parsed
+            # provider body so MassiveClient can classify 401/403/404/429 without
+            # leaking credentials or raw response text to callers.
+            try:
+                body = exc.read()
+            except OSError:
+                body = b""
+            response_headers = {
+                key.lower(): value for key, value in exc.headers.items()
+            } if exc.headers else {}
+            return TransportResponse(
+                status_code=int(exc.code),
+                payload=_decode_payload(body),
+                headers=response_headers,
+            )
+        except (URLError, OSError, TimeoutError) as exc:  # provider/network errors become an explicit failed observation
             raise MassiveClientError("Massive request failed") from exc
 
 
@@ -90,6 +129,30 @@ def _number(value: Any) -> float | None:
 def _payload_hash(payload: dict[str, Any]) -> str:
     encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def _first_number(*values: Any) -> float | None:
+    for value in values:
+        number = _number(value)
+        if number is not None:
+            return number
+    return None
+
+
+def _snapshot_quality(
+    *,
+    last: float | None,
+    source_timestamp: datetime | None,
+    prices: tuple[float | None, ...],
+    volume: float | None,
+) -> str:
+    if any(value is not None and value <= 0 for value in prices):
+        return "NEEDS_REVIEW"
+    if volume is not None and volume < 0:
+        return "NEEDS_REVIEW"
+    if last is None or source_timestamp is None:
+        return "PARTIAL"
+    return "OK"
 
 
 def _safe_request_id(payload: dict[str, Any]) -> str | None:
@@ -140,13 +203,28 @@ class MassiveClient:
     def _stock(self, declaration: RealtimeSymbol, fetched_at: datetime) -> RealtimeObservation:
         response = self._get(f"/v2/snapshot/locale/us/markets/stocks/tickers/{quote(declaration.symbol, safe='')}")
         payload = response.payload
-        day = payload.get("day") if isinstance(payload.get("day"), dict) else {}
-        previous = payload.get("prevDay") if isinstance(payload.get("prevDay"), dict) else {}
-        last_trade = payload.get("lastTrade") if isinstance(payload.get("lastTrade"), dict) else {}
-        minute = payload.get("min") if isinstance(payload.get("min"), dict) else {}
-        last = _number(last_trade.get("p")) or _number(minute.get("c")) or _number(day.get("c"))
-        source_timestamp = _timestamp(last_trade.get("t")) or _timestamp(minute.get("e"))
-        quality = "OK" if last is not None and source_timestamp is not None else "PARTIAL"
+        ticker = payload.get("ticker") if isinstance(payload.get("ticker"), dict) else {}
+        day = ticker.get("day") if isinstance(ticker.get("day"), dict) else {}
+        previous = ticker.get("prevDay") if isinstance(ticker.get("prevDay"), dict) else {}
+        last_trade = ticker.get("lastTrade") if isinstance(ticker.get("lastTrade"), dict) else {}
+        minute = ticker.get("min") if isinstance(ticker.get("min"), dict) else {}
+        last = _first_number(last_trade.get("p"), minute.get("c"), day.get("c"))
+        # Massive uses nanoseconds for lastTrade.t, milliseconds for min.t, and
+        # nanoseconds for ticker.updated in the documented snapshot shape.
+        source_timestamp = (
+            _timestamp(last_trade.get("t"))
+            or _timestamp(minute.get("t"))
+            or _timestamp(ticker.get("updated"))
+        )
+        close = _number(day.get("c"))
+        previous_close = _number(previous.get("c"))
+        volume = _number(day.get("v"))
+        quality = _snapshot_quality(
+            last=last,
+            source_timestamp=source_timestamp,
+            prices=(last, close, previous_close),
+            volume=volume,
+        )
         return RealtimeObservation(
             provider="massive",
             symbol=declaration.symbol,
@@ -154,9 +232,9 @@ class MassiveClient:
             fetched_at_utc=fetched_at,
             source_timestamp_utc=source_timestamp,
             last=last,
-            close=_number(day.get("c")),
-            previous_close=_number(previous.get("c")),
-            volume=_number(day.get("v")),
+            close=close,
+            previous_close=previous_close,
+            volume=volume,
             price_basis="unadjusted_ohlcv",
             quality=quality,
             provisional=True,
@@ -172,9 +250,16 @@ class MassiveClient:
         if item is None:
             raise MassiveClientError("NOT_FOUND")
         session = item.get("session") if isinstance(item.get("session"), dict) else {}
-        last = _number(item.get("value")) or _number(session.get("close"))
+        last = _first_number(item.get("value"), session.get("close"))
         source_timestamp = _timestamp(item.get("last_updated"))
-        quality = "OK" if last is not None and source_timestamp is not None else "PARTIAL"
+        close = _number(session.get("close"))
+        previous_close = _number(session.get("previous_close"))
+        quality = _snapshot_quality(
+            last=last,
+            source_timestamp=source_timestamp,
+            prices=(last, close, previous_close),
+            volume=None,
+        )
         return RealtimeObservation(
             provider="massive",
             symbol=declaration.symbol,
@@ -182,8 +267,8 @@ class MassiveClient:
             fetched_at_utc=fetched_at,
             source_timestamp_utc=source_timestamp,
             last=last,
-            close=_number(session.get("close")),
-            previous_close=_number(session.get("previous_close")),
+            close=close,
+            previous_close=previous_close,
             volume=None,
             price_basis="index_level",
             quality=quality,
@@ -223,7 +308,10 @@ class MassiveClient:
             except MassiveClientError as exc:
                 observation = self._failed(declaration, fetched_at, str(exc))
             observations.append(observation)
-        material = json.dumps([item.as_dict(display_timezone="UTC") for item in observations], sort_keys=True, separators=(",", ":"))
+        # A polling batch is identified by provider observation content, not by
+        # the local fetch time or request id. Re-reading unchanged data therefore
+        # produces the same id and can be safely deduplicated by M16.2.
+        material = json.dumps([item.dedupe_key for item in observations], sort_keys=True, separators=(",", ":"))
         batch_id = hashlib.sha256(material.encode("utf-8")).hexdigest()[:24]
         return ObservationBatch(
             batch_id=batch_id,

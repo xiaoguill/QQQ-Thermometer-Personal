@@ -15,6 +15,7 @@ from .models import RealtimeSymbol
 MIN_REFRESH_SECONDS = 60
 MAX_REFRESH_SECONDS = 86_400
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "configs" / "realtime" / "massive.json"
+MASSIVE_API_HOST = "api.massive.com"
 
 
 class RealtimeConfigError(ValueError):
@@ -84,8 +85,17 @@ class RealtimeConfig:
         if self.mode != "rest_poll":
             raise RealtimeConfigError("M16.1 currently supports rest_poll only")
         parsed = urlparse(self.base_url)
-        if parsed.scheme != "https" or not parsed.netloc or parsed.query or parsed.fragment:
-            raise RealtimeConfigError("base_url must be an HTTPS origin without query credentials")
+        if (
+            parsed.scheme != "https"
+            or parsed.hostname != MASSIVE_API_HOST
+            or parsed.port not in {None, 443}
+            or parsed.username is not None
+            or parsed.password is not None
+            or parsed.path not in {"", "/"}
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise RealtimeConfigError("base_url must be the canonical Massive HTTPS origin without credentials")
         if not self.api_key_env or self.api_key_env.startswith("$"):
             raise RealtimeConfigError("api_key_env must name an environment variable")
         if isinstance(self.refresh_interval_seconds, bool) or not isinstance(self.refresh_interval_seconds, int):

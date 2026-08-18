@@ -21,7 +21,7 @@ def _raw_config(**overrides):
         "display_timezone": "Asia/Shanghai",
         "market_timezone": "America/New_York",
         "max_source_age_seconds": 1800,
-        "future_skew_seconds": 60,
+        "future_skew_seconds": 0,
         "symbols": [
             {"symbol": "QQQ", "asset_class": "stocks", "role": "strategy_input"},
             {"symbol": "I:VIX", "asset_class": "indices", "role": "strategy_input"},
@@ -53,6 +53,10 @@ class RealtimeConfigTests(unittest.TestCase):
             RealtimeConfig.from_mapping(_raw_config(base_url="https://api.massive.com?apiKey=secret"))
         with self.assertRaises(RealtimeConfigError):
             RealtimeConfig.from_mapping(_raw_config(base_url="http://api.massive.com"))
+        with self.assertRaises(RealtimeConfigError):
+            RealtimeConfig.from_mapping(_raw_config(base_url="https://evil.example"))
+        with self.assertRaises(RealtimeConfigError):
+            RealtimeConfig.from_mapping(_raw_config(base_url="https://user:secret@api.massive.com"))
 
     def test_invalid_symbols_and_quality_window_fail_closed(self):
         with self.assertRaises(RealtimeConfigError):

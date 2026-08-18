@@ -9,7 +9,7 @@
   "display_timezone": "Asia/Shanghai",
   "market_timezone": "America/New_York",
   "max_source_age_seconds": 1800,
-  "future_skew_seconds": 60,
+  "future_skew_seconds": 0,
   "symbols": [
     {"symbol": "QQQ", "asset_class": "stocks", "role": "strategy_input"},
     {"symbol": "QLD", "asset_class": "stocks", "role": "target_asset"},

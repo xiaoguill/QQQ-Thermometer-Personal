@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+import hashlib
+import json
 from typing import Any, Literal
 
 
@@ -62,6 +64,7 @@ class RealtimeObservation:
     raw_payload_hash: str | None = None
     error_code: str | None = None
     error_message: str | None = None
+    is_duplicate: bool = False
 
     def __post_init__(self) -> None:
         if self.fetched_at_utc.tzinfo is None:
@@ -72,6 +75,26 @@ class RealtimeObservation:
             raise ValueError(f"unsupported quality status: {self.quality}")
         if not self.provisional:
             raise ValueError("M16 observations are always provisional until M04-M07 close confirmation")
+
+    @property
+    def dedupe_key(self) -> str:
+        """Stable semantic identity, excluding local fetch time and request ids."""
+
+        material = {
+            "provider": self.provider,
+            "symbol": self.symbol,
+            "asset_class": self.asset_class,
+            "source_timestamp": self.source_timestamp_utc.isoformat() if self.source_timestamp_utc else None,
+            "last": self.last,
+            "close": self.close,
+            "previous_close": self.previous_close,
+            "volume": self.volume,
+            "price_basis": self.price_basis,
+            "quality": self.quality,
+            "error_code": self.error_code,
+        }
+        encoded = json.dumps(material, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return hashlib.sha256(encoded).hexdigest()[:24]
 
     def as_dict(self, *, display_timezone: str = "Asia/Shanghai") -> dict[str, Any]:
         # The service layer supplies a validated timezone; keeping conversion out of
@@ -98,6 +121,8 @@ class RealtimeObservation:
             "raw_payload_hash": self.raw_payload_hash,
             "error_code": self.error_code,
             "error_message": self.error_message,
+            "dedupe_key": self.dedupe_key,
+            "is_duplicate": self.is_duplicate,
         }
 
 
