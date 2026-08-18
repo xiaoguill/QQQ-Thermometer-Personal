@@ -253,8 +253,8 @@ class SseEventStream:
             self.last_event_id = cursor.reset_to
             payload = {"reset_required": True, "last_event_id": previous_id, "reset_to": self.last_event_id}
             data = _canonical_json(payload)
-            reset_id = cursor.reset_to or "cursor-reset"
-            return f"id: {reset_id}\nevent: cursor.reset\ndata: {data}\n\n".encode("utf-8")
+            reset_id = f"id: {cursor.reset_to}\n" if cursor.reset_to else ""
+            return f"{reset_id}event: cursor.reset\ndata: {data}\n\n".encode("utf-8")
         self._pending.extend(cursor.events)
         if self._pending:
             event = self._pending.popleft()

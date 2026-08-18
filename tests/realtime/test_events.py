@@ -56,6 +56,13 @@ class LiveEventTests(unittest.TestCase):
         frame = stream.next_frame(timeout_seconds=0)
         self.assertIn(f"id: {new_event.event_id}".encode("utf-8"), frame)
 
+    def test_empty_replay_window_does_not_create_a_reset_loop(self):
+        stream = SseEventStream(LiveEventBus(), last_event_id="evt-old")
+        frame = stream.next_frame(timeout_seconds=0)
+        self.assertIn(b"event: cursor.reset", frame)
+        self.assertNotIn(b"id: cursor-reset", frame)
+        self.assertEqual(stream.next_frame(timeout_seconds=0), b": heartbeat\n\n")
+
     def test_batch_publishing_suppresses_unchanged_poll_and_emits_quality_event(self):
         config = _config()
         client = MassiveClient(config, "test-only-key", transport=FakeTransport())
@@ -88,4 +95,3 @@ class LiveEventTests(unittest.TestCase):
             self.assertEqual(server.server_address[0], "127.0.0.1")
         finally:
             server.server_close()
-

@@ -2,6 +2,17 @@
 
 本模块使用 Massive 的只读市场数据能力，不使用账户、订单或券商接口。默认模式是 REST 轮询，刷新间隔由 `configs/realtime/massive.json` 的 `refresh_interval_seconds` 控制，默认 900 秒（15 分钟）。
 
+## 本地启动链路
+
+M16.4 提供一个个人版启动入口：它读取版本化配置、从环境变量读取 `MASSIVE_API_KEY`、轮询 Massive、将变化发布到内存事件总线，并在本机提供 `frontend/m16` 页面与 SSE。PowerShell 示例：
+
+```powershell
+$env:MASSIVE_API_KEY = "<只在本机环境设置，不写入文件>"
+python -m src.realtime --config configs/realtime/massive.json --host 127.0.0.1 --port 8766
+```
+
+然后打开 `http://127.0.0.1:8766/`。停止进程即可停止轮询；不要把 host 改成 `0.0.0.0`，也不要把 API key 放入 HTML、URL、日志或提交记录。配置文件只修改非秘密参数，例如 `refresh_interval_seconds`，修改后应创建新的 Candidate 版本并重新验证。
+
 ## 时点与时区
 
 - Massive 返回的市场时间保留原始时间戳；内部统一转换为 UTC。
