@@ -2,7 +2,7 @@
   "$schema": "qqq-m17-private-release-manifest/v1",
   "task_id": "M17",
   "version": "m17-unified-portal/v1",
-  "status": "CANDIDATE_PENDING_EVIDENCE",
+  "status": "BASELINE_PROMOTION_REQUIRED",
   "trusted_baseline": {
     "ref": "verification-baseline-v3.27",
     "commit": "6a8d49c2697ae73de00785303329f6a217fb459f",
@@ -24,10 +24,11 @@
     "/shell/index.html",
     "/m16/index.html"
   ],
-  "candidate_commit": "PENDING_FINAL_CANDIDATE_COMMIT",
+  "candidate_ref": "m17-private-release-candidate",
+  "candidate_commit": "bound to candidate_ref tag",
   "evidence": {
-    "local": "PENDING_HARNESS_EVIDENCE",
-    "github_ci": "PENDING_GITHUB_CI_EVIDENCE",
+    "local": "external bundle keyed by candidate commit: m17-local-evidence-<candidate-sha>/evidence.json",
+    "github_ci": "GitHub Actions artifact keyed by candidate commit: qqq-verification-evidence-<candidate-sha>",
     "promotion_status": "BASELINE_PROMOTION_REQUIRED"
   },
   "rollback": {
