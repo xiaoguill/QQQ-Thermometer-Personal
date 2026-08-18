@@ -6,7 +6,7 @@
   "change_class": "integration",
   "route_id": "unified_personal_portal",
   "role": "integrator",
-  "base_ref": "verification-baseline-v3.26",
+  "base_ref": "verification-baseline-v3.27",
   "task_contract_authority": "trusted_ref_only",
   "requires_user_approval": true,
   "baseline_promotion_required": true,
