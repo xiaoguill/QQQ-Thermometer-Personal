@@ -1,0 +1,98 @@
+{
+  "$schema": "qqq-m16-private-release/v1",
+  "release_id": "m16-private-realtime-observation-2026-08-18",
+  "status": "BASELINE_PROMOTION_REQUIRED",
+  "visibility": "private_personal",
+  "candidate": {
+    "branch": "codex/m16-realtime-observation",
+    "commit": "09078f9ce06b9903f9b3c7bc59334a034b41c0d5",
+    "tag": null
+  },
+  "governance": {
+    "task_id": "M16",
+    "task_contract_status": "approved",
+    "task_contract_base_ref": "verification-baseline-v3.21",
+    "verification_trusted_ref": "verification-baseline-v3.26",
+    "verification_trusted_head": "693bd6c4b2a56da9cb3591e4071ef7055ce6bba3",
+    "rollback_ref": "verification-baseline-v3.26",
+    "m15_preserved_ref": "verification-baseline-v3.21",
+    "existing_demo_preserved_paths": [
+      "frontend/demo/",
+      "frontend/shell/",
+      "frontend/dashboard/",
+      "frontend/m14/"
+    ],
+    "promotion_note": "此文件记录已通过候选验证的私有版本；候选仍不是 Trusted baseline 或 Product baseline。"
+  },
+  "runtime": {
+    "provider": "massive",
+    "mode": "rest_poll",
+    "config_path": "configs/realtime/massive.json",
+    "default_refresh_interval_seconds": 900,
+    "display_timezone": "Asia/Shanghai",
+    "market_timezone": "America/New_York",
+    "entrypoint": "python -m src.realtime --config configs/realtime/massive.json --host 127.0.0.1 --port 8766",
+    "bind_scope": "localhost_only",
+    "read_only_market_data": true,
+    "paper_ledger": false,
+    "broker_access": false,
+    "public_deployment": false,
+    "api_key_location": "process_environment_only",
+    "api_key_env": "MASSIVE_API_KEY"
+  },
+  "verification": {
+    "acceptance_gates": "18/18",
+    "local": {
+      "run_id": "verify-20260818T031104Z-347d68c3ea24",
+      "result": "PASS",
+      "status_transition": "VERIFIED",
+      "developer_tests": 137,
+      "independent_tests": 11,
+      "total_tests": 162,
+      "failed": 0,
+      "skipped": 0,
+      "evidence_path": "../m16.4-local-evidence-09078f9/evidence.json",
+      "evidence_sha256": "3f4d9b3b6ad1bf96074c8f2edfe42e2c5a5bde9bdf9f3e1d85a74d1f6a66231c"
+    },
+    "github_actions": {
+      "run_id": "32094664145",
+      "run_attempt": 1,
+      "result": "PASS",
+      "status_transition": "VERIFIED",
+      "developer_tests": 137,
+      "independent_tests": 11,
+      "total_tests": 162,
+      "failed": 0,
+      "skipped": 0,
+      "evidence_path": "../m16.4-ci-evidence-32094664145/qqq-verification-evidence-09078f9ce06b9903f9b3c7bc59334a034b41c0d5/evidence.json",
+      "evidence_sha256": "6c06cca3f28bd2336892ee847badddfad1917b1daa014e0c5be1f28314d27a16"
+    }
+  },
+  "release_scope": {
+    "included": [
+      "Massive 只读 REST 轮询客户端与版本化刷新配置",
+      "数据质量、时间戳、去重、退避与错误 fail-closed 边界",
+      "本地内存事件总线与可重连 SSE",
+      "独立 frontend/m16 实时观察页面",
+      "本地启动链与 Asia/Shanghai 展示时区"
+    ],
+    "excluded": [
+      "改变 M04-M07 确认策略与目标仓位",
+      "将盘中观察写入确认状态或 paper ledger",
+      "真实券商连接、下单、转账或自动交易",
+      "公网部署、多用户权限和生产级高可用"
+    ]
+  },
+  "secret_policy": {
+    "committed_secrets": false,
+    "frontend_receives_api_key": false,
+    "query_parameter_authentication": false,
+    "logs_contain_api_key": false
+  },
+  "rollback": {
+    "action": "停止 M16 进程并回到 rollback_ref；不删除候选分支或证据目录。",
+    "ref": "verification-baseline-v3.26",
+    "reason": "v3.26 是 M16 当前验证所依赖的治理 Trusted baseline，且不包含本候选的实时业务实现。",
+    "m15_reference": "verification-baseline-v3.21"
+  }
+}
