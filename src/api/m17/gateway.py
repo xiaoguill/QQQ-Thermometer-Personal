@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import copy
+from http.client import HTTPConnection
 import json
 import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
-from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit, urlunsplit
-from urllib.request import HTTPRedirectHandler, Request, build_opener
 from zoneinfo import ZoneInfo
 
 from src.api.live_api import LiveApiService, create_live_app
@@ -59,11 +58,6 @@ class LocalReadResponse:
     body: Mapping[str, Any]
 
 
-class _NoRedirectHandler(HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):  # type: ignore[no-untyped-def]
-        return None
-
-
 class LocalReadApiClient:
     """GET-only adapter for the existing localhost-confirmed read model."""
 
@@ -84,7 +78,6 @@ class LocalReadApiClient:
         self.token_env = token_env
         self.environ = os.environ if environ is None else environ
         self.timeout_seconds = timeout_seconds
-        self._opener = build_opener(_NoRedirectHandler)
 
     def _url(self, path: str, query: Mapping[str, Any] | None = None) -> str:
         parsed = urlsplit(path)
@@ -110,18 +103,24 @@ class LocalReadApiClient:
                 # The value is read only inside this process and never returned
                 # or included in an exception message.
                 headers["X-QQQ-Local-Token"] = token
-        request = Request(url, method="GET", headers=headers)
+        parsed_url = urlsplit(url)
+        host = parsed_url.hostname
+        if host is None:
+            raise LocalReadApiError("confirmed read API origin is invalid")
+        request_target = parsed_url.path or "/"
+        if parsed_url.query:
+            request_target += f"?{parsed_url.query}"
+        connection: HTTPConnection | None = None
         try:
-            with self._opener.open(request, timeout=self.timeout_seconds) as response:  # noqa: S310 - origin is validated
-                return LocalReadResponse(int(response.status), _decode_json(response.read()))
-        except HTTPError as exc:
-            try:
-                body = _decode_json(exc.read())
-            except OSError:
-                body = {}
-            return LocalReadResponse(int(exc.code), body)
-        except (URLError, OSError, TimeoutError) as exc:
+            connection = HTTPConnection(host, parsed_url.port or 80, timeout=self.timeout_seconds)
+            connection.request("GET", request_target, headers=headers)
+            response = connection.getresponse()
+            return LocalReadResponse(int(response.status), _decode_json(response.read()))
+        except (OSError, TimeoutError) as exc:
             raise LocalReadApiError("confirmed read API is unavailable") from exc
+        finally:
+            if connection is not None:
+                connection.close()
 
 
 def _parse_query(raw_query: str) -> dict[str, list[str]]:
