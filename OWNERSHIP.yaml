@@ -29,7 +29,7 @@
       "forbidden": ["OWNERSHIP.yaml", "contracts/", "verification/", "configs/frozen/", ".github/workflows/verification.yml", "frontend/", "src/api/", "src/storage/", "src/jobs/"]
     },
     "integrator": {
-      "write": ["frontend/", "configs/realtime/", "configs/m17/", "configs/paper/", "src/api/", "src/notifications/", "src/realtime/", "src/paper/", "src/storage/", "src/jobs/", "src/thermometer/", "src/web/", "tests/", "docs/", "README.md", "README_PERSONAL.md"],
+      "write": ["frontend/", "configs/realtime/", "configs/m17/", "configs/m18/", "configs/paper/", "src/api/", "src/notifications/", "src/realtime/", "src/paper/", "src/storage/", "src/jobs/", "src/thermometer/", "src/web/", "tests/", "docs/", "README.md", "README_PERSONAL.md"],
       "read_only": ["contracts/", "verification/", "configs/frozen/", "OWNERSHIP.yaml"],
       "forbidden": ["OWNERSHIP.yaml", "contracts/", "verification/", "configs/frozen/", ".github/workflows/verification.yml", "AI_CONTEXT_ROUTER.json", "tasks/", "docs/DOCUMENT_REGISTRY.json"]
     },
