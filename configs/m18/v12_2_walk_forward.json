@@ -1,0 +1,21 @@
+{
+  "$schema": "qqq-v12.2-causal-walk-forward-config/v1",
+  "replay_version": "v12.2-causal-walk-forward/v1",
+  "strategy_version": "v10_preserve_shock_recovery",
+  "start_date": "2025-01-01",
+  "end_date": null,
+  "prices_adj_close_csv": "research/qqq_drawdown_strategy/output/prices_adj_close.csv",
+  "vix_indices_csv": "research/qqq_drawdown_strategy/output/vix_indices.csv",
+  "vxx_ohlcv_csv": null,
+  "initial_capital": 1000000.0,
+  "cost_bps": [5.0, 10.0, 25.0],
+  "require_vxx_for_returns": true,
+  "calendar_timezone": "America/New_York",
+  "exchange": "NYSE",
+  "output_root": null,
+  "notes": [
+    "v12.2 is an independent causal replay/audit label, not a new strategy contract.",
+    "Set vxx_ohlcv_csv or pass --vxx-csv to use a local VXX execution-price cache.",
+    "Missing VXX is fail-closed; VIX must never be substituted for VXX."
+  ]
+}
