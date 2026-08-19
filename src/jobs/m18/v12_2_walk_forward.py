@@ -1236,6 +1236,15 @@ def _annual_metrics(rows: Sequence[Mapping[str, Any]], *, return_key: str, equit
         period_return = equity - 1.0
         annualized = (equity ** (365.25 / days) - 1.0) if equity > 0.0 else -1.0
         max_dd, duration = _drawdown(curve)
+        # A trading-year does not begin on January 1, so checking the first
+        # period against ``01-01`` incorrectly labels every otherwise complete
+        # year as partial.  The report groups returns by their period end;
+        # only the terminal year is partial when the available data ends
+        # before December.  A December terminal date is treated as a complete
+        # calendar-year close (the NYSE session may be Dec 29, 30, or 31).
+        partial_year = year == max(
+            grouped
+        ) and last.month < 12
         result.append(
             {
                 "series": label,
@@ -1243,7 +1252,7 @@ def _annual_metrics(rows: Sequence[Mapping[str, Any]], *, return_key: str, equit
                 "periods": len(year_rows),
                 "period_start": first.isoformat(),
                 "period_end": last.isoformat(),
-                "partial_year": first.month != 1 or first.day != 1 or last.month != 12 or last.day != 31,
+                "partial_year": partial_year,
                 "return": period_return,
                 "annualized_return": annualized,
                 "max_drawdown": max_dd,

@@ -3,6 +3,7 @@ import unittest
 from src.jobs.m18.v12_2_walk_forward import (
     CausalMarketDataset,
     ReplayConfig,
+    _annual_metrics,
     _next_session,
     build_prefix_snapshots,
 )
@@ -61,6 +62,25 @@ class V122WalkForwardTests(unittest.TestCase):
     def test_config_keeps_vxx_fail_closed_by_default(self) -> None:
         config = ReplayConfig.from_mapping({})
         self.assertTrue(config.require_vxx_for_returns)
+
+    def test_annual_metrics_does_not_mark_complete_year_partial(self) -> None:
+        rows = [
+            {
+                "period_start": "2025-01-02",
+                "period_end": "2025-12-31",
+                "return": 0.001,
+                "equity": 1.0,
+            },
+            {
+                "period_start": "2025-12-31",
+                "period_end": "2026-08-10",
+                "return": 0.001,
+                "equity": 1.0,
+            },
+        ]
+        annual = _annual_metrics(rows, return_key="return", equity_key="equity", label="test")
+        self.assertFalse(annual[0]["partial_year"])
+        self.assertTrue(annual[1]["partial_year"])
 
 
 if __name__ == "__main__":
