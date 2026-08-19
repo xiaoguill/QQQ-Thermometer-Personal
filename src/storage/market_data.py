@@ -26,6 +26,7 @@ SUPPORTED_SYMBOLS = (
     "IAU",
     "XLU",
     "SVXY",
+    "VXX",
     "VIX",
     "VIX3M",
 )

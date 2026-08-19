@@ -96,6 +96,9 @@ class NormalizationIntegrationTests(unittest.TestCase):
         self.assertFalse(calendar.is_trading_day("2020-11-26"))
         self.assertTrue(calendar.is_trading_day("2020-11-27"))
 
+    def test_vxx_has_an_explicit_first_available_date(self):
+        self.assertEqual(ListingRegistry().first_date("VXX"), "2009-01-29")
+
     def test_missing_session_is_partial_and_never_filled(self):
         request = self._request(start_date="2020-03-16", end_date="2020-03-18")
         result = normalize_snapshots(
