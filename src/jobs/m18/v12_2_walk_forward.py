@@ -285,6 +285,18 @@ def _resolve_path(value: str | None) -> Path | None:
     return path if path.is_absolute() else _PROJECT_ROOT / path
 
 
+def _manifest_path(path: Path) -> str:
+    """Return a stable provenance path across clean repository checkouts."""
+
+    resolved = path.resolve()
+    try:
+        return resolved.relative_to(_PROJECT_ROOT.resolve()).as_posix()
+    except ValueError:
+        # External inputs, such as the separately cached VXX file, retain
+        # their absolute path so the operator can locate the source.
+        return str(resolved)
+
+
 def _replay_calendar(config: ReplayConfig) -> TradingCalendar:
     return TradingCalendar(
         exchange=config.exchange,
@@ -351,7 +363,7 @@ def _read_prices_csv(path: Path) -> tuple[dict[str, dict[str, float]], dict[str,
     _require("QQQ" in series and series["QQQ"], "price CSV must contain QQQ")
     meta = {
         "role": "prices_adj_close",
-        "path": str(path),
+        "path": _manifest_path(path),
         "sha256": _file_hash(path),
         "columns": columns,
         "rows": row_count,
@@ -384,7 +396,7 @@ def _read_vix_csv(path: Path) -> tuple[dict[str, float], dict[str, float], dict[
     _require(vix and vix3m, "VIX CSV must contain non-empty VIX and VIX3M series")
     meta = {
         "role": "vix_indices",
-        "path": str(path),
+        "path": _manifest_path(path),
         "sha256": _file_hash(path),
         "columns": ["date", "VIX", "VIX3M"],
         "rows": row_count,
@@ -417,7 +429,7 @@ def _read_vxx_csv(path: Path | None) -> tuple[dict[str, float], Mapping[str, Any
     _require(values, "VXX CSV is empty")
     return values, {
         "role": "vxx_execution_close",
-        "path": str(path),
+        "path": _manifest_path(path),
         "sha256": _file_hash(path),
         "columns": list(reader.fieldnames or ()),
         "rows": row_count,

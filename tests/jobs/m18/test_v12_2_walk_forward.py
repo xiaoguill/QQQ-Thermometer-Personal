@@ -1,8 +1,10 @@
 import unittest
+from pathlib import Path
 
 from src.jobs.m18.v12_2_walk_forward import (
     CausalMarketDataset,
     ReplayConfig,
+    _manifest_path,
     _next_session,
     build_prefix_snapshots,
 )
@@ -61,6 +63,10 @@ class V122WalkForwardTests(unittest.TestCase):
     def test_config_keeps_vxx_fail_closed_by_default(self) -> None:
         config = ReplayConfig.from_mapping({})
         self.assertTrue(config.require_vxx_for_returns)
+
+    def test_manifest_path_is_stable_inside_repository_checkout(self) -> None:
+        repository_file = Path(__file__).resolve().parents[3] / "research" / "example.csv"
+        self.assertEqual(_manifest_path(repository_file), "research/example.csv")
 
 
 if __name__ == "__main__":
