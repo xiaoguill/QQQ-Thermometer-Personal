@@ -278,7 +278,7 @@ def _free_inputs(config: M21Config, *, start_date: str, end_date: str) -> tuple[
     else:
         stock_results = list(stocks_source.fetch_all(start_date=start_date, end_date=end_date))
     cboe_source = CboeOfficialSource(config)
-    index_results = [cboe_source.fetch_index(symbol, end_date=end_date) for symbol in INDEX_SYMBOLS]
+    index_results = [cboe_source.fetch_index(symbol, start_date=start_date, end_date=end_date) for symbol in INDEX_SYMBOLS]
     return stock_results, index_results
 
 
@@ -349,6 +349,9 @@ def _availability_evidence(
 
 
 def _failure_decision(config: M21Config, *, end_date: str | None, failure: Mapping[str, Any], availability: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    requested_start = availability.get("requested_start_date") if isinstance(availability, Mapping) else None
+    if not isinstance(requested_start, str) or not requested_start:
+        requested_start = config.history_floor_date
     return {
         "schema": M21_DECISION_SCHEMA,
         "runtime_version": M21_RUNTIME_VERSION,
@@ -373,7 +376,7 @@ def _failure_decision(config: M21Config, *, end_date: str | None, failure: Mappi
         "failure_class": failure.get("class", "unknown"),
         "failure_message": failure.get("message", "data source failed"),
         "source": {"provider": config.provider},
-        "data_window": {"provider_requested_start": config.history_floor_date, "provider_requested_end": end_date},
+        "data_window": {"provider_requested_start": requested_start, "provider_requested_end": end_date},
         "availability": dict(availability or {}),
         "checks": {"safe_failure": True, "target_weight_sum": False, "missing_vxx_policy": "fail_closed"},
         "manual_action": "数据不完整，本次不调仓。",
@@ -384,6 +387,7 @@ def _replay_with_prepared_files(config: M21Config, *, end_date: str, requested_s
     """Call the existing M19/v12.2 replay without changing its source."""
 
     base = M19Config.from_file(config.project_root / "configs" / "m19" / "readonly.json")
+    effective_replay_start = max(config.replay_start_date, requested_start)
     replay_config = replace(
         base,
         provider="local_csv",
@@ -391,7 +395,7 @@ def _replay_with_prepared_files(config: M21Config, *, end_date: str, requested_s
         local_vix_csv=str(inputs_dir / "vix_indices.csv"),
         local_vxx_csv=str(inputs_dir / "vxx.csv"),
         history_start_date=requested_start,
-        replay_start_date=config.replay_start_date,
+        replay_start_date=effective_replay_start,
         replay_config_path=config.replay_config_path,
         initial_capital=config.initial_capital,
         cost_bps=config.cost_bps,
@@ -436,6 +440,7 @@ def _decorate_replay_decision(
             "provider_requested_end": end_date,
             "signal_date": value.get("signal_date"),
             "execution_date": value.get("execution_date"),
+            "replay_start_date": max(config.replay_start_date, requested_start),
             "uses_data_through_signal_date": True,
             "execution_delay_trading_days": 1,
         },

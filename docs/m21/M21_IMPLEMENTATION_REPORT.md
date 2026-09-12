@@ -15,8 +15,8 @@ M21 是新增的只读收盘数据链路，不是新策略。它固定调用现�
 | 序列 | M21 来源 | 当前验证结果 |
 |---|---|---|
 | QQQ、QLD、VXX、SVXY、BIL、TLT、IAU、XLU、VOO、SPY | Massive Stocks 日线、`adjusted=true` | 未提供 key 时统一为 `MISSING_API_KEY`；设置 GitHub Secret 后才可验证权限和标的响应 |
-| VIX | Cboe 官方历史 CSV | 真实读取成功，首日 `1990-01-02`，末日 `2026-09-11` |
-| VIX3M | Cboe 官方历史 CSV | 真实读取成功，首日 `2009-09-18`，末日 `2026-09-11` |
+| VIX | Cboe 官方历史 CSV | 原始文件覆盖始于 `1990-01-02`；本次滚动请求 Evidence 为 `2024-09-12` 至 `2026-09-11` |
+| VIX3M | Cboe 官方历史 CSV | 原始文件覆盖始于 `2009-09-18`；本次滚动请求 Evidence 为 `2024-09-12` 至 `2026-09-11` |
 
 Cboe 的两个序列分开请求、分开 hash、分开记录，不依赖 Massive 指数权限。VIX3M 如果未来不可用，保持缺失并关闭本次调仓；不会用 VIX、SVXY 或 BIL 替代。
 
@@ -51,12 +51,13 @@ failure_code=MISSING_API_KEY
 最后一轮本地回归：
 
 ```text
-274 passed, 25 subtests passed
+275 passed, 25 subtests passed
 ```
 
 另外已通过：
 
 - M21 源适配器、VXX 分类、VIX3M 缺失的负向测试；
+- M21 专项测试共 15 项，全部通过；
 - M21 配置的布尔值和整数边界测试；
 - Python 编译检查；
 - M21 JSON 配置、任务合同和文档注册表解析；
@@ -68,9 +69,13 @@ failure_code=MISSING_API_KEY
 
 ## Evidence 位置
 
-无 key 的真实源探测 Evidence：
+无 key 的真实源探测 Evidence（最新窗口修正版）：
 
-`D:\Backup\Documents\量化回测\_quant_artifacts\m21-live-source-probe-20260912\availability_evidence.json`
+`D:\Backup\Documents\量化回测\_quant_artifacts\m21-live-source-probe-20260912-windowfix\availability_evidence.json`
+
+早期无 key 探测的邮件预览仍保留在：
+
+`D:\Backup\Documents\量化回测\_quant_artifacts\m21-live-source-probe-20260912\email_preview.txt`
 
 本地 CSV 失败关闭 Evidence：
 

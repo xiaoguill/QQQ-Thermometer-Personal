@@ -46,6 +46,22 @@ def test_vix3m_source_unavailable_is_explicit_and_not_substituted() -> None:
     assert result.rows == ()
 
 
+def test_cboe_source_records_and_applies_the_requested_window() -> None:
+    config = M21Config.from_file(ROOT / "configs/m21/free_close.json")
+    content = (
+        b"DATE,OPEN,HIGH,LOW,CLOSE\n"
+        b"08/07/2026,20,21,19,20.5\n"
+        b"08/10/2026,21,22,20,21.5\n"
+    )
+    result = CboeOfficialSource(config, fetcher=lambda _url, _timeout: content).fetch_index(
+        "VIX", start_date="2026-08-10", end_date="2026-08-10"
+    )
+    assert result.status == "success"
+    assert result.requested_start == "2026-08-10"
+    assert result.first_date == "2026-08-10"
+    assert [row["date"] for row in result.rows] == ["2026-08-10"]
+
+
 @pytest.mark.parametrize(
     ("kwargs", "expected_class", "expected_code"),
     [

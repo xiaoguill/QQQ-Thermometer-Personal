@@ -283,15 +283,17 @@ class CboeOfficialSource:
         self.config = config
         self._fetcher = fetcher or (lambda url, timeout: _fetch_bytes(url, timeout=timeout))
 
-    def fetch_index(self, symbol: str, *, end_date: str) -> SeriesResult:
+    def fetch_index(self, symbol: str, *, start_date: str | None = None, end_date: str) -> SeriesResult:
         normalized = symbol.strip().upper()
         if normalized not in INDEX_SYMBOLS:
             raise ValueError(f"unsupported Cboe index: {symbol}")
+        requested_start = start_date or self.config.history_floor_date
         url = self.config.cboe_vix_url if normalized == "VIX" else self.config.cboe_vix3m_url
-        request = {"source": "cboe-official-cdn", "symbol": normalized, "url": url, "interval": "1d", "price_basis": "official_index_close"}
+        request = {"source": "cboe-official-cdn", "symbol": normalized, "url": url, "interval": "1d", "start_date": requested_start, "end_date": end_date, "price_basis": "official_index_close"}
         try:
             raw = self._fetcher(url, 30)
             values, meta = parse_cboe_history(raw, symbol=normalized, end_date=end_date)
+            values = {session: value for session, value in values.items() if session >= requested_start}
             if end_date not in values:
                 raise M21SourceError("STALE_OR_MISSING", "data_quality", f"Cboe {normalized} has no value on the requested close date")
             rows = tuple({"date": session, "symbol": normalized, "close": value} for session, value in sorted(values.items()))
@@ -300,10 +302,10 @@ class CboeOfficialSource:
                 provider="cboe-official-cdn",
                 status="success",
                 rows=rows,
-                requested_start=self.config.history_floor_date,
+                requested_start=requested_start,
                 requested_end=end_date,
-                first_date=meta["first_date"],
-                last_date=meta["last_date"],
+                first_date=min(values),
+                last_date=max(values),
                 has_end_date=True,
                 request=request,
                 raw_sha256=meta["raw_sha256"],
@@ -314,7 +316,7 @@ class CboeOfficialSource:
             return _failure(
                 symbol=normalized,
                 provider="cboe-official-cdn",
-                start_date=self.config.history_floor_date,
+                start_date=requested_start,
                 end_date=end_date,
                 code=exc.code,
                 failure_class=exc.failure_class,
