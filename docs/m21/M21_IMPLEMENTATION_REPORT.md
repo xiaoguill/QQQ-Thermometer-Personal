@@ -70,9 +70,9 @@ failure_code=MISSING_API_KEY
 
 ## Evidence 位置
 
-无 key 的真实源探测 Evidence（最新窗口修正版）：
+无 key 的真实源探测 Evidence（最新窗口、契约分类与交易日缺口检查版）：
 
-`D:\Backup\Documents\量化回测\_quant_artifacts\m21-live-source-probe-20260912-windowfix\availability_evidence.json`
+`D:\Backup\Documents\量化回测\_quant_artifacts\m21-live-source-probe-20260912-contractfix-v3\availability_evidence.json`
 
 早期无 key 探测的邮件预览仍保留在：
 

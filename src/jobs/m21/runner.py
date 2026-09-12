@@ -300,7 +300,11 @@ def _session_completeness(result: SeriesResult, expected: set[str]) -> dict[str,
         "missing_sessions_sample": missing[:20],
         "unexpected_session_count": len(unexpected),
         "unexpected_sessions_sample": unexpected[:20],
-        "complete": not missing and not unexpected,
+        # Some official Cboe history files publish index observations on dates
+        # that the NYSE equity calendar marks closed.  Extra observations are
+        # retained in Evidence and ignored by the replay calendar; only a
+        # missing expected NYSE session can make a daily series incomplete.
+        "complete": not missing,
     }
 
 
