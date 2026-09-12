@@ -314,6 +314,37 @@
         "frontend/m17/app.js"
       ]
     },
+    "scheduled_readonly": {
+      "path_prefixes": [
+        ".github/workflows/qqq_readonly_schedule.yml",
+        "configs/m19/",
+        "configs/m20/",
+        "docs/m19/",
+        "docs/m20/",
+        "src/jobs/m19/",
+        "src/jobs/m20/",
+        "tests/jobs/m19/",
+        "tests/jobs/m20/"
+      ],
+      "default_role": "scheduled_readonly_builder",
+      "task_contract_pattern": "tasks/{task_id}.json",
+      "required_context": [
+        "configs/frozen/strategy_contract.json",
+        "configs/m18/v12_2_walk_forward.json",
+        "src/jobs/m18/v12_2_walk_forward.py",
+        "src/jobs/m18/massive_history.py",
+        "src/realtime/config.py",
+        "src/realtime/massive_client.py",
+        "docs/QQQ_THERMOMETER_GOVERNANCE_BOUNDARIES.md",
+        "docs/PERSONAL_USE_GOVERNANCE.md",
+        "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
+        "docs/WORKTREE_RESTORE_PROTOCOL.md"
+      ],
+      "optional_context": [
+        "docs/m18/V12_2_CAUSAL_WALK_FORWARD.md",
+        "verification/control/policy.json"
+      ]
+    },
     "research": {
       "path_prefixes": [
         "research/",

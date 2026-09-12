@@ -16,6 +16,9 @@
 
 - `docs/QQQ_THERMOMETER_ARCHITECTURE.md`：目标系统的分层结构。
 - `docs/QQQ_THERMOMETER_MODULE_PLAN.md`：按 M00–M15 拆解的实施顺序。
+- `docs/m19/M19_READONLY_RUNTIME.md`：数据源、因果回放和失败关闭规则。
+- `docs/m20/M20_GITHUB_ACTION_RUNBOOK.md`：获取 key、填写 Secrets、手动测试和邮件处理清单。
+- `.github/workflows/qqq_readonly_schedule.yml`：三个美股检查点和次日北京时间邮件触发器；不修改旧的独立验证工作流。
 - `src/thermometer/`：温度计核心规则的未来落点。
 - `src/api/`：未来的只读查询接口边界。
 - `src/web/` 与 `frontend/`：当前旧 Web 入口与未来前端边界，暂不混写。
@@ -26,6 +29,13 @@
 - `research/qqq_drawdown_strategy/`：已提交的历史研究基线和原有测试。
 - `docs/reference/v10_preserve_shock_recovery/`：从原仓库研究结果复制的 v10 静态参考快照。
 - `artifacts/runs/`：未来运行输出目录，已加入忽略规则，不应提交。
+
+## 当前可运行版本
+
+- 运行层：`m19-readonly-data-replay/v1`。
+- 回放层：`v12.2-causal-walk-forward/v1`。
+- 实际策略源：`v10_preserve_shock_recovery`。
+- 运行边界：纸上目标、人工复核、禁止券商下单；M18/v12.2 和旧 Demo 继续独立保留。
 
 ## 文件进入 Git 的条件
 

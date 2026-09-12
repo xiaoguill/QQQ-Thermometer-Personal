@@ -38,6 +38,11 @@
       "protected_write": ["OWNERSHIP.yaml", "AI_CONTEXT_ROUTER.json", "tasks/", "docs/DOCUMENT_REGISTRY.json", "verification/", ".github/workflows/verification.yml"],
       "read_only": ["contracts/", "configs/frozen/", "src/", "frontend/", "research/"],
       "forbidden": ["contracts/", "configs/frozen/", "src/", "frontend/", "research/", "docs/reference/", "docs/REPO_CLEANUP_AUDIT_20260812.md"]
+    },
+    "scheduled_readonly_builder": {
+      "write": [".github/workflows/qqq_readonly_schedule.yml", "configs/m19/", "configs/m20/", "docs/m19/", "docs/m20/", "src/jobs/m19/", "src/jobs/m20/", "tests/jobs/m19/", "tests/jobs/m20/"],
+      "read_only": ["contracts/", "configs/frozen/", "src/thermometer/", "src/realtime/", "src/jobs/m18/", "docs/", "verification/"],
+      "forbidden": ["OWNERSHIP.yaml", "AI_CONTEXT_ROUTER.json", "tasks/", "docs/DOCUMENT_REGISTRY.json", "verification/", ".github/workflows/verification.yml", "configs/frozen/", "contracts/", "research/", "data/", "artifacts/", "secrets/", ".env", ".env.*", "src/thermometer/", "src/realtime/", "src/api/", "src/storage/", "frontend/", "configs/realtime/", "configs/m18/", "configs/m17/", "configs/paper/"]
     }
   }
 }

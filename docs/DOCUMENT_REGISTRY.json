@@ -239,6 +239,42 @@
       "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml", "tasks/M17.json", "contracts/openapi.json", "verification/control/policy.json"]
     },
     {
+      "path": "tasks/M19.json",
+      "doc_id": "QQQ-TASK-M19",
+      "type": "task_contract",
+      "status": "approved",
+      "authority": "L3",
+      "read_when": ["M19", "scheduled_readonly", "data_capture", "causal_replay"],
+      "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml", "configs/frozen/strategy_contract.json", "verification/control/policy.json"]
+    },
+    {
+      "path": "tasks/M20.json",
+      "doc_id": "QQQ-TASK-M20",
+      "type": "task_contract",
+      "status": "approved",
+      "authority": "L3",
+      "read_when": ["M20", "scheduled_readonly", "github_actions", "email"],
+      "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml", "verification/control/policy.json"]
+    },
+    {
+      "path": "docs/m19/M19_READONLY_RUNTIME.md",
+      "doc_id": "QQQ-M19-GUIDE-001",
+      "type": "implementation_guide",
+      "status": "active",
+      "authority": "L5",
+      "read_when": ["M19", "scheduled_readonly", "data_capture", "causal_replay"],
+      "machine_truth": ["tasks/M19.json", "configs/m19/readonly.json"]
+    },
+    {
+      "path": "docs/m20/M20_GITHUB_ACTION_RUNBOOK.md",
+      "doc_id": "QQQ-M20-RUNBOOK-001",
+      "type": "implementation_guide",
+      "status": "active",
+      "authority": "L5",
+      "read_when": ["M20", "github_actions", "email", "private_use"],
+      "machine_truth": ["tasks/M20.json", "configs/m20/email.json", ".github/workflows/qqq_readonly_schedule.yml"]
+    },
+    {
       "path": "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
       "doc_id": "QQQ-GOV-VERIFICATION-001",
       "type": "normative_governance",
