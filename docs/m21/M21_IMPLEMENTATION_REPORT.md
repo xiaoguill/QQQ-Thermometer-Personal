@@ -134,9 +134,29 @@ failure_code=MISSING_API_KEY
 - 目标仓位：`QQQ 60% + BIL 40%`；
 - 输出的 5/10/25 bps 成本情景与 QQQ 基准均已写入本地 Evidence，未改变 v10/v12.2 策略规则。
 
-本地重放只用于验证程序逻辑；下一步仍需在 GitHub 上用同一 Candidate 重新运行一次无邮件 Action，确认 Linux Runner 与真实 Secret 环境一致。
+本地重放只用于验证程序逻辑；随后已在 GitHub 上用同一 Candidate 重新运行无邮件 Action，确认 Linux Runner 与真实 Secret 环境一致。
 
-下一步是在新 Candidate 推送后重新运行一次无邮件 Action。只有新运行同时满足“所有源成功、共同窗口完整、回放 READY、Evidence 上传成功”时，才可把 M21 标记为候选验证通过；在治理审阅和 Trusted baseline 更新前，仍不称为 `CI_VERIFIED`。
+### 最终 GitHub 真实数据验证
+
+同一 Candidate `75908d3` 已在 GitHub Action `34698880318` 完成一次不发邮件的真实验证：
+
+- `MASSIVE_API_KEY` 已被实际使用，且没有写入日志或 Artifact；
+- 十个 ETF（含 VXX）均为 `success`，共同窗口为 `2024-09-12` 至 `2026-09-11`，每个 ETF 返回 501 根日线；
+- VIX 与 VIX3M 均从 Cboe 官方源成功读取；
+- `effective_start_date=2024-09-12`，共同窗口预期 501 个 NYSE 交易日，QQQ 等 ETF 的 `missing_session_count=0`；
+- `vxx_diagnostic.outcome=available`，没有发生 VXX 替代；
+- `decision.status=READY`、`decision_eligible=true`、`data_quality=OK`、`normalization_quality=OK`；
+- 首个 indicator-ready 日期为 `2025-05-02`，最新信号日期为 `2026-09-11`，下一执行日为 `2026-09-14`；
+- 最新状态为 `normal`、温度 80，纸上目标为 `QQQ 60% + BIL 40%`；
+- 邮件步骤按手动输入正确跳过，Artifact 上传成功，失败可见性检查通过。
+
+本次远程 Artifact 已下载并保存在：
+
+`D:\Backup\Documents\量化回测\_quant_artifacts\m21-github-run-34698880318`
+
+这证明“约两年的免费数据作为完整数据窗口”的实现、真实 Secret、VXX 契约、预热处理和 v12.2 回放链路在 GitHub Runner 上能够连通。它仍然只是 M21 Candidate 的一次运行证据，不等于策略收益保证，也不等于已经提升为 Trusted baseline。
+
+下一步不是继续修改策略，而是按治理流程审阅 Candidate `75908d3` 和运行 `34698880318` 的 Evidence；审阅通过后才能提升新的 Trusted baseline，再运行正式 GitHub CI。当前 M21 已满足“数据源成功、共同窗口完整、回放 READY、Evidence 上传成功”的 Candidate 验证条件，但在此之前仍不称为 `CI_VERIFIED`。
 
 ## Evidence 位置
 
@@ -152,12 +172,11 @@ failure_code=MISSING_API_KEY
 
 `D:\Backup\Documents\量化回测\_quant_artifacts\m21-local-replay-20260810-rerun2\availability_evidence.json`
 
-设置 key 后，GitHub Action 的 Artifact 应至少包含 `availability_evidence.json`、`provider_manifest.json`、`decision.json`、`run_metadata.json`、`replay/` 和 `email_preview.txt`。
+设置 key 后，GitHub Action 的 Artifact 应至少包含 `availability_evidence.json`、`provider_manifest.json`、`decision.json`、`run_metadata.json`、`replay/` 和 `email_preview.txt`。本次成功 Artifact 为 `m21-github-run-34698880318`。
 
 ## 下一步
 
-1. 重新推送已修复的 M21 Candidate，并手动运行一次不发邮件 Action。
-2. 下载 Artifact，确认十个 ETF 和 VIX/VIX3M 的数据区间覆盖预热期，且 `decision.json` 为 `READY`。
-3. 如果 VXX 分类是 `permission` 或 `interface_or_symbol`，暂停调仓并按分类处理；不替换 VXX。
-4. 只有所有序列完整且回放成功时，才做一次测试邮件。
-5. 新 Candidate 通过治理审阅并提升 Trusted baseline 后，再进行远程 Evidence 验证。
+1. 审阅 Candidate `75908d3`、运行 `34698880318` 及其 Artifact。
+2. 如治理审阅通过，再单独提升新的 Trusted baseline；不覆盖旧基线。
+3. 提升基线后再运行正式 GitHub CI；在此之前 M21 只作为 Candidate 使用。
+4. 需要发邮件时另行配置邮件 Secret，并先做测试邮件；当前仍不自动下单。
