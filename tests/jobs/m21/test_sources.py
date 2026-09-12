@@ -6,6 +6,8 @@ from pathlib import Path
 import pytest
 
 from src.jobs.m21.config import M21Config
+from src.realtime.config import RealtimeConfig
+from src.realtime.massive_client import MassiveClientError
 from src.jobs.m21.sources import (
     CboeOfficialSource,
     M21SourceError,
@@ -73,3 +75,19 @@ def test_massive_config_missing_vxx_is_symbol_contract(tmp_path: Path) -> None:
         MassiveFreeStocksSource.from_config(config)
     assert exc_info.value.code == "CONFIG_MISSING_SYMBOL"
     assert exc_info.value.failure_class == "symbol_contract"
+
+
+def test_massive_vxx_entitlement_failure_is_preserved_as_permission() -> None:
+    config = M21Config.from_file(ROOT / "configs/m21/free_close.json")
+    massive_config = RealtimeConfig.from_file(ROOT / "configs/m21/massive_stocks.json")
+
+    class DeniedClient:
+        def _get(self, _path: str, _query: dict[str, str]) -> object:
+            raise MassiveClientError("NOT_ENTITLED")
+
+    source = MassiveFreeStocksSource(config, massive_config, DeniedClient(), sleep_fn=lambda _seconds: None)  # type: ignore[arg-type]
+    results = source.fetch_all(start_date="2026-08-07", end_date="2026-08-10")
+    vxx = next(result for result in results if result.symbol == "VXX")
+    assert vxx.status == "failed"
+    assert vxx.failure_code == "NOT_ENTITLED"
+    assert vxx.failure_class == "permission"
