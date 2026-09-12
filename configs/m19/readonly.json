@@ -1,0 +1,44 @@
+{
+  "$schema": "qqq-m19-readonly-config/v1",
+  "runtime_version": "m19-readonly-data-replay/v1",
+  "replay_version": "v12.2-causal-walk-forward/v1",
+  "strategy_version": "v10_preserve_shock_recovery",
+  "provider": "massive",
+  "paper_only": true,
+  "execution_allowed": false,
+  "data": {
+    "massive_config_path": "configs/m19/massive.json",
+    "history_start_date": "2024-01-01",
+    "display_timezone": "Asia/Shanghai",
+    "market_timezone": "America/New_York",
+    "close_confirmation_time": "16:15",
+    "require_vxx": true,
+    "required_provider_symbols": ["QQQ", "BIL", "VXX", "I:VIX", "I:VIX3M"],
+    "local_csv": {
+      "prices_adj_close_csv": "research/qqq_drawdown_strategy/output/prices_adj_close.csv",
+      "vix_indices_csv": "research/qqq_drawdown_strategy/output/vix_indices.csv",
+      "vxx_csv": "research/qqq_drawdown_strategy/output_low_corr_lab/VXX_adj_close.csv"
+    }
+  },
+  "replay": {
+    "base_config_path": "configs/m18/v12_2_walk_forward.json",
+    "start_date": "2025-01-01",
+    "initial_capital": 1000000.0,
+    "cost_bps": [5.0, 10.0, 25.0]
+  },
+  "schedule": {
+    "checkpoints": {
+      "open": "09:37",
+      "midday": "12:17",
+      "close": "16:23",
+      "email": "08:23"
+    },
+    "email_window": {"start": "08:00", "end": "10:00"}
+  },
+  "notes": [
+    "Massive is the live source; local_csv is an offline historical replay mode and never a silent live fallback.",
+    "The history request begins before the 2025 replay start to provide causal warm-up context when the provider plan permits it.",
+    "Missing, stale, not-entitled, rate-limited, or incomplete VXX/VIX data fails closed.",
+    "M19 does not add strategy thresholds; the actual strategy remains v10 and the replay label remains v12.2."
+  ]
+}

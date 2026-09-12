@@ -1,0 +1,16 @@
+{
+  "$schema": "qqq-m20-email-config/v1",
+  "runtime_version": "m20-github-schedule-email/v1",
+  "delivery": "https_only",
+  "provider_environment_variable": "EMAIL_API_PROVIDER",
+  "api_key_environment_variable": "EMAIL_API_KEY",
+  "from_environment_variable": "EMAIL_API_FROM",
+  "to_environment_variable": "QQQ_EMAIL_TO",
+  "allowed_providers": ["resend", "brevo", "sendgrid"],
+  "window": {"timezone": "Asia/Shanghai", "start": "08:00", "end": "10:00"},
+  "test_run_may_bypass_window": true,
+  "notes": [
+    "This file contains names and policy only; it never contains an email API key.",
+    "The M20 CLI reads the values from the process environment at send time."
+  ]
+}

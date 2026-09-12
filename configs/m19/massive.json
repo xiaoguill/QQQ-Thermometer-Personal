@@ -1,0 +1,20 @@
+{
+  "$schema": "qqq-m19-massive-config/v1",
+  "provider": "massive",
+  "mode": "rest_poll",
+  "base_url": "https://api.massive.com",
+  "api_key_env": "MASSIVE_API_KEY",
+  "refresh_interval_seconds": 900,
+  "request_timeout_seconds": 30,
+  "display_timezone": "Asia/Shanghai",
+  "market_timezone": "America/New_York",
+  "max_source_age_seconds": 172800,
+  "future_skew_seconds": 300,
+  "symbols": [
+    {"symbol": "QQQ", "asset_class": "stocks", "role": "strategy_and_benchmark"},
+    {"symbol": "BIL", "asset_class": "stocks", "role": "cash_proxy"},
+    {"symbol": "VXX", "asset_class": "stocks", "role": "shock_sleeve"},
+    {"symbol": "I:VIX", "asset_class": "indices", "role": "signal"},
+    {"symbol": "I:VIX3M", "asset_class": "indices", "role": "signal"}
+  ]
+}

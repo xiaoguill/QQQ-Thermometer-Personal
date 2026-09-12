@@ -1,0 +1,147 @@
+name: QQQ Read-only Checkpoints
+
+on:
+  schedule:
+    # The non-round minutes reduce the chance of waiting behind the hourly
+    # GitHub Actions queue.  The runner still refuses to use a partial daily bar.
+    - cron: "37 9 * * 1-5"
+      timezone: "America/New_York"
+    - cron: "17 12 * * 1-5"
+      timezone: "America/New_York"
+    - cron: "23 16 * * 1-5"
+      timezone: "America/New_York"
+    # Saturday morning is intentional: it delivers Friday's US close in China.
+    - cron: "23 8 * * 1-6"
+      timezone: "Asia/Shanghai"
+  workflow_dispatch:
+    inputs:
+      checkpoint:
+        description: "要运行的节点"
+        required: true
+        type: choice
+        default: close
+        options:
+          - open
+          - midday
+          - close
+          - email
+      test_email:
+        description: "email 节点是否作为测试邮件发送"
+        required: true
+        type: boolean
+        default: false
+      as_of_date:
+        description: "可选：YYYY-MM-DD；仅用于可复现测试"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qqq-readonly-schedule
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    name: Fetch, replay and optionally email
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONHASHSEED: "0"
+      TZ: UTC
+      M19_OUTPUT: ${{ runner.temp }}/qqq-m19-output
+
+    steps:
+      - name: Checkout the selected default-branch code
+        uses: actions/checkout@v4
+
+      - name: Set up controlled Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Select checkpoint
+        id: mode
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "checkpoint=${{ inputs.checkpoint }}" >> "$GITHUB_OUTPUT"
+            echo "as_of_date=${{ inputs.as_of_date }}" >> "$GITHUB_OUTPUT"
+          else
+            case "${{ github.event.schedule }}" in
+              "37 9 * * 1-5")  echo "checkpoint=open" >> "$GITHUB_OUTPUT" ;;
+              "17 12 * * 1-5") echo "checkpoint=midday" >> "$GITHUB_OUTPUT" ;;
+              "23 16 * * 1-5") echo "checkpoint=close" >> "$GITHUB_OUTPUT" ;;
+              "23 8 * * 1-6")  echo "checkpoint=email" >> "$GITHUB_OUTPUT" ;;
+              *) echo "unknown schedule; fail closed" >&2; exit 1 ;;
+            esac
+            echo "as_of_date=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run bounded M19 checkpoint
+        id: decision
+        continue-on-error: true
+        shell: bash
+        env:
+          M19_CHECKPOINT: ${{ steps.mode.outputs.checkpoint }}
+          M19_AS_OF_DATE: ${{ steps.mode.outputs.as_of_date }}
+        run: |
+          set +e
+          args=(
+            -m src.jobs.m19.runner
+            --config configs/m19/readonly.json
+            --checkpoint "$M19_CHECKPOINT"
+            --output-dir "$M19_OUTPUT"
+          )
+          if [[ -n "$M19_AS_OF_DATE" ]]; then
+            args+=(--as-of-date "$M19_AS_OF_DATE")
+          fi
+          python "${args[@]}"
+          status=$?
+          echo "runner_exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
+
+      - name: Send the next-morning plain-language email
+        id: email
+        if: steps.mode.outputs.checkpoint == 'email'
+        continue-on-error: true
+        shell: bash
+        env:
+          EMAIL_API_PROVIDER: ${{ vars.EMAIL_API_PROVIDER }}
+          EMAIL_API_KEY: ${{ secrets.EMAIL_API_KEY }}
+          EMAIL_API_FROM: ${{ secrets.EMAIL_API_FROM }}
+          QQQ_EMAIL_TO: ${{ secrets.QQQ_EMAIL_TO }}
+        run: |
+          email_args=(
+            -m src.jobs.m20.email
+            --decision "$M19_OUTPUT/decision.json"
+            --email-window-start 08:00
+            --email-window-end 10:00
+          )
+          if [[ "${{ inputs.test_email }}" == "true" ]]; then
+            email_args+=(--test-email)
+          fi
+          python "${email_args[@]}"
+
+      - name: Upload the run evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qqq-m19-${{ steps.mode.outputs.checkpoint }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/qqq-m19-output/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Keep data and email failures fail-closed
+        if: always()
+        shell: bash
+        run: |
+          if [[ "${{ steps.decision.outcome }}" == "failure" ]]; then
+            echo "M19 did not produce a safe decision." >&2
+            exit 1
+          fi
+          if [[ "${{ steps.email.outcome }}" == "failure" ]]; then
+            echo "M20 email delivery failed." >&2
+            exit 1
+          fi
