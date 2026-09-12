@@ -66,6 +66,22 @@ failure_code=MISSING_API_KEY
 - 无 key 的真实 Cboe/Massive 探测；
 - 本地 CSV 回放的失败关闭检查。
 
+## GitHub Action 实跑验证
+
+已在独立分支手动运行一次不发邮件测试：
+
+- 运行编号：`34685643553`；
+- 分支：`codex/m21-free-close-data`；
+- 结果：按预期失败关闭，`failure_code=MISSING_API_KEY`；
+- VXX：`credentials / MISSING_API_KEY`，不是 `permission` 或 `symbol_contract`；
+- `decision.json.manual_action`：`数据不完整，本次不调仓。`；
+- Artifact 已成功上传，包含 `availability_evidence.json`、`decision.json`、`provider_manifest.json` 和 `run_metadata.json`；
+- 运行环境显示 `MASSIVE_API_KEY` 为空，说明 GitHub Repository Secret 尚未设置；本次没有进行真实 VXX 授权测试。
+
+远程 Artifact 已下载到仓库外的 Evidence archive，并完成 key 暴露扫描：
+
+`D:\Backup\Documents\量化回测\_quant_artifacts\m21-github-run-34685643553`
+
 本地旧 CSV 的额外发现是：VXX 的列名 `adj_close` 已通过配置显式映射，但旧价格文件仍缺少 VOO、SPY。因此本地回放也会正确停止，不会把不完整文件当成完整历史。
 
 ## Evidence 位置
