@@ -61,9 +61,10 @@ class M21RunnerError(RuntimeError):
 
 
 _EXTRA_CLOSED_DATES = ("2012-10-29", "2012-10-30", "2018-12-05", "2025-01-09")
-# v12.2's largest finite rolling indicator is the existing 150-session SMA.
-# This is a causal data requirement, not a tunable strategy parameter.
-_V12_2_REQUIRED_CONTEXT_SESSIONS = 150
+# v12.2's bounded M04 call needs 160 actual QQQ sessions: 150 sessions for
+# the largest rolling indicator plus 10 slots used to carry the known EMA
+# state.  This is a causal data requirement, not a tunable strategy parameter.
+_V12_2_REQUIRED_CONTEXT_SESSIONS = 160
 
 
 def _canonical_hash(value: Any) -> str:
@@ -522,15 +523,15 @@ def _first_indicator_ready_date(start_date: str, end_date: str) -> str:
     """Return the first signal date with the frozen v12.2 context available."""
 
     sessions = _expected_sessions(start_date, end_date)
-    if len(sessions) <= _V12_2_REQUIRED_CONTEXT_SESSIONS:
+    if len(sessions) < _V12_2_REQUIRED_CONTEXT_SESSIONS:
         raise M21RunnerError(
             "INSUFFICIENT_CONTEXT",
             "data_quality",
-            "provider-delimited window does not contain the 150-session v12.2 warm-up",
+            "provider-delimited window does not contain the 160-session v12.2 warm-up",
         )
-    # The preceding session is the 150th close and is used as the bootstrap
-    # context; this session is the first one eligible for a signal.
-    return sessions[_V12_2_REQUIRED_CONTEXT_SESSIONS]
+    # The first non-bootstrap signal must have a 160-session actual tail so
+    # M04 can retain its 150 actual rolling bars and ten EMA seed slots.
+    return sessions[_V12_2_REQUIRED_CONTEXT_SESSIONS - 1]
 
 
 def _effective_replay_start_date(config: M21Config, *, coverage_start: str, end_date: str) -> tuple[str, str]:

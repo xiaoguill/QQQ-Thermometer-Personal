@@ -39,7 +39,7 @@ def test_free_close_window_uses_two_year_boundary_and_defers_replay_until_ready(
     calendar = TradingCalendar(
         extra_closed_dates=("2012-10-29", "2012-10-30", "2018-12-05", "2025-01-09")
     )
-    assert len(calendar.sessions(start, first_ready)) == 151
+    assert len(calendar.sessions(start, first_ready)) == 160
 
 
 def test_provider_delimited_history_is_complete_after_common_first_date() -> None:
