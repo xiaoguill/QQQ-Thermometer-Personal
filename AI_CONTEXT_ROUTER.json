@@ -345,6 +345,37 @@
         "verification/control/policy.json"
       ]
     },
+    "free_close_readonly": {
+      "path_prefixes": [
+        ".github/workflows/qqq_free_close_daily.yml",
+        "configs/m21/",
+        "docs/m21/",
+        "src/jobs/m21/",
+        "tests/jobs/m21/"
+      ],
+      "default_role": "free_close_readonly_builder",
+      "task_contract_pattern": "tasks/{task_id}.json",
+      "required_context": [
+        "configs/frozen/strategy_contract.json",
+        "configs/m18/v12_2_walk_forward.json",
+        "src/jobs/m18/v12_2_walk_forward.py",
+        "src/jobs/m19/runner.py",
+        "src/jobs/m20/email.py",
+        "src/realtime/config.py",
+        "src/realtime/massive_client.py",
+        "src/storage/market_data.py",
+        "src/storage/normalization.py",
+        "docs/QQQ_THERMOMETER_GOVERNANCE_BOUNDARIES.md",
+        "docs/PERSONAL_USE_GOVERNANCE.md",
+        "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",
+        "docs/WORKTREE_RESTORE_PROTOCOL.md"
+      ],
+      "optional_context": [
+        "docs/m18/V12_2_CAUSAL_WALK_FORWARD.md",
+        "docs/m20/M20_GITHUB_ACTION_RUNBOOK.md",
+        "verification/control/policy.json"
+      ]
+    },
     "research": {
       "path_prefixes": [
         "research/",

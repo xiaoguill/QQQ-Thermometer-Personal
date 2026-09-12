@@ -257,6 +257,15 @@
       "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml", "verification/control/policy.json"]
     },
     {
+      "path": "tasks/M21.json",
+      "doc_id": "QQQ-TASK-M21",
+      "type": "task_contract",
+      "status": "approved",
+      "authority": "L3",
+      "read_when": ["M21", "free_close_readonly", "cboe", "free_data", "daily_close"],
+      "machine_truth": ["AI_CONTEXT_ROUTER.json", "OWNERSHIP.yaml", "configs/frozen/strategy_contract.json", "verification/control/policy.json"]
+    },
+    {
       "path": "docs/m19/M19_READONLY_RUNTIME.md",
       "doc_id": "QQQ-M19-GUIDE-001",
       "type": "implementation_guide",
@@ -273,6 +282,15 @@
       "authority": "L5",
       "read_when": ["M20", "github_actions", "email", "private_use"],
       "machine_truth": ["tasks/M20.json", "configs/m20/email.json", ".github/workflows/qqq_readonly_schedule.yml"]
+    },
+    {
+      "path": "docs/m21/M21_FREE_CLOSE_RUNBOOK.md",
+      "doc_id": "QQQ-M21-RUNBOOK-001",
+      "type": "implementation_guide",
+      "status": "active",
+      "authority": "L5",
+      "read_when": ["M21", "free_close_readonly", "cboe", "daily_close", "vxx_diagnostics"],
+      "machine_truth": ["tasks/M21.json", "configs/m21/free_close.json", ".github/workflows/qqq_free_close_daily.yml"]
     },
     {
       "path": "docs/QQQ_VERIFICATION_GOVERNANCE_BASELINE.md",

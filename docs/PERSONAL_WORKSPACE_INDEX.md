@@ -18,7 +18,9 @@
 - `docs/QQQ_THERMOMETER_MODULE_PLAN.md`：按 M00–M15 拆解的实施顺序。
 - `docs/m19/M19_READONLY_RUNTIME.md`：数据源、因果回放和失败关闭规则。
 - `docs/m20/M20_GITHUB_ACTION_RUNBOOK.md`：获取 key、填写 Secrets、手动测试和邮件处理清单。
+- `docs/m21/M21_FREE_CLOSE_RUNBOOK.md`：免费收盘数据、Cboe VIX、VXX 故障分类、单次日运行和邮件清单。
 - `.github/workflows/qqq_readonly_schedule.yml`：三个美股检查点和次日北京时间邮件触发器；不修改旧的独立验证工作流。
+- `.github/workflows/qqq_free_close_daily.yml`：每天北京时间早上一次的免费收盘数据只读任务。
 - `src/thermometer/`：温度计核心规则的未来落点。
 - `src/api/`：未来的只读查询接口边界。
 - `src/web/` 与 `frontend/`：当前旧 Web 入口与未来前端边界，暂不混写。
@@ -33,6 +35,7 @@
 ## 当前可运行版本
 
 - 运行层：`m19-readonly-data-replay/v1`。
+- 免费收盘运行层：`m21-free-close-readonly/v1`（Candidate，尚未提升为 Trusted baseline）。
 - 回放层：`v12.2-causal-walk-forward/v1`。
 - 实际策略源：`v10_preserve_shock_recovery`。
 - 运行边界：纸上目标、人工复核、禁止券商下单；M18/v12.2 和旧 Demo 继续独立保留。
