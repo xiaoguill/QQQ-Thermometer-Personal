@@ -51,7 +51,7 @@ failure_code=MISSING_API_KEY
 最后一轮本地回归：
 
 ```text
-273 passed, 25 subtests passed
+274 passed, 25 subtests passed
 ```
 
 另外已通过：
