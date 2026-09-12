@@ -1,0 +1,119 @@
+name: QQQ Free Close Daily Read-only
+
+on:
+  schedule:
+    # 08:23 China time is after the prior US close and keeps the user's
+    # morning-email window.  Tuesday-Saturday maps to Monday-Friday US
+    # sessions; Monday is omitted so Friday's close is not processed twice.
+    # No intraday data is requested by this workflow.
+    - cron: "23 8 * * 2-6"
+      timezone: "Asia/Shanghai"
+  workflow_dispatch:
+    inputs:
+      as_of_date:
+        description: "可选：YYYY-MM-DD；仅用于可复现测试"
+        required: false
+        type: string
+      send_email:
+        description: "是否发送邮件；手动测试默认不发送"
+        required: true
+        type: boolean
+        default: false
+      test_email:
+        description: "是否绕过早间时间窗发送测试邮件"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qqq-free-close-daily
+  cancel-in-progress: false
+
+jobs:
+  close:
+    name: Fetch free close data, replay and email
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONHASHSEED: "0"
+      TZ: UTC
+      M21_OUTPUT: ${{ runner.temp }}/qqq-m21-output
+      MASSIVE_API_KEY: ${{ secrets.MASSIVE_API_KEY }}
+
+    steps:
+      - name: Checkout read-only code
+        uses: actions/checkout@v4
+
+      - name: Set up controlled Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run one completed-close decision
+        id: decision
+        continue-on-error: true
+        shell: bash
+        env:
+          M21_AS_OF_DATE: ${{ inputs.as_of_date }}
+        run: |
+          set +e
+          args=(
+            -m src.jobs.m21.runner
+            --config configs/m21/free_close.json
+            --output-dir "$M21_OUTPUT"
+          )
+          if [[ -n "$M21_AS_OF_DATE" ]]; then
+            args+=(--as-of-date "$M21_AS_OF_DATE")
+          fi
+          python "${args[@]}"
+          status=$?
+          echo "runner_exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
+
+      - name: Send the plain-language morning reminder
+        id: email
+        if: ${{ always() && (github.event_name == 'schedule' || inputs.send_email == true) }}
+        continue-on-error: true
+        shell: bash
+        env:
+          EMAIL_API_PROVIDER: ${{ vars.EMAIL_API_PROVIDER }}
+          EMAIL_API_KEY: ${{ secrets.EMAIL_API_KEY }}
+          EMAIL_API_FROM: ${{ secrets.EMAIL_API_FROM }}
+          QQQ_EMAIL_TO: ${{ secrets.QQQ_EMAIL_TO }}
+          M21_TEST_EMAIL: ${{ inputs.test_email }}
+        run: |
+          email_args=(
+            -m src.jobs.m21.email
+            --decision "$M21_OUTPUT/decision.json"
+            --email-window-start 08:00
+            --email-window-end 10:00
+          )
+          if [[ "$M21_TEST_EMAIL" == "true" ]]; then
+            email_args+=(--test-email)
+          fi
+          python "${email_args[@]}"
+
+      - name: Upload source and decision Evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: qqq-m21-free-close-${{ github.run_id }}
+          path: ${{ runner.temp }}/qqq-m21-output/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Keep data and email failures visible
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          if [[ "${{ steps.decision.outcome }}" == "failure" ]]; then
+            echo "M21 did not produce a safe decision: 数据不完整，本次不调仓。" >&2
+            exit 1
+          fi
+          if [[ "${{ steps.email.outcome }}" == "failure" ]]; then
+            echo "M21 email delivery failed." >&2
+            exit 1
+          fi

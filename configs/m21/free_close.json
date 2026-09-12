@@ -1,0 +1,52 @@
+{
+  "$schema": "qqq-m21-free-close-readonly-config/v1",
+  "runtime_version": "m21-free-close-readonly/v1",
+  "replay_version": "v12.2-causal-walk-forward/v1",
+  "strategy_version": "v10_preserve_shock_recovery",
+  "provider": "free_close",
+  "paper_only": true,
+  "execution_allowed": false,
+  "data": {
+    "massive_stocks_config_path": "configs/m21/massive_stocks.json",
+    "history_floor_date": "2024-01-01",
+    "free_history_days": 730,
+    "display_timezone": "Asia/Shanghai",
+    "market_timezone": "America/New_York",
+    "close_confirmation_time": "16:15",
+    "request_spacing_seconds": 13,
+    "max_source_age_seconds": 172800,
+    "require_vxx": true,
+    "required_stock_symbols": ["QQQ", "QLD", "VXX", "SVXY", "BIL", "TLT", "IAU", "XLU", "VOO", "SPY"],
+    "required_index_symbols": ["VIX", "VIX3M"],
+    "decision_symbols": ["QQQ", "BIL", "VXX", "VIX", "VIX3M"],
+    "cboe": {
+      "vix_url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
+      "vix3m_url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX3M_History.csv"
+    },
+    "local_csv": {
+      "prices_adj_close_csv": "research/qqq_drawdown_strategy/output/prices_adj_close.csv",
+      "vix_indices_csv": "research/qqq_drawdown_strategy/output/vix_indices.csv",
+      "vxx_csv": "../FinRL-Trading/research/qqq_drawdown_strategy/output_low_corr_lab/VXX_adj_close.csv",
+      "vxx_value_field": "adj_close"
+    }
+  },
+  "replay": {
+    "base_config_path": "configs/m18/v12_2_walk_forward.json",
+    "start_date": "2025-01-01",
+    "initial_capital": 1000000.0,
+    "cost_bps": [5.0, 10.0, 25.0]
+  },
+  "schedule": {
+    "close": "08:23",
+    "timezone": "Asia/Shanghai",
+    "email_window": {"start": "08:00", "end": "10:00"}
+  },
+  "notes": [
+    "The single scheduled run occurs after the prior US close and uses completed daily bars only.",
+    "Massive is used only for the declared stock universe; Cboe public daily CSVs are used for VIX and VIX3M.",
+    "VIX3M is never substituted. If the free Cboe file is unavailable or stale, this run produces no target.",
+    "The rolling request window is bounded so a free EOD plan can provide indicator warm-up; the exact requested dates are recorded in Evidence.",
+    "The current v12.2 replay still uses QQQ/BIL/VXX for the frozen target profile; other ETFs are captured for data coverage and future read-only observation only.",
+    "M21 is paper-only and does not create broker orders."
+  ]
+}
