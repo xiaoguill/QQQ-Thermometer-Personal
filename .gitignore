@@ -167,5 +167,6 @@ artifacts/runs/
 artifacts/runtime/
 research/qqq_drawdown_strategy/output_*/
 research/qqq_drawdown_strategy/one_year_test/
+m21-output/
 *.pyc
 __pycache__/

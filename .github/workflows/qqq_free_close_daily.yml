@@ -41,8 +41,9 @@ jobs:
       PYTHONHASHSEED: "0"
       TZ: UTC
       # runner.temp is not available in a job-level env expression.  A local
-      # ignored directory keeps the path deterministic and artifact-scoped.
-      M21_OUTPUT: .m21-output
+      # ignored, non-hidden directory keeps the path deterministic and lets
+      # upload-artifact preserve failure Evidence as well as successful output.
+      M21_OUTPUT: m21-output
       MASSIVE_API_KEY: ${{ secrets.MASSIVE_API_KEY }}
 
     steps:
@@ -103,7 +104,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: qqq-m21-free-close-${{ github.run_id }}
-          path: .m21-output/
+          path: m21-output/
           if-no-files-found: warn
           retention-days: 30
 
