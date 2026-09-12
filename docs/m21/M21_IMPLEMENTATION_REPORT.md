@@ -84,6 +84,31 @@ failure_code=MISSING_API_KEY
 
 本地旧 CSV 的额外发现是：VXX 的列名 `adj_close` 已通过配置显式映射，但旧价格文件仍缺少 VOO、SPY。因此本地回放也会正确停止，不会把不完整文件当成完整历史。
 
+### 已设置 Secret 后的首次实跑
+
+随后在 Secret 名称修正为 `MASSIVE_API_KEY` 后，远程运行 `34696224606` 完成了真实数据读取：
+
+- Massive 的十个 ETF 均返回 `status=success`，包括 VXX；VXX 的诊断结果为 `outcome=available`，因此本次已经排除“缺少 key”和“VXX 不被接口识别”这两个原因；
+- VIX、VIX3M 均从 Cboe 官方 CDN 返回成功；
+- 运行请求区间为 `2024-09-12` 至 `2026-09-11`，数据完整性检查通过，Evidence 已上传；
+- 首次回放仍返回 `DATA_ERROR / RUNNER_ERROR`，不是数据权限失败。直接堆栈定位为：首次信号前的上下文少于 126 个 QQQ 交易日，M04 指标在 warm-up 阶段提前计算了 126 日动量并触发 `IndexError`；
+- 这说明 Secret 和 VXX 数据链路已经打通，但暴露了“免费滚动窗口没有覆盖策略预热期”的程序边界问题。
+
+已在本 Candidate 中做最小修复：
+
+- 将 M21 免费收盘请求窗口调整为 1000 个自然日，使 2025 年回放前有足够的 150 日均线与 126 日动量预热数据；
+- 让 5/10/20/126 日指标在 warm-up 不足时先返回空值，不触发 Python 负索引或越界；这只修正计算边界，不改指标定义、阈值、状态或权重；
+- 新增短上下文回归测试，验证预热状态显式保留且不读取未来价格。
+
+修复后的本地完整历史回放已通过：
+
+- `status=READY`、`decision_eligible=true`、`data_quality=OK`、`normalization_quality=OK`；
+- 信号日期 `2026-08-10`，执行日期 `2026-08-11`；
+- 当前信号目标为 `QQQ 60% + BIL 40%`；
+- `279 passed, 25 subtests passed`（使用 importlib 模式避免历史测试文件同名造成的收集冲突）。
+
+下一步是在新 Candidate 推送后重新运行一次无邮件 Action。只有新运行同时满足“所有源成功、回放 READY、Evidence 上传成功”时，才可把 M21 标记为候选验证通过；在治理审阅和 Trusted baseline 更新前，仍不称为 `CI_VERIFIED`。
+
 ## Evidence 位置
 
 无 key 的真实源探测 Evidence（最新窗口、契约分类与交易日缺口检查版）：
@@ -102,8 +127,8 @@ failure_code=MISSING_API_KEY
 
 ## 下一步
 
-1. 在 GitHub Actions Secret 中设置 `MASSIVE_API_KEY`，不要发到聊天。
-2. 手动运行 M21，先不发邮件，下载 Artifact 检查十个 ETF 和 VIX/VIX3M。
+1. 重新推送已修复的 M21 Candidate，并手动运行一次不发邮件 Action。
+2. 下载 Artifact，确认十个 ETF 和 VIX/VIX3M 的数据区间覆盖预热期，且 `decision.json` 为 `READY`。
 3. 如果 VXX 分类是 `permission` 或 `interface_or_symbol`，暂停调仓并按分类处理；不替换 VXX。
-4. 只有所有序列完整且 `decision.json` 为 `READY` 时，才做一次测试邮件。
+4. 只有所有序列完整且回放成功时，才做一次测试邮件。
 5. 新 Candidate 通过治理审阅并提升 Trusted baseline 后，再进行远程 Evidence 验证。

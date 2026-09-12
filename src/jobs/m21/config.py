@@ -206,7 +206,7 @@ class M21Config:
             local_vxx_csv=None if not isinstance(local, Mapping) or local.get("vxx_csv") in (None, "") else str(local.get("vxx_csv")),
             local_vxx_value_field=str(local.get("vxx_value_field", "adj_close")) if isinstance(local, Mapping) else "adj_close",
             history_floor_date=_iso_date(data.get("history_floor_date"), "data.history_floor_date"),
-            free_history_days=_integer(data.get("free_history_days", 730), "data.free_history_days", minimum=1),
+            free_history_days=_integer(data.get("free_history_days", 1000), "data.free_history_days", minimum=1),
             replay_start_date=_iso_date(replay.get("start_date"), "replay.start_date"),
             replay_config_path=str(replay.get("base_config_path", "")),
             display_timezone=_timezone(data.get("display_timezone"), "data.display_timezone"),

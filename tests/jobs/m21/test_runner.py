@@ -6,7 +6,8 @@ from dataclasses import replace
 from pathlib import Path
 
 from src.jobs.m21.config import M21Config
-from src.jobs.m21.runner import latest_completed_session, run_close
+from src.jobs.m21.runner import latest_completed_session, requested_start_date, run_close
+from src.storage.normalization import TradingCalendar
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -20,6 +21,16 @@ def test_latest_completed_session_never_uses_pre_close_daily_bar() -> None:
     after_close = datetime(2026, 8, 10, 20, 30, tzinfo=timezone.utc)
     assert latest_completed_session(config, now=before_close) == "2026-08-07"
     assert latest_completed_session(config, now=after_close) == "2026-08-10"
+
+
+def test_free_close_window_covers_strategy_warmup_before_replay() -> None:
+    config = M21Config.from_file(ROOT / "configs/m21/free_close.json")
+    start = requested_start_date(config, "2026-09-11")
+    calendar = TradingCalendar(
+        extra_closed_dates=("2012-10-29", "2012-10-30", "2018-12-05", "2025-01-09")
+    )
+    context_sessions = calendar.sessions(start, "2024-12-31")
+    assert len(context_sessions) >= 150
 
 
 def _write_fixture_files(

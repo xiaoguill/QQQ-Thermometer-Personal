@@ -503,9 +503,12 @@ def calculate_indicator_snapshots(
                 return
             values[name] = _finite(value, name)
 
-        qqq_value("qqq_return_5d", 5, index - 5, qqq_closes[index] / qqq_closes[index - 5] - 1.0)
-        qqq_value("qqq_return_10d", 10, index - 10, qqq_closes[index] / qqq_closes[index - 10] - 1.0)
-        qqq_value("qqq_return_20d", 20, index - 20, qqq_closes[index] / qqq_closes[index - 20] - 1.0)
+        # Keep warm-up calculations lazy.  Evaluating an unavailable lookback
+        # before qqq_value() checks its minimum index can accidentally use
+        # Python's negative-index semantics (or raise on a short prefix).
+        qqq_value("qqq_return_5d", 5, index - 5, qqq_closes[index] / qqq_closes[index - 5] - 1.0 if index >= 5 else 0.0)
+        qqq_value("qqq_return_10d", 10, index - 10, qqq_closes[index] / qqq_closes[index - 10] - 1.0 if index >= 10 else 0.0)
+        qqq_value("qqq_return_20d", 20, index - 20, qqq_closes[index] / qqq_closes[index - 20] - 1.0 if index >= 20 else 0.0)
 
         ema10_value: float | None = None
         if index >= 9:
@@ -516,7 +519,7 @@ def calculate_indicator_snapshots(
         qqq_value("qqq_ema10", 9, 0, float(ema10_value) if ema10_value is not None else 0.0)
 
         qqq_value("qqq_sma150", 149, index - 149, _mean(qqq_closes[index - 149 : index + 1]) if index >= 149 else 0.0)
-        qqq_value("qqq_momentum126", 126, index - 126, qqq_closes[index] / qqq_closes[index - 126] - 1.0)
+        qqq_value("qqq_momentum126", 126, index - 126, qqq_closes[index] / qqq_closes[index - 126] - 1.0 if index >= 126 else 0.0)
         rv20_value: float | None = None
         if index >= 20:
             returns = tuple(qqq_closes[return_index] / qqq_closes[return_index - 1] - 1.0 for return_index in range(index - 19, index + 1))

@@ -9,7 +9,7 @@
   "data": {
     "massive_stocks_config_path": "configs/m21/massive_stocks.json",
     "history_floor_date": "2024-01-01",
-    "free_history_days": 730,
+    "free_history_days": 1000,
     "display_timezone": "Asia/Shanghai",
     "market_timezone": "America/New_York",
     "close_confirmation_time": "16:15",
@@ -45,7 +45,7 @@
     "The single scheduled run occurs after the prior US close and uses completed daily bars only.",
     "Massive is used only for the declared stock universe; Cboe public daily CSVs are used for VIX and VIX3M.",
     "VIX3M is never substituted. If the free Cboe file is unavailable or stale, this run produces no target.",
-    "The rolling request window is bounded so a free EOD plan can provide indicator warm-up; the exact requested dates are recorded in Evidence.",
+    "The rolling request window is bounded at 1000 calendar days so a free EOD plan can provide the 150-session SMA and 126-session momentum warm-up before the 2025 replay; the exact requested dates are recorded in Evidence.",
     "The current v12.2 replay still uses QQQ/BIL/VXX for the frozen target profile; other ETFs are captured for data coverage and future read-only observation only.",
     "M21 is paper-only and does not create broker orders."
   ]

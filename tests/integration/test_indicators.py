@@ -101,6 +101,13 @@ class IndicatorIntegrationTests(unittest.TestCase):
         self.assertTrue(run.ready)
         self.assertEqual(run.quality, "OK")
 
+    def test_short_prefix_keeps_warmup_explicit_without_negative_indexing(self):
+        run, _, _, _, _ = self._run(count=80)
+        self.assertEqual(run.quality, "OK")
+        self.assertFalse(run.ready)
+        self.assertIn("qqq_momentum126", run.snapshots[-1].warmup_indicators)
+        self.assertIsNone(run.snapshots[-1].values["qqq_momentum126"])
+
     def test_hand_calculation_uses_declared_price_and_window_rules(self):
         run, _, _, sessions, _ = self._run()
         by_date = {snapshot.signal_date: snapshot for snapshot in run.snapshots}
