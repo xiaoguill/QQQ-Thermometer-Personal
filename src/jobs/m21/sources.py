@@ -173,6 +173,8 @@ def _classify_error(code: str) -> tuple[str, str]:
         return "permission", "NOT_ENTITLED"
     if normalized in {"NOT_FOUND", "SYMBOL_NOT_FOUND"}:
         return "interface_or_symbol", "NOT_FOUND"
+    if normalized in {"CONFIG_MISSING_SYMBOL", "RESPONSE_SYMBOL_MISMATCH"}:
+        return "symbol_contract", normalized
     if normalized == "RATE_LIMITED":
         return "rate_limit", normalized
     if normalized in {"INVALID_PROVIDER_RESPONSE", "INVALID_DATE", "INVALID_BAR"}:
@@ -402,6 +404,8 @@ class MassiveFreeStocksSource:
                 if response_symbol not in (None, "") and str(response_symbol).strip().upper() != symbol:
                     raise M21SourceError("RESPONSE_SYMBOL_MISMATCH", "symbol_contract", "Massive response symbol does not match the requested symbol")
                 session = _bar_date(item.get("t"), self.config.market_timezone)
+                if session < start_date:
+                    continue
                 if session > end_date:
                     continue
                 if session in values:

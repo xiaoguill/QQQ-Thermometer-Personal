@@ -35,6 +35,7 @@ Massive 的股票 Basic 计划是否能读取每一个 ETF、历史窗口和当�
 4. 如果要发邮件，再配置 M20 已定义的邮件 Secret：`EMAIL_API_KEY`、`EMAIL_API_FROM`、`QQQ_EMAIL_TO`，并将 Variable `EMAIL_API_PROVIDER` 设置为 `resend`、`brevo` 或 `sendgrid`。
 
 本地 CSV 回放的 VXX 列名在 `configs/m21/free_close.json` 中明确写为 `adj_close`；这只是列名映射，不是把其他标的当成 VXX。请求窗口之外的历史行不会参与本次检查，窗口内的空值仍会导致失败关闭。
+窗口内的每一个预期 NYSE 交易日也必须存在；内部缺口会记录在 `session_completeness`，并按数据不完整处理。
 
 ## 手动测试顺序
 

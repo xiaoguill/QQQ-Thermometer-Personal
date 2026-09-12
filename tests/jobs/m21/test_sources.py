@@ -68,6 +68,7 @@ def test_cboe_source_records_and_applies_the_requested_window() -> None:
         ({"declared_in_config": False, "status": "failed", "error_code": "CONFIG_MISSING_SYMBOL"}, "symbol_contract", "CONFIG_MISSING_SYMBOL"),
         ({"declared_in_config": True, "status": "failed", "error_code": "NOT_ENTITLED"}, "permission", "NOT_ENTITLED"),
         ({"declared_in_config": True, "status": "failed", "error_code": "NOT_FOUND"}, "interface_or_symbol", "NOT_FOUND"),
+        ({"declared_in_config": True, "status": "failed", "error_code": "RESPONSE_SYMBOL_MISMATCH"}, "symbol_contract", "RESPONSE_SYMBOL_MISMATCH"),
         ({"declared_in_config": True, "status": "failed", "error_code": "INVALID_PROVIDER_RESPONSE"}, "interface", "INVALID_PROVIDER_RESPONSE"),
         ({"declared_in_config": True, "status": "success"}, None, None),
     ],

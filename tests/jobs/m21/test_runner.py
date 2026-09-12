@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import json
 from dataclasses import replace
 from pathlib import Path
 
@@ -21,8 +22,12 @@ def test_latest_completed_session_never_uses_pre_close_daily_bar() -> None:
     assert latest_completed_session(config, now=after_close) == "2026-08-10"
 
 
-def _write_fixture_files(tmp_path: Path) -> tuple[Path, Path, Path]:
-    dates = ("2026-08-07", "2026-08-10")
+def _write_fixture_files(
+    tmp_path: Path,
+    *,
+    dates: tuple[str, ...] = ("2026-08-07", "2026-08-10"),
+    include_vix3m: bool = False,
+) -> tuple[Path, Path, Path]:
     symbols = ("QQQ", "QLD", "VXX", "SVXY", "BIL", "TLT", "IAU", "XLU", "VOO", "SPY")
     prices = tmp_path / "prices.csv"
     with prices.open("w", encoding="utf-8", newline="") as handle:
@@ -35,7 +40,13 @@ def _write_fixture_files(tmp_path: Path) -> tuple[Path, Path, Path]:
         writer = csv.DictWriter(handle, fieldnames=["date", "VIX", "VIX3M"])
         writer.writeheader()
         for index, session in enumerate(dates):
-            writer.writerow({"date": session, "VIX": str(20 + index), "VIX3M": ""})
+            writer.writerow(
+                {
+                    "date": session,
+                    "VIX": str(20 + index),
+                    "VIX3M": str(25 + index) if include_vix3m else "",
+                }
+            )
     vxx = tmp_path / "vxx.csv"
     with vxx.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=["date", "close"])
@@ -51,6 +62,7 @@ def test_missing_vix3m_fails_closed_before_replay(tmp_path: Path) -> None:
     config = replace(
         config,
         provider="local_csv",
+        history_floor_date="2026-08-07",
         local_prices_csv=str(prices),
         local_vix_csv=str(vix),
         local_vxx_csv=str(vxx),
@@ -65,3 +77,35 @@ def test_missing_vix3m_fails_closed_before_replay(tmp_path: Path) -> None:
     evidence = (output / "availability_evidence.json").read_text(encoding="utf-8")
     assert "VIX3M" in evidence
     assert "no VIX/SVXY/BIL substitute" in evidence
+
+
+def test_internal_session_gap_fails_closed_before_replay(tmp_path: Path) -> None:
+    prices, vix, vxx = _write_fixture_files(
+        tmp_path,
+        dates=("2026-08-06", "2026-08-10"),
+        include_vix3m=True,
+    )
+    config = M21Config.from_file(ROOT / "configs/m21/free_close.json")
+    config = replace(
+        config,
+        provider="local_csv",
+        history_floor_date="2026-08-06",
+        local_prices_csv=str(prices),
+        local_vix_csv=str(vix),
+        local_vxx_csv=str(vxx),
+    )
+    output = tmp_path / "run"
+    decision = run_close(config, output, as_of_date="2026-08-10")
+
+    assert decision["status"] == "DATA_ERROR"
+    assert decision["failure_code"] == "MISSING_SESSION"
+    assert decision["failure_class"] == "data_quality"
+    assert decision["manual_action"] == "数据不完整，本次不调仓。"
+    evidence = json.loads(
+        (output / "availability_evidence.json").read_text(encoding="utf-8")
+    )
+    qqq = next(
+        item for item in evidence["session_completeness"] if item["symbol"] == "QQQ"
+    )
+    assert qqq["missing_session_count"] == 1
+    assert qqq["complete"] is False

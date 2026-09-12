@@ -282,10 +282,44 @@ def _free_inputs(config: M21Config, *, start_date: str, end_date: str) -> tuple[
     return stock_results, index_results
 
 
-def _source_complete(stock_results: Sequence[SeriesResult], index_results: Sequence[SeriesResult]) -> bool:
+def _expected_sessions(start_date: str, end_date: str) -> tuple[str, ...]:
+    """Return the sessions that every required daily series must cover."""
+
+    return _calendar().sessions(start_date, end_date)
+
+
+def _session_completeness(result: SeriesResult, expected: set[str]) -> dict[str, Any]:
+    returned = {str(row.get("date")) for row in result.rows if row.get("date")}
+    missing = sorted(expected - returned)
+    unexpected = sorted(returned - expected)
+    return {
+        "symbol": result.symbol,
+        "expected_session_count": len(expected),
+        "returned_session_count": len(returned),
+        "missing_session_count": len(missing),
+        "missing_sessions_sample": missing[:20],
+        "unexpected_session_count": len(unexpected),
+        "unexpected_sessions_sample": unexpected[:20],
+        "complete": not missing and not unexpected,
+    }
+
+
+def _source_complete(
+    stock_results: Sequence[SeriesResult],
+    index_results: Sequence[SeriesResult],
+    *,
+    start_date: str,
+    end_date: str,
+) -> bool:
     expected = set(STOCK_SYMBOLS) | set(INDEX_SYMBOLS)
     actual = {result.symbol for result in (*stock_results, *index_results)}
-    return actual == expected and all(result.status == "success" and result.has_end_date for result in (*stock_results, *index_results))
+    expected_sessions = set(_expected_sessions(start_date, end_date))
+    return actual == expected and all(
+        result.status == "success"
+        and result.has_end_date
+        and _session_completeness(result, expected_sessions)["complete"]
+        for result in (*stock_results, *index_results)
+    )
 
 
 def _result_failure(result: SeriesResult) -> dict[str, Any]:
@@ -297,8 +331,25 @@ def _result_failure(result: SeriesResult) -> dict[str, Any]:
     }
 
 
-def _primary_failure(stock_results: Sequence[SeriesResult], index_results: Sequence[SeriesResult]) -> dict[str, Any]:
-    failures = [result for result in (*stock_results, *index_results) if result.status != "success" or not result.has_end_date]
+def _primary_failure(
+    stock_results: Sequence[SeriesResult],
+    index_results: Sequence[SeriesResult],
+    *,
+    start_date: str,
+    end_date: str,
+) -> dict[str, Any]:
+    expected_sessions = set(_expected_sessions(start_date, end_date))
+    failures: list[SeriesResult] = []
+    for result in (*stock_results, *index_results):
+        if result.status != "success" or not result.has_end_date:
+            failures.append(result)
+            continue
+        if not _session_completeness(result, expected_sessions)["complete"]:
+            return {
+                "code": "MISSING_SESSION",
+                "class": "data_quality",
+                "message": f"{result.symbol} does not cover every expected NYSE session",
+            }
     priority = {"MISSING_API_KEY": 0, "NOT_ENTITLED": 1, "CONFIG_MISSING_SYMBOL": 2, "RESPONSE_SYMBOL_MISMATCH": 3, "NOT_FOUND": 4, "MISSING_FREE_SERIES": 5, "STALE_OR_MISSING": 6, "RATE_LIMITED": 7}
     if not failures:
         return {"code": "UNKNOWN", "class": "unknown", "message": "data source did not complete"}
@@ -315,6 +366,7 @@ def _availability_evidence(
     index_results: Sequence[SeriesResult],
 ) -> dict[str, Any]:
     vxx = next((item for item in stock_results if item.symbol == "VXX"), None)
+    expected_sessions = set(_expected_sessions(start_date, end_date))
     vxx_diagnostic = classify_vxx_issue(
         declared_in_config="VXX" in config.required_stock_symbols,
         status=vxx.status if vxx else "failed",
@@ -331,6 +383,10 @@ def _availability_evidence(
         "index_provider": "cboe-official-cdn" if config.provider == "free_close" else "local_csv",
         "stock_series": [item.manifest_entry() for item in stock_results],
         "index_series": [item.manifest_entry() for item in index_results],
+        "session_completeness": [
+            _session_completeness(item, expected_sessions)
+            for item in (*stock_results, *index_results)
+        ],
         "vxx_diagnostic": {
             **vxx_diagnostic,
             "declared_in_stock_contract": "VXX" in config.required_stock_symbols,
@@ -342,7 +398,12 @@ def _availability_evidence(
                 "credentials": "provider test was not authorized because the API key was missing",
             },
         },
-        "all_required_series_complete": _source_complete(stock_results, index_results),
+        "all_required_series_complete": _source_complete(
+            stock_results,
+            index_results,
+            start_date=start_date,
+            end_date=end_date,
+        ),
         "decision_policy": "incomplete, stale, or failed series produces no target and no rebalance",
         "vix3m_policy": "missing VIX3M remains missing; no VIX/SVXY/BIL substitute",
     }
@@ -488,8 +549,18 @@ def run_close(config: M21Config, output_dir: Path, *, now: datetime | None = Non
             "index_series": [item.manifest_entry() for item in index_results],
             "manifest_hash": _canonical_hash({"stocks": [item.manifest_entry() for item in stock_results], "indices": [item.manifest_entry() for item in index_results]}),
         })
-        if not _source_complete(stock_results, index_results):
-            failure = _primary_failure(stock_results, index_results)
+        if not _source_complete(
+            stock_results,
+            index_results,
+            start_date=start_date,
+            end_date=end_date,
+        ):
+            failure = _primary_failure(
+                stock_results,
+                index_results,
+                start_date=start_date,
+                end_date=end_date,
+            )
             decision = _failure_decision(config, end_date=end_date, failure=failure, availability=availability)
         else:
             inputs_dir.mkdir(parents=True, exist_ok=True)

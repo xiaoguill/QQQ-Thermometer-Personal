@@ -44,6 +44,7 @@ failure_code=MISSING_API_KEY
 - 这个时间对应美国周一至周五收盘后的早晨，周一不运行以避免重复处理上周五；
 - 只读取完整日线，不读取盘中实时行情；
 - 十个 ETF、VIX、VIX3M 任一个失败、过期或缺少请求收盘日时，目标仓位为空，并写入：`数据不完整，本次不调仓。`；
+- 请求窗口内的每一个预期 NYSE 交易日都必须有对应序列；内部缺口会记录在 `session_completeness`，并按数据质量失败关闭；
 - Action 仍上传 Evidence，并在最后让失败状态可见；不创建券商订单。
 
 ## 测试结果
@@ -51,13 +52,13 @@ failure_code=MISSING_API_KEY
 最后一轮本地回归：
 
 ```text
-275 passed, 25 subtests passed
+277 passed, 25 subtests passed
 ```
 
 另外已通过：
 
 - M21 源适配器、VXX 分类、VIX3M 缺失的负向测试；
-- M21 专项测试共 15 项，全部通过；
+- M21 专项测试共 17 项，全部通过；
 - M21 配置的布尔值和整数边界测试；
 - Python 编译检查；
 - M21 JSON 配置、任务合同和文档注册表解析；
