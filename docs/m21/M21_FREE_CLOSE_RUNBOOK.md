@@ -22,7 +22,9 @@ Cboe 官方页面说明其 VIX 历史页面提供每日收盘值；M21 使用其
 
 Massive 的股票 Basic 计划是否能读取每一个 ETF、历史窗口和当日收盘，以账户实际返回为准。免费计划的调用限制也可能导致 `RATE_LIMITED`；M21 会用固定请求间隔降低频率，但不会无限重试或切换到付费数据源。
 
-当前默认请求窗口为 1000 个自然日。原因不是扩大回测样本，而是给 2025-01-01 开始的逐日回放提供 150 日均线和 126 日动量的因果预热；最终回放和邮件仍从配置的 `replay.start_date` 开始。实际请求起止日期会写入 Evidence。
+当前默认请求窗口为 730 个自然日，作为“约两年的免费数据完整窗口”。如果提供方实际返回的首日晚于请求起点，M21 不把这段窗口外的日期伪报为缺失，而是记录每条序列的实际首日，并将所有必需序列首日中的最晚日期设为 `effective_start_date`。从这个共同首日到最新收盘必须没有内部交易日缺口，否则仍然失败关闭。实际请求起止日期、共同有效起点和每条序列的首末日期都会写入 Evidence。
+
+v12.2 的 150 日均线是数据预热要求，不是策略参数。共同有效起点之后最初的 150 个 NYSE 交易日只用于建立因果上下文；首个可用信号日期由程序动态计算并写入 Evidence，预热期不计入策略收益，也不生成调仓目标。如果免费两年窗口不足以完成这段预热，则本次仍失败关闭。
 
 ## 第一次配置
 
@@ -36,8 +38,8 @@ Massive 的股票 Basic 计划是否能读取每一个 ETF、历史窗口和当�
 3. 不要把 key 发到聊天、写入 JSON、代码、截图、日志或 Artifact。
 4. 如果要发邮件，再配置 M20 已定义的邮件 Secret：`EMAIL_API_KEY`、`EMAIL_API_FROM`、`QQQ_EMAIL_TO`，并将 Variable `EMAIL_API_PROVIDER` 设置为 `resend`、`brevo` 或 `sendgrid`。
 
-本地 CSV 回放的 VXX 列名在 `configs/m21/free_close.json` 中明确写为 `adj_close`；这只是列名映射，不是把其他标的当成 VXX。请求窗口之外的历史行不会参与本次检查，窗口内的空值仍会导致失败关闭。
-窗口内的每一个预期 NYSE 交易日也必须存在；内部缺口会记录在 `session_completeness`，并按数据不完整处理。
+本地 CSV 回放的 VXX 列名在 `configs/m21/free_close.json` 中明确写为 `adj_close`；这只是列名映射，不是把其他标的当成 VXX。共同有效窗口之外的历史行不会参与本次检查，窗口内的空值仍会导致失败关闭。
+共同有效窗口内的每一个预期 NYSE 交易日也必须存在；内部缺口会记录在 `session_completeness`，并按数据不完整处理。共同有效窗口的边界不是人为选择的回测起点，而是所有必需序列实际可见数据的交集边界。
 
 ## 手动测试顺序
 
@@ -45,9 +47,10 @@ Massive 的股票 Basic 计划是否能读取每一个 ETF、历史窗口和当�
 
 1. 先不发送邮件，填写一个 `as_of_date` 或留空，运行一次。
 2. 下载 Artifact，先看 `availability_evidence.json`。
-3. 确认十个股票标的和 VIX/VIX3M 都有 `status=success`、`has_requested_end_date=true`。
-4. 再检查 `decision.json`：成功必须是 `status=READY`、`decision_eligible=true`；失败必须是空目标。
-5. 最后再勾选 `send_email` 和 `test_email` 做一次邮件测试。
+3. 确认十个股票标的和 VIX/VIX3M 都有 `status=success`、`has_requested_end_date=true`，并检查 `effective_start_date` 是否是所有必需序列首日中的最晚日期。
+4. 再检查 `session_completeness`：只检查共同有效起点之后的内部缺口；最初请求起点之前没有免费数据不算失败。
+5. 再检查 `decision.json`：成功必须是 `status=READY`、`decision_eligible=true`；失败必须是空目标。
+6. 最后再勾选 `send_email` 和 `test_email` 做一次邮件测试。
 
 ## VXX 问题如何判断
 

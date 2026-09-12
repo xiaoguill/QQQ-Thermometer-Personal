@@ -61,6 +61,9 @@ class M21RunnerError(RuntimeError):
 
 
 _EXTRA_CLOSED_DATES = ("2012-10-29", "2012-10-30", "2018-12-05", "2025-01-09")
+# v12.2's largest finite rolling indicator is the existing 150-session SMA.
+# This is a causal data requirement, not a tunable strategy parameter.
+_V12_2_REQUIRED_CONTEXT_SESSIONS = 150
 
 
 def _canonical_hash(value: Any) -> str:
@@ -308,16 +311,56 @@ def _session_completeness(result: SeriesResult, expected: set[str]) -> dict[str,
     }
 
 
+def _effective_coverage_start(
+    stock_results: Sequence[SeriesResult],
+    index_results: Sequence[SeriesResult],
+    *,
+    requested_start: str,
+) -> str | None:
+    """Return the common start of the provider-delimited complete window.
+
+    A free provider may return a bounded history window even when a longer
+    date range was requested.  The part before the latest first visible date
+    is outside the common provider window, not an internal data gap.  The
+    common start is accepted only after all required series have a successful
+    response and a requested end-date observation; completeness after this
+    point is still checked separately.
+    """
+
+    results = (*stock_results, *index_results)
+    expected_symbols = set(STOCK_SYMBOLS) | set(INDEX_SYMBOLS)
+    if {result.symbol for result in results} != expected_symbols:
+        return None
+    if any(
+        result.status != "success"
+        or not result.has_end_date
+        or not result.first_date
+        for result in results
+    ):
+        return None
+    starts = [date.fromisoformat(requested_start)]
+    starts.extend(date.fromisoformat(result.first_date) for result in results if result.first_date)
+    return max(starts).isoformat()
+
+
 def _source_complete(
     stock_results: Sequence[SeriesResult],
     index_results: Sequence[SeriesResult],
     *,
     start_date: str,
     end_date: str,
+    coverage_start_date: str | None = None,
 ) -> bool:
     expected = set(STOCK_SYMBOLS) | set(INDEX_SYMBOLS)
     actual = {result.symbol for result in (*stock_results, *index_results)}
-    expected_sessions = set(_expected_sessions(start_date, end_date))
+    coverage_start = coverage_start_date or _effective_coverage_start(
+        stock_results,
+        index_results,
+        requested_start=start_date,
+    )
+    if coverage_start is None:
+        return False
+    expected_sessions = set(_expected_sessions(coverage_start, end_date))
     return actual == expected and all(
         result.status == "success"
         and result.has_end_date
@@ -341,8 +384,14 @@ def _primary_failure(
     *,
     start_date: str,
     end_date: str,
+    coverage_start_date: str | None = None,
 ) -> dict[str, Any]:
-    expected_sessions = set(_expected_sessions(start_date, end_date))
+    coverage_start = coverage_start_date or _effective_coverage_start(
+        stock_results,
+        index_results,
+        requested_start=start_date,
+    ) or start_date
+    expected_sessions = set(_expected_sessions(coverage_start, end_date))
     failures: list[SeriesResult] = []
     for result in (*stock_results, *index_results):
         if result.status != "success" or not result.has_end_date:
@@ -368,9 +417,16 @@ def _availability_evidence(
     end_date: str,
     stock_results: Sequence[SeriesResult],
     index_results: Sequence[SeriesResult],
+    effective_start_date: str | None = None,
 ) -> dict[str, Any]:
     vxx = next((item for item in stock_results if item.symbol == "VXX"), None)
-    expected_sessions = set(_expected_sessions(start_date, end_date))
+    effective_start = effective_start_date or _effective_coverage_start(
+        stock_results,
+        index_results,
+        requested_start=start_date,
+    )
+    completeness_start = effective_start or start_date
+    expected_sessions = set(_expected_sessions(completeness_start, end_date))
     vxx_diagnostic = classify_vxx_issue(
         declared_in_config="VXX" in config.required_stock_symbols,
         status=vxx.status if vxx else "failed",
@@ -383,6 +439,13 @@ def _availability_evidence(
         "provider_mode": config.provider,
         "requested_start_date": start_date,
         "requested_end_date": end_date,
+        "effective_start_date": effective_start,
+        "coverage_window_policy": {
+            "name": "provider_delimited_common_overlap",
+            "pre_effective_window": "outside_provider_window_not_treated_as_missing",
+            "effective_start_rule": "latest_first_date_across_all_required_successful_series",
+            "internal_gap_after_effective_start": "fail_closed",
+        },
         "stock_provider": "massive-free-stocks" if config.provider == "free_close" else "local_csv",
         "index_provider": "cboe-official-cdn" if config.provider == "free_close" else "local_csv",
         "stock_series": [item.manifest_entry() for item in stock_results],
@@ -407,6 +470,7 @@ def _availability_evidence(
             index_results,
             start_date=start_date,
             end_date=end_date,
+            coverage_start_date=effective_start,
         ),
         "decision_policy": "incomplete, stale, or failed series produces no target and no rebalance",
         "vix3m_policy": "missing VIX3M remains missing; no VIX/SVXY/BIL substitute",
@@ -441,26 +505,59 @@ def _failure_decision(config: M21Config, *, end_date: str | None, failure: Mappi
         "failure_class": failure.get("class", "unknown"),
         "failure_message": failure.get("message", "data source failed"),
         "source": {"provider": config.provider},
-        "data_window": {"provider_requested_start": requested_start, "provider_requested_end": end_date},
+        "data_window": {
+            "provider_requested_start": requested_start,
+            "provider_requested_end": end_date,
+            "effective_coverage_start": availability.get("effective_start_date") if isinstance(availability, Mapping) else None,
+            "coverage_window_policy": "provider_delimited_common_overlap",
+            "configured_replay_start_date": config.replay_start_date,
+        },
         "availability": dict(availability or {}),
         "checks": {"safe_failure": True, "target_weight_sum": False, "missing_vxx_policy": "fail_closed"},
         "manual_action": "数据不完整，本次不调仓。",
     }
 
 
-def _replay_with_prepared_files(config: M21Config, *, end_date: str, requested_start: str, inputs_dir: Path, replay_dir: Path) -> dict[str, Any]:
+def _first_indicator_ready_date(start_date: str, end_date: str) -> str:
+    """Return the first signal date with the frozen v12.2 context available."""
+
+    sessions = _expected_sessions(start_date, end_date)
+    if len(sessions) <= _V12_2_REQUIRED_CONTEXT_SESSIONS:
+        raise M21RunnerError(
+            "INSUFFICIENT_CONTEXT",
+            "data_quality",
+            "provider-delimited window does not contain the 150-session v12.2 warm-up",
+        )
+    # The preceding session is the 150th close and is used as the bootstrap
+    # context; this session is the first one eligible for a signal.
+    return sessions[_V12_2_REQUIRED_CONTEXT_SESSIONS]
+
+
+def _effective_replay_start_date(config: M21Config, *, coverage_start: str, end_date: str) -> tuple[str, str]:
+    first_ready = _first_indicator_ready_date(coverage_start, end_date)
+    return max(config.replay_start_date, first_ready), first_ready
+
+
+def _replay_with_prepared_files(
+    config: M21Config,
+    *,
+    end_date: str,
+    coverage_start: str,
+    replay_start_date: str,
+    inputs_dir: Path,
+    replay_dir: Path,
+) -> dict[str, Any]:
     """Call the existing M19/v12.2 replay without changing its source."""
 
     base = M19Config.from_file(config.project_root / "configs" / "m19" / "readonly.json")
-    effective_replay_start = max(config.replay_start_date, requested_start)
     replay_config = replace(
         base,
         provider="local_csv",
         local_prices_csv=str(inputs_dir / "prices_adj_close.csv"),
         local_vix_csv=str(inputs_dir / "vix_indices.csv"),
         local_vxx_csv=str(inputs_dir / "vxx.csv"),
-        history_start_date=requested_start,
-        replay_start_date=effective_replay_start,
+        history_start_date=coverage_start,
+        replay_start_date=replay_start_date,
         replay_config_path=config.replay_config_path,
         initial_capital=config.initial_capital,
         cost_bps=config.cost_bps,
@@ -478,6 +575,9 @@ def _decorate_replay_decision(
     *,
     end_date: str,
     requested_start: str,
+    effective_coverage_start: str,
+    effective_replay_start: str,
+    first_indicator_ready_date: str,
     availability: Mapping[str, Any],
     stock_results: Sequence[SeriesResult],
     index_results: Sequence[SeriesResult],
@@ -503,9 +603,13 @@ def _decorate_replay_decision(
         "data_window": {
             "provider_requested_start": requested_start,
             "provider_requested_end": end_date,
+            "effective_coverage_start": effective_coverage_start,
+            "configured_replay_start_date": config.replay_start_date,
+            "first_indicator_ready_date": first_indicator_ready_date,
             "signal_date": value.get("signal_date"),
             "execution_date": value.get("execution_date"),
-            "replay_start_date": max(config.replay_start_date, requested_start),
+            "replay_start_date": effective_replay_start,
+            "coverage_window_policy": "provider_delimited_common_overlap",
             "uses_data_through_signal_date": True,
             "execution_delay_trading_days": 1,
         },
@@ -517,6 +621,9 @@ def _decorate_replay_decision(
             "missing_vxx_policy": "fail_closed",
             "close_only_daily_source": True,
             "read_only_paper_boundary": True,
+            "provider_delimited_window_accepted": True,
+            "warmup_not_counted_as_signal": True,
+            "no_older_data_assumed": True,
         },
     })
     if value.get("status") != "READY" or not value.get("decision_eligible"):
@@ -541,7 +648,19 @@ def run_close(config: M21Config, output_dir: Path, *, now: datetime | None = Non
             stock_results, index_results = _free_inputs(config, start_date=start_date, end_date=end_date)
         else:
             stock_results, index_results = _local_inputs(config, start_date=start_date, end_date=end_date, workdir=inputs_dir)
-        availability = _availability_evidence(config, start_date=start_date, end_date=end_date, stock_results=stock_results, index_results=index_results)
+        effective_coverage_start = _effective_coverage_start(
+            stock_results,
+            index_results,
+            requested_start=start_date,
+        )
+        availability = _availability_evidence(
+            config,
+            start_date=start_date,
+            end_date=end_date,
+            stock_results=stock_results,
+            index_results=index_results,
+            effective_start_date=effective_coverage_start,
+        )
         _write_json(output_dir / "availability_evidence.json", availability)
         _write_json(output_dir / "provider_manifest.json", {
             "schema": "qqq-m21-provider-manifest/v1",
@@ -549,6 +668,8 @@ def run_close(config: M21Config, output_dir: Path, *, now: datetime | None = Non
             "provider_mode": config.provider,
             "requested_start_date": start_date,
             "requested_end_date": end_date,
+            "effective_start_date": effective_coverage_start,
+            "coverage_window_policy": "provider_delimited_common_overlap",
             "stock_series": [item.manifest_entry() for item in stock_results],
             "index_series": [item.manifest_entry() for item in index_results],
             "manifest_hash": _canonical_hash({"stocks": [item.manifest_entry() for item in stock_results], "indices": [item.manifest_entry() for item in index_results]}),
@@ -558,21 +679,56 @@ def run_close(config: M21Config, output_dir: Path, *, now: datetime | None = Non
             index_results,
             start_date=start_date,
             end_date=end_date,
+            coverage_start_date=effective_coverage_start,
         ):
             failure = _primary_failure(
                 stock_results,
                 index_results,
                 start_date=start_date,
                 end_date=end_date,
+                coverage_start_date=effective_coverage_start,
             )
             decision = _failure_decision(config, end_date=end_date, failure=failure, availability=availability)
         else:
+            if effective_coverage_start is None:
+                raise M21RunnerError("INSUFFICIENT_CONTEXT", "data_quality", "no common provider coverage window is available")
+            effective_replay_start, first_indicator_ready_date = _effective_replay_start_date(
+                config,
+                coverage_start=effective_coverage_start,
+                end_date=end_date,
+            )
+            availability["replay_window"] = {
+                "configured_replay_start_date": config.replay_start_date,
+                "first_indicator_ready_date": first_indicator_ready_date,
+                "effective_replay_start_date": effective_replay_start,
+                "warmup_context_sessions": _V12_2_REQUIRED_CONTEXT_SESSIONS,
+                "warmup_policy": "context_only_no_signal_or_return_claim",
+            }
+            _write_json(output_dir / "availability_evidence.json", availability)
             inputs_dir.mkdir(parents=True, exist_ok=True)
             write_price_csv(inputs_dir / "prices_adj_close.csv", stock_results)
             write_vxx_csv(inputs_dir / "vxx.csv", next(item for item in stock_results if item.symbol == "VXX"))
             write_vix_csv(inputs_dir / "vix_indices.csv", index_results)
-            replay_decision = _replay_with_prepared_files(config, end_date=end_date, requested_start=start_date, inputs_dir=inputs_dir, replay_dir=replay_dir)
-            decision = _decorate_replay_decision(config, replay_decision, end_date=end_date, requested_start=start_date, availability=availability, stock_results=stock_results, index_results=index_results)
+            replay_decision = _replay_with_prepared_files(
+                config,
+                end_date=end_date,
+                coverage_start=effective_coverage_start,
+                replay_start_date=effective_replay_start,
+                inputs_dir=inputs_dir,
+                replay_dir=replay_dir,
+            )
+            decision = _decorate_replay_decision(
+                config,
+                replay_decision,
+                end_date=end_date,
+                requested_start=start_date,
+                effective_coverage_start=effective_coverage_start,
+                effective_replay_start=effective_replay_start,
+                first_indicator_ready_date=first_indicator_ready_date,
+                availability=availability,
+                stock_results=stock_results,
+                index_results=index_results,
+            )
     except (M21RunnerError, M21ConfigError, OSError, ValueError) as exc:
         if isinstance(exc, (M21RunnerError, M21ConfigError)):
             failure = {"code": getattr(exc, "code", "CONFIG_ERROR"), "class": getattr(exc, "failure_class", "configuration"), "message": getattr(exc, "message", str(exc))}

@@ -6,7 +6,14 @@ from dataclasses import replace
 from pathlib import Path
 
 from src.jobs.m21.config import M21Config
-from src.jobs.m21.runner import latest_completed_session, requested_start_date, run_close
+from src.jobs.m21.runner import (
+    _effective_coverage_start,
+    _first_indicator_ready_date,
+    latest_completed_session,
+    requested_start_date,
+    run_close,
+)
+from src.jobs.m21.sources import SeriesResult
 from src.storage.normalization import TradingCalendar
 
 
@@ -23,14 +30,39 @@ def test_latest_completed_session_never_uses_pre_close_daily_bar() -> None:
     assert latest_completed_session(config, now=after_close) == "2026-08-10"
 
 
-def test_free_close_window_covers_strategy_warmup_before_replay() -> None:
+def test_free_close_window_uses_two_year_boundary_and_defers_replay_until_ready() -> None:
     config = M21Config.from_file(ROOT / "configs/m21/free_close.json")
     start = requested_start_date(config, "2026-09-11")
+    assert start == "2024-09-12"
+    first_ready = _first_indicator_ready_date(start, "2026-09-11")
+    assert first_ready > config.replay_start_date
     calendar = TradingCalendar(
         extra_closed_dates=("2012-10-29", "2012-10-30", "2018-12-05", "2025-01-09")
     )
-    context_sessions = calendar.sessions(start, "2024-12-31")
-    assert len(context_sessions) >= 150
+    assert len(calendar.sessions(start, first_ready)) == 151
+
+
+def test_provider_delimited_history_is_complete_after_common_first_date() -> None:
+    requested_start = "2024-01-01"
+    end_date = "2026-09-11"
+    stock_symbols = ("QQQ", "QLD", "VXX", "SVXY", "BIL", "TLT", "IAU", "XLU", "VOO", "SPY")
+    results = [
+        SeriesResult(
+            symbol=symbol,
+            provider="massive-free-stocks",
+            status="success",
+            rows=({"date": "2024-09-12"}, {"date": end_date}),
+            requested_start=requested_start,
+            requested_end=end_date,
+            first_date="2024-09-12",
+            last_date=end_date,
+            has_end_date=True,
+        )
+        for symbol in (*stock_symbols, "VIX", "VIX3M")
+    ]
+    assert _effective_coverage_start(results[:10], results[10:], requested_start=requested_start) == "2024-09-12"
+    shifted = replace(results[0], first_date="2024-09-13")
+    assert _effective_coverage_start((shifted, *results[1:10]), results[10:], requested_start=requested_start) == "2024-09-13"
 
 
 def _write_fixture_files(
